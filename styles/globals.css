@@ -18,41 +18,41 @@
 	--color-gray-800: #333333;
 	--color-gray-900: #191919;
 
-	/* ─── Purple (Primary) ─── */
-	--color-purple-50: #f0effc;
-	--color-purple-100: #dcdaf9;
-	--color-purple-200: #bebaf4;
-	--color-purple-300: #a49cef;
-	--color-purple-400: #8c81eb;
-	--color-purple-500: #7566e5;
-	--color-purple-600: #604cde;
-	--color-purple-700: #452cc0;
-	--color-purple-800: #2a197d;
-	--color-purple-900: #0f073a;
+	/* ─── Navy (Primary) ─── */
+	--color-navy-50: #e8f0ff;
+	--color-navy-100: #c5d4f5;
+	--color-navy-200: #9db5ee;
+	--color-navy-300: #6b90f4;
+	--color-navy-400: #3d68d9;
+	--color-navy-500: #1e4d87;
+	--color-navy-600: #0d3080;
+	--color-navy-700: #0d1b3e;
+	--color-navy-800: #091429;
+	--color-navy-900: #050c1a;
 
-	/* ─── Orange (Secondary) ─── */
-	--color-orange-50: #fff4ed;
-	--color-orange-100: #ffe6d5;
-	--color-orange-200: #ffc9a8;
-	--color-orange-300: #ffa873;
-	--color-orange-400: #ff8742;
-	--color-orange-500: #ff6b2c;
-	--color-orange-600: #e65217;
-	--color-orange-700: #b83e12;
-	--color-orange-800: #7a280c;
-	--color-orange-900: #3d1405;
+	/* ─── Lime (Secondary) ─── */
+	--color-lime-50: #f9ffd8;
+	--color-lime-100: #eeffa0;
+	--color-lime-200: #e2ff6b;
+	--color-lime-300: #d4f55a;
+	--color-lime-400: #c8f135;
+	--color-lime-500: #abcc1a;
+	--color-lime-600: #7a9a10;
+	--color-lime-700: #526808;
+	--color-lime-800: #2e3d02;
+	--color-lime-900: #141a00;
 
-	/* ─── Green (Tertiary) ─── */
-	--color-green-50: #e6f7f1;
-	--color-green-100: #cff0e4;
-	--color-green-200: #a6e5d1;
-	--color-green-300: #86d9c2;
-	--color-green-400: #5fc8a6;
-	--color-green-500: #00a876;
-	--color-green-600: #0b7955;
-	--color-green-700: #06583d;
-	--color-green-800: #023725;
-	--color-green-900: #00160c;
+	/* ─── Pink (Tertiary) ─── */
+	--color-pink-50: #fff0f5;
+	--color-pink-100: #ffd6e7;
+	--color-pink-200: #ffb3cf;
+	--color-pink-300: #ff8fb5;
+	--color-pink-400: #ff6b9d;
+	--color-pink-500: #ff4d8f;
+	--color-pink-600: #e6233f;
+	--color-pink-700: #cc1a52;
+	--color-pink-800: #99103d;
+	--color-pink-900: #660828;
 
 	/* ─── Error ─── */
 	--color-error: #e91616;
@@ -70,30 +70,30 @@
 	--color-google-text: #1f1f1f;
 
 	/* ─── Gradients ─── */
-	--gradient-purple-100-lr: linear-gradient(
+	--gradient-navy-100-lr: linear-gradient(
 		to right,
-		var(--color-purple-50),
-		var(--color-purple-100)
+		var(--color-navy-50),
+		var(--color-navy-100)
 	);
-	--gradient-purple-100-td: linear-gradient(
+	--gradient-navy-100-td: linear-gradient(
 		to bottom,
-		var(--color-purple-50),
-		var(--color-purple-100)
+		var(--color-navy-50),
+		var(--color-navy-100)
 	);
-	--gradient-purple-200-lr: linear-gradient(
+	--gradient-navy-200-lr: linear-gradient(
 		to right,
-		var(--color-purple-100),
-		var(--color-purple-200)
+		var(--color-navy-100),
+		var(--color-navy-200)
 	);
-	--gradient-purple-200-rl: linear-gradient(
+	--gradient-navy-200-rl: linear-gradient(
 		to left,
-		var(--color-purple-200),
-		var(--color-purple-100)
+		var(--color-navy-200),
+		var(--color-navy-100)
 	);
-	--gradient-purple-500: linear-gradient(
+	--gradient-navy-500: linear-gradient(
 		to right,
-		var(--color-purple-400),
-		var(--color-purple-700)
+		var(--color-navy-400),
+		var(--color-navy-700)
 	);
 
 	/* ─── Box Shadow ─── */
@@ -235,29 +235,29 @@
 	body {
 		@apply bg-gray-50 text-gray-900;
 	}
-	.bg-gradient-purple-100-lr {
-		background-image: var(--gradient-purple-100-lr);
+	.bg-gradient-navy-100-lr {
+		background-image: var(--gradient-navy-100-lr);
 	}
-	.bg-gradient-purple-100-td {
-		background-image: var(--gradient-purple-100-td);
+	.bg-gradient-navy-100-td {
+		background-image: var(--gradient-navy-100-td);
 	}
-	.bg-gradient-purple-200-lr {
-		background-image: var(--gradient-purple-200-lr);
+	.bg-gradient-navy-200-lr {
+		background-image: var(--gradient-navy-200-lr);
 	}
-	.bg-gradient-purple-200-rl {
-		background-image: var(--gradient-purple-200-rl);
+	.bg-gradient-navy-200-rl {
+		background-image: var(--gradient-navy-200-rl);
 	}
-	.bg-gradient-purple-500 {
-		background-image: var(--gradient-purple-500);
+	.bg-gradient-navy-500 {
+		background-image: var(--gradient-navy-500);
 	}
 }
 
 @layer utilities {
-	.border-gradient-purple {
+	.border-gradient-navy {
 		border: 1px solid transparent;
 		background:
 			linear-gradient(#fff, #fff) padding-box,
-			linear-gradient(to right, #8c81eb, #452cc0) border-box;
+			linear-gradient(to right, #3d68d9, #0d1b3e) border-box;
 	}
 }
 
