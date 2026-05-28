@@ -3,49 +3,48 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/utils/cn";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-lg font-medium transition-colors",
+const chipVariants = cva(
+  "inline-flex items-center justify-center rounded-full border transition-colors font-medium",
   {
     variants: {
       variant: {
-        primary:
-          "bg-pink-500 text-white hover:bg-pink-600",
+        default:
+          "border-gray-300 bg-white text-black hover:bg-gray-100",
 
-        secondary:
-          "bg-blue-500 text-white hover:bg-blue-600",
+        selected:
+          "bg-pink-500 border-pink-500 text-white hover:bg-pink-600",
 
         outline:
-          "border border-gray-300 bg-white hover:bg-gray-100",
+          "border-pink-500 text-pink-500 bg-white",
       },
 
       size: {
         sm: "h-8 px-3 text-sm",
         md: "h-10 px-4 text-base",
-        lg: "h-12 px-6 text-lg",
       },
     },
 
     defaultVariants: {
-      variant: "primary",
+      variant: "default",
       size: "md",
     },
   }
 );
 
-interface ButtonProps
+interface ChipProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof chipVariants> {}
 
-export default function Button({
+export default function Chip({
   variant,
   size,
   className,
   ...props
-}: ButtonProps) {
+}: ChipProps) {
   return (
     <button
       className={cn(
-        buttonVariants({
+        chipVariants({
           variant,
           size,
         }),
