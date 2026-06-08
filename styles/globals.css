@@ -273,6 +273,7 @@
 /* 스크롤바 스타일 */
 .scrollbar {
 	overflow: auto;
+	overflow-x: hidden;
 	scrollbar-width: thin;
 	scrollbar-color: var(--color-gray-300) transparent;
 	scroll-behavior: smooth;
