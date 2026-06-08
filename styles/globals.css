@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Tektur:wght@800&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 @import "tailwindcss";
 @import "./font.css";
 @import "react-loading-skeleton/dist/skeleton.css";
@@ -234,6 +235,7 @@
 
 	body {
 		@apply bg-gray-50 text-gray-900;
+		font-family: "Pretendard", sans-serif;
 	}
 	.bg-gradient-navy-100-lr {
 		background-image: var(--gradient-navy-100-lr);

@@ -1,13 +1,38 @@
 "use client";
 
-import { Map } from "react-kakao-maps-sdk";
+import { useEffect, useRef } from "react";
 
 export default function SpotMap() {
-	return (
-		<Map
-			center={{ lat: 35.1796, lng: 129.0756 }} // 부산 중심 좌표
-			style={{ width: "100%", height: "100%" }}
-			level={8} // 줌 레벨 (숫자 클수록 넓게)
-		/>
-	);
+	const mapRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const initMap = () => {
+			if (!mapRef.current) return;
+			const options = {
+				center: new window.kakao.maps.LatLng(35.1796, 129.0756),
+				level: 8,
+			};
+			new window.kakao.maps.Map(mapRef.current, options);
+		};
+
+		const loadMap = () => {
+			window.kakao.maps.load(initMap);
+		};
+
+		if (window.kakao?.maps) {
+			loadMap();
+		} else {
+			// 스크립트가 아직 로드 안 됐으면 일정 간격으로 체크
+			const interval = setInterval(() => {
+				if (window.kakao?.maps) {
+					clearInterval(interval);
+					loadMap();
+				}
+			}, 100);
+
+			return () => clearInterval(interval);
+		}
+	}, []);
+
+	return <div ref={mapRef} className="h-full w-full" />;
 }
