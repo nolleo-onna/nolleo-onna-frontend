@@ -6,7 +6,6 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/react";
-
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
@@ -27,58 +26,22 @@ export default function Dropdown({
   const [selected, setSelected] = useState<Option | null>(null);
 
   return (
-    <Listbox
-      value={selected}
-      onChange={setSelected}
-    >
+    <Listbox value={selected} onChange={setSelected}>
       <div className="relative inline-block">
-        <ListboxButton
-          className="
-            flex items-center gap-2
-            text-xl font-medium text-black
-
-            outline-none
-            focus:outline-none
-          "
-        >
-          <span>
-            {selected?.label ?? placeholder}
-          </span>
-
-          <ChevronDownIcon className="size-4" />
+        <ListboxButton className="flex items-center gap-1 text-sm font-medium text-gray-700 outline-none focus:outline-none">
+          <span>{selected?.label ?? placeholder}</span>
+          <ChevronDownIcon className="size-3.5" />
         </ListboxButton>
 
         <ListboxOptions
-          anchor="bottom start"
-          className="
-            mt-2
-            w-36
-            overflow-hidden
-            rounded-2xl
-
-            bg-white
-            shadow-lg
-
-            outline-none
-            focus:outline-none
-          "
+          anchor="bottom end"
+          className="mt-1 w-28 overflow-hidden rounded-xl bg-white shadow-lg outline-none focus:outline-none"
         >
           {options.map((option) => (
             <ListboxOption
               key={option.value}
               value={option}
-              className="
-                cursor-pointer
-                px-4
-                py-3
-                text-lg
-                text-black
-
-                data-[focus]:bg-gray-50
-
-                not-last:border-b
-                not-last:border-gray-100
-              "
+              className="cursor-pointer px-3 py-2 text-sm text-gray-700 data-[focus]:bg-gray-50 not-last:border-b not-last:border-gray-100"
             >
               {option.label}
             </ListboxOption>

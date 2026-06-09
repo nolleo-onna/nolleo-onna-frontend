@@ -5,8 +5,8 @@ interface SpotCardProps {
 	name: string;
 	location: string;
 	rating: number;
-	reviewCount: string; // "2.1k" 형태
-	price?: number | null; // null이면 무료
+	reviewCount: string;
+	price?: number | null;
 	crowdStatus?: "매우혼잡" | "혼잡" | "보통" | "여유";
 	onClick?: () => void;
 	className?: string;
@@ -32,7 +32,7 @@ export default function SpotCard({
 			badges={crowdStatus ? [{ label: crowdStatus, variant: "crowd" }] : []}
 			topRightSlot={
 				isFree ? (
-					<span className="rounded-full bg-purple-500 px-2.5 py-0.5 text-xs font-semibold text-white">
+					<span className="rounded-full bg-navy-400 px-2.5 py-0.5 text-xs font-semibold text-white">
 						무료
 					</span>
 				) : undefined
@@ -57,7 +57,7 @@ export default function SpotCard({
 			</p>
 
 			{/* 가격 */}
-			<p className={`mt-1 text-sm font-bold ${isFree ? "text-purple-500" : "text-gray-900"}`}>
+			<p className={`mt-1 text-sm font-bold ${isFree ? "text-navy-400" : "text-gray-900"}`}>
 				{isFree ? "무료" : `${price?.toLocaleString()}원/인`}
 			</p>
 		</CardBase>
