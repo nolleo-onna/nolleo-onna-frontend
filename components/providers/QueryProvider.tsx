@@ -1,6 +1,10 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -13,29 +17,29 @@ interface QueryProviderProps {
 export default function QueryProvider({ children }: QueryProviderProps) {
   const router = useRouter();
 
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-          },
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
         },
-        queryCache: undefined,
+      },
+      queryCache: new QueryCache({
+        onError: (error, query) => {
+          if (
+            error instanceof Error &&
+            error.message === "UNAUTHORIZED" &&
+            query.queryKey[0] === ME_QUERY_KEY[0]
+          ) {
+            client.removeQueries({ queryKey: ME_QUERY_KEY });
+            router.replace("/login");
+          }
+        },
       }),
-  );
+    });
 
-  // 전역 401 처리 (#6)
-  queryClient.getQueryCache().config.onError = (error, query) => {
-    if (
-      error instanceof Error &&
-      error.message === "UNAUTHORIZED" &&
-      query.queryKey[0] === ME_QUERY_KEY[0]
-    ) {
-      queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
-      router.replace("/login");
-    }
-  };
+    return client;
+  });
 
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
