@@ -25,15 +25,23 @@ export default function AuthCallback() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let cancelled = false;
+
     fetchMe()
       .then((user) => {
+        if (cancelled) return;
         queryClient.setQueryData(ME_QUERY_KEY, user);
         router.replace(getReturnUrl());
       })
       .catch(() => {
+        if (cancelled) return;
         queryClient.setQueryData(ME_QUERY_KEY, null);
         router.replace("/login");
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router, queryClient]);
 
   return (
