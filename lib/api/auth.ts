@@ -15,3 +15,15 @@ export async function fetchMe(): Promise<User> {
 
   return response.data;
 }
+
+export async function logout(): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("LOGOUT_FAILED");
+  }
+
+}
