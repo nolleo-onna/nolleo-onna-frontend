@@ -14,9 +14,9 @@ type Course = {
 };
 
 const mockCourses: Course[] = [
-  { id: 1, imageSrc: "https://picsum.photos/seed/beach/400/600", badge: "상황별", emoji: "🏖️", subTitle: "SOLO HEALING", title: "혼자 힐링하는 날", description: "조용한 바다 + 카페 1곳" },
+  { id: 1, imageSrc: "https://picsum.photos/seed/beach/400/600", badge: "상황별", emoji: "🏖️", subTitle: "SOLO HEALING", title: "혼자 여행", description: "조용한 바다 + 카페 1곳" },
   { id: 2, imageSrc: "https://picsum.photos/seed/rose/400/600", badge: "상황별", emoji: "🌹", subTitle: "CHEAP & CHIC", title: "짠내 데이트", description: "5만원 이하 감성 코스" },
-  { id: 3, imageSrc: "https://picsum.photos/seed/rain/400/600", badge: "상황별", emoji: "🌧️", subTitle: "RAINY DAY", title: "비 와도 괜찮아", description: "실내 위주 큐레이션" },
+  { id: 3, imageSrc: "https://picsum.photos/seed/rain/400/600", badge: "상황별", emoji: "🌧️", subTitle: "RAINY DAY", title: "비오는 날 여행", description: "실내 위주 큐레이션" },
   { id: 4, imageSrc: "https://picsum.photos/seed/night/400/600", badge: "상황별", emoji: "🌙", subTitle: "NIGHT VIBE", title: "부산 야경 투어", description: "광안리 + 해운대 야경" },
   { id: 5, imageSrc: "https://picsum.photos/seed/food/400/600", badge: "상황별", emoji: "🍜", subTitle: "FOOD TRIP", title: "부산 먹방 투어", description: "국제시장 + 자갈치" },
   { id: 6, imageSrc: "https://picsum.photos/seed/nature/400/600", badge: "상황별", emoji: "🌿", subTitle: "NATURE WALK", title: "자연 힐링 코스", description: "태종대 + 이기대" },
