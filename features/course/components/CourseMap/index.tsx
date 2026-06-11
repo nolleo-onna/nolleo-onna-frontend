@@ -1,0 +1,102 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+import type { CoursePlace } from "@/features/course/data/mockCourse";
+
+interface CourseMapProps {
+  places: CoursePlace[];
+  selectedPlaceId: number | null;
+  onSelectPlace: (place: CoursePlace) => void;
+}
+
+export default function CourseMap({
+  places,
+  selectedPlaceId,
+  onSelectPlace,
+}: CourseMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<kakao.maps.Map | null>(null);
+  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const polylineRef = useRef<kakao.maps.Polyline | null>(null);
+
+  // 지도 초기화 (SDK 로드 폴링)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!window.kakao?.maps || !containerRef.current) return;
+      clearInterval(interval);
+
+      window.kakao.maps.load(() => {
+        if (!containerRef.current) return;
+        mapRef.current = new window.kakao.maps.Map(containerRef.current, {
+          center: new window.kakao.maps.LatLng(35.1532, 129.1186),
+          level: 5,
+        });
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 마커 + 폴리라인 갱신
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || places.length === 0) return;
+
+    // 기존 오버레이 제거
+    overlaysRef.current.forEach((overlay) => overlay.setMap(null));
+    overlaysRef.current = [];
+    polylineRef.current?.setMap(null);
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+
+    places.forEach((place, index) => {
+      const position = new window.kakao.maps.LatLng(place.lat, place.lng);
+      bounds.extend(position);
+
+      const isSelected = place.id === selectedPlaceId;
+      const content = document.createElement("button");
+      content.type = "button";
+      content.className = [
+        "flex h-8 w-8 items-center justify-center rounded-full",
+        "text-sm font-bold text-white shadow-md transition-transform",
+        isSelected ? "bg-pink-500 scale-125" : "bg-navy-900 hover:scale-110",
+      ].join(" ");
+      content.textContent = String(index + 1);
+      content.addEventListener("click", () => onSelectPlace(place));
+
+      const overlay = new window.kakao.maps.CustomOverlay({
+        position,
+        content,
+        yAnchor: 0.5,
+        zIndex: isSelected ? 10 : 1,
+      });
+      overlay.setMap(map);
+      overlaysRef.current.push(overlay);
+    });
+
+    polylineRef.current = new window.kakao.maps.Polyline({
+      path: places.map(
+        (p) => new window.kakao.maps.LatLng(p.lat, p.lng),
+      ),
+      strokeWeight: 2,
+      strokeColor: "#1B2A4A",
+      strokeOpacity: 0.8,
+      strokeStyle: "shortdash",
+    });
+    polylineRef.current.setMap(map);
+
+    map.setBounds(bounds, 80, 80, 200, 80);
+  }, [places, selectedPlaceId, onSelectPlace]);
+
+  // 선택 장소로 이동
+  useEffect(() => {
+    const map = mapRef.current;
+    const selected = places.find((p) => p.id === selectedPlaceId);
+    if (!map || !selected) return;
+
+    map.panTo(new window.kakao.maps.LatLng(selected.lat, selected.lng));
+  }, [places, selectedPlaceId]);
+
+  return <div ref={containerRef} className="h-full w-full" />;
+}

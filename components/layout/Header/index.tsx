@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 const NAV_ITEMS = [
   { label: "홈", href: "/" },
   { label: "스팟", href: "/spot" },
-  { label: "한끗", href: "/course" },
+  { label: "코스", href: "/course" },
+  { label: "한끗", href: "/hankkut" },
 ] as const;
 
 export default function Header() {

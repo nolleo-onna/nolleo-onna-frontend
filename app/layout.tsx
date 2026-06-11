@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Header from "@/components/layout/Header";
-import QueryProvider from "@/components/providers/QueryProvider";
+import QueryProvider from "@/providers/QueryProvider";
 import "@/styles/globals.css";
 import "@/styles/font.css";
 

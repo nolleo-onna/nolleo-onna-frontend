@@ -14,7 +14,7 @@ const features = [
   {
     icon: <PiggyBank className="w-5 h-5 text-pink-400" />,
     title: "예산 남는 코스",
-    description: "잔액 + 인당까지 표시\n관광공사 대비 70% 절약",
+    description: "잔액 + 인당까지 표시\n예산 안에서 즐기는 코스",
   },
 ];
 
