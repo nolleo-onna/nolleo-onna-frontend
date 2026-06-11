@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import Header from "@/components/layout/Header";
+import QueryProvider from "@/components/providers/QueryProvider";
 import "@/styles/globals.css";
 import "@/styles/font.css";
 
@@ -17,8 +18,10 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body>
-        <Header />
-        {children}
+        <QueryProvider>
+          <Header />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
