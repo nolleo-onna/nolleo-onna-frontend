@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL이 설정되지 않았습니다.");
+  throw new Error("NEXT_PUBLIC_API_BASE_URL이 설정되지 않았습니다.");
 }
 
 export async function serverFetch(
