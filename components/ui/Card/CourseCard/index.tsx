@@ -1,85 +1,70 @@
-import CardBase from "@/components/ui/Card/CardBase";
+import Image from "next/image";
 
 interface CourseCardProps {
-	imageSrc: string;
-	title: string;
-	rating: number;
-	reviewCount: string;
-	location: string;
-	tags?: string[]; // ["관광공사", "해운대"] 등
-	originalPrice?: number;
-	discountPrice?: number;
-	onClick?: () => void;
-	className?: string;
+  imageSrc: string;
+  badge?: string;
+  emoji?: string;
+  subTitle?: string;
+  title: string;
+  description?: string;
+  onClick?: () => void;
+  className?: string;
 }
 
 export default function CourseCard({
-	imageSrc,
-	title,
-	rating,
-	reviewCount,
-	location,
-	tags = [],
-	originalPrice,
-	discountPrice,
-	onClick,
-	className,
+  imageSrc,
+  badge,
+  emoji,
+  subTitle,
+  title,
+  description,
+  onClick,
+  className = "",
 }: CourseCardProps) {
-	return (
-		<CardBase
-			imageSrc={imageSrc}
-			imageAlt={title}
-			aspectRatio="video"
-			topLeftSlot={
-				tags.length > 0 ? (
-					<div className="flex gap-1">
-						{tags.map((tag, i) => (
-							<span
-								key={i}
-								className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-									tag === "관광공사"
-										? "bg-purple-500 text-white"
-										: "bg-white/90 text-gray-700"
-								}`}
-							>
-								{tag}
-							</span>
-						))}
-					</div>
-				) : undefined
-			}
-			onClick={onClick}
-			className={className}
-		>
-			{/* 코스 제목 */}
-			<p className="line-clamp-2 text-sm font-bold text-gray-900">{title}</p>
+  return (
+    <div
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-2xl aspect-[3/4] cursor-pointer ${className}`}
+    >
+      {/* 배경 이미지 */}
+      <Image
+        src={imageSrc}
+        alt={title}
+        fill
+        className="object-cover transition-transform duration-500 group-hover:scale-105"
+        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+      />
 
-			{/* 별점 + 위치 */}
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-1">
-					<span className="text-xs text-orange-400">★</span>
-					<span className="text-xs font-semibold text-gray-800">{rating}</span>
-					<span className="text-xs text-gray-400">({reviewCount})</span>
-				</div>
-				<p className="flex items-center gap-0.5 text-xs text-gray-500">
-					<span>📍</span>
-					{location}
-				</p>
-			</div>
+      {/* 전체 그라디언트 오버레이 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-			{/* 가격 */}
-			{discountPrice !== undefined && (
-				<div className="mt-1 flex items-center gap-2">
-					{originalPrice && (
-						<span className="text-xs text-gray-400 line-through">
-							{originalPrice.toLocaleString()}원
-						</span>
-					)}
-					<span className="text-sm font-bold text-gray-900">
-						{discountPrice.toLocaleString()}원
-					</span>
-				</div>
-			)}
-		</CardBase>
-	);
+      {/* 상단 */}
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+        {badge && (
+          <span className="rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-0.5 text-xs font-semibold text-white">
+            {badge}
+          </span>
+        )}
+        {emoji && (
+          <span className="text-2xl ml-auto">{emoji}</span>
+        )}
+      </div>
+
+      {/* 하단 텍스트 오버레이 */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-1">
+        {subTitle && (
+          <p className="text-xs font-semibold tracking-widest text-white/70 uppercase">
+            {subTitle}
+          </p>
+        )}
+        <h3 className="text-xl font-bold text-white leading-tight">{title}</h3>
+        {description && (
+          <p className="text-xs text-white/80">{description}</p>
+        )}
+        <button className="mt-2 text-sm font-semibold text-white flex items-center gap-1 w-fit">
+          코스 보기 →
+        </button>
+      </div>
+    </div>
+  );
 }
