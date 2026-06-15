@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import CourseCard from "@/components/ui/Card/CourseCard";
+
 
 type Course = {
   id: number;
@@ -32,6 +34,7 @@ type Props = {
 };
 
 export default function CourseCarousel({ courses = mockCourses }: Props) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -41,6 +44,13 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
 
   const cloned = [...courses, ...courses, ...courses];
   const offset = courses.length;
+
+  const handleScrollToSearch = () => {
+    document.getElementById("search-bar")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  };
 
   const updateIndex = useCallback((index: number) => {
     currentIndexRef.current = index;
@@ -158,10 +168,16 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
 
       {/* 버튼 */}
       <div className="flex justify-center gap-3 mt-8">
-        <button className="px-6 py-2.5 rounded-full bg-navy-500 text-white text-sm font-medium">
+        <button
+          onClick={handleScrollToSearch}
+          className="px-6 py-2.5 rounded-full bg-navy-500 text-white text-sm font-medium"
+        >
           코스 추천받기
         </button>
-        <button className="px-6 py-2.5 rounded-full border border-navy-500 text-navy-500 text-sm font-medium">
+        <button
+          onClick={() => router.push("/spot")}
+          className="px-6 py-2.5 rounded-full border border-navy-500 text-navy-500 text-sm font-medium"
+        >
           스팟 둘러보기
         </button>
       </div>

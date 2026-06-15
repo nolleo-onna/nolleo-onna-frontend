@@ -52,9 +52,12 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {isLoading ? null : isLoggedIn ? (
               <>
-                <span className="text-sm font-medium text-gray-700">
+                <Link
+                  href="/mypage"
+                  className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors"
+                >
                   {user?.nickname}님
-                </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => logout()}

@@ -14,7 +14,9 @@ export default function HomePage() {
     <main>
       <HeroSection />
       <Container>
-        <SearchBar />
+        <div id="search-bar">
+          <SearchBar />
+        </div>
         <CourseCarousel />
         <WeatherSection />
         <SpotsPreviewSection type="crowd" />
