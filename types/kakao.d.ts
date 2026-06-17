@@ -18,6 +18,8 @@ declare global {
       constructor(container: HTMLElement, options: { center: LatLng; level: number });
       setBounds(bounds: LatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number): void;
       panTo(latlng: LatLng): void;
+      getLevel(): number;
+      setLevel(level: number): void;
     }
 
     class CustomOverlay {
@@ -39,6 +41,19 @@ declare global {
         strokeStyle?: string;
       });
       setMap(map: Map | null): void;
+    }
+
+    namespace event {
+      function addListener(
+        target: Map,
+        type: string,
+        handler: () => void
+      ): void;
+      function removeListener(
+        target: Map,
+        type: string,
+        handler: () => void
+      ): void;
     }
   }
 }

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchMe } from "@/lib/api/auth";
+import { fetchMe } from "@/libs/api/auth";
 import type { User } from "@/types/auth";
 
 export const ME_QUERY_KEY = ["me"] as const;

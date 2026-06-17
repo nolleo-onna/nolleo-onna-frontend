@@ -4,12 +4,38 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, MapPin, Wallet, Clock, Users, Search } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
+import { useCourseGenerate } from "@/features/course/hooks/useCourseGenerate";
+import type { CourseGenerateRequest } from "@/types/course";
 
 type Tab = "course" | "spot" | "ai";
 
 const BUDGET_OPTIONS = ["무지출", "1만원", "3만원", "5만원", "제한 없음"];
 const TIME_OPTIONS = ["오전", "오후", "저녁", "하루"];
 const COMPANION_OPTIONS = ["혼자", "연인", "친구", "가족", "단체"];
+
+const BUDGET_MAP: Record<string, number> = {
+  "무지출": 0,
+  "1만원": 10000,
+  "3만원": 30000,
+  "5만원": 50000,
+  "제한 없음": 200000,
+};
+
+const TIME_MAP: Record<string, CourseGenerateRequest["duration"]> = {
+  "오전": "HALF_DAY",
+  "오후": "HALF_DAY",
+  "저녁": "HALF_DAY",
+  "하루": "ONE_DAY",
+  "반나절": "HALF_DAY",
+};
+
+const COMPANION_MAP: Record<string, CourseGenerateRequest["companion"]> = {
+  "혼자": "SOLO",
+  "연인": "COUPLE",
+  "친구": "FRIENDS",
+  "가족": "FAMILY",
+  "단체": "FRIENDS",
+};
 
 function Chevron({ isOpen }: { isOpen: boolean }) {
   return isOpen ? (
@@ -21,6 +47,8 @@ function Chevron({ isOpen }: { isOpen: boolean }) {
 
 export default function SearchBar() {
   const router = useRouter();
+  const { mutate, isPending } = useCourseGenerate();
+
   const [activeTab, setActiveTab] = useState<Tab>("course");
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState("광안리");
@@ -36,8 +64,18 @@ export default function SearchBar() {
     }
     setActiveTab(tab);
   };
+
   const toggleDropdown = (key: string) => {
     setOpenDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const handleSearch = () => {
+    mutate({
+      signgu: selectedRegion,
+      budget: BUDGET_MAP[selectedBudget] ?? 50000,
+      duration: TIME_MAP[selectedTime] ?? "HALF_DAY",
+      companion: COMPANION_MAP[selectedCompanion] ?? "COUPLE",
+    });
   };
 
   return (
@@ -171,9 +209,13 @@ export default function SearchBar() {
 
             {/* 검색 버튼 */}
             <div className="pl-4">
-              <button className="flex items-center gap-1.5 px-6 py-3 rounded-xl bg-pink-400 text-white text-sm font-semibold whitespace-nowrap">
+              <button
+                onClick={handleSearch}
+                disabled={isPending}
+                className="flex items-center gap-1.5 px-6 py-3 rounded-xl bg-pink-400 text-white text-sm font-semibold whitespace-nowrap disabled:opacity-60"
+              >
                 <Search className="w-4 h-4" />
-                검색
+                {isPending ? "생성 중..." : "검색"}
               </button>
             </div>
           </div>

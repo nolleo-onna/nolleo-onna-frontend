@@ -1,14 +1,10 @@
-import SpotLayout from "@/features/spot/SpotLayout";
-import SpotFilterSidebar from "@/features/spot/SpotFilterSidebar";
-import SpotMap from "@/features/spot/SpotMap";
-import SpotListSidebar from "@/features/spot/SpotListSidebar";
+import { Suspense } from "react";
+import SpotContainer from "@/features/spot/SpotContainer";
 
 export default function SpotPage() {
   return (
-    <SpotLayout
-      filterSidebar={<SpotFilterSidebar />}
-      map={<SpotMap />}
-      listSidebar={<SpotListSidebar />}
-    />
+    <Suspense fallback={null}>
+      <SpotContainer />
+    </Suspense>
   );
 }

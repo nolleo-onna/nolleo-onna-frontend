@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { ME_QUERY_KEY } from "@/hooks/useMe";
-import { fetchMe } from "@/lib/api/auth";
+import { fetchMe } from "@/libs/api/auth";
 
 const RETURN_URL_KEY = "auth:returnUrl";
 
