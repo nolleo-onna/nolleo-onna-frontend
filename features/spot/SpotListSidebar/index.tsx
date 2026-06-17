@@ -81,7 +81,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="스팟 검색..."
+            placeholder="맛집 / 관광지 / 카페 검색"
             className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-8 pr-8 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-navy-300 focus:bg-white transition-colors"
           />
           {search && (
