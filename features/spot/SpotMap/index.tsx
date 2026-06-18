@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSpotMarkers } from "../hooks/useSpotMarkers";
 import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
 import type { SpotMarker } from "@/types/spot";
+import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 
 interface SpotMapProps {
   selectedId: string | null;
@@ -90,8 +91,8 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   return (
     <section className="relative flex-1">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100">
-          <span className="text-sm text-gray-500">지도 불러오는 중...</span>
+        <div className="absolute inset-0 z-10">
+          <MapSkeleton />
         </div>
       )}
       <div ref={mapRef} className="h-full w-full" />

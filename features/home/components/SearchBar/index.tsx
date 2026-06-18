@@ -85,7 +85,7 @@ export default function SearchBar() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleTabClick("course")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+            className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
               activeTab === "course"
                 ? "bg-navy-400 text-white"
                 : "border border-gray-300 text-gray-600"
@@ -95,13 +95,13 @@ export default function SearchBar() {
           </button>
           <button
             onClick={() => handleTabClick("spot")}
-            className="px-4 py-1.5 rounded-full text-sm font-semibold border border-gray-300 text-gray-600"
+            className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-gray-300 text-gray-600"
           >
             스팟 검색
           </button>
           <button
             onClick={() => handleTabClick("ai")}
-            className="px-4 py-1.5 rounded-full text-sm font-semibold border border-pink-400 text-pink-400"
+            className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-pink-400 text-pink-400"
           >
             ✨ AI 에게 말하기
           </button>
@@ -109,11 +109,12 @@ export default function SearchBar() {
 
         {/* 필드 */}
         {(activeTab === "course" || activeTab === "ai") && (
-          <div className="flex items-center divide-x divide-gray-200">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:divide-x sm:divide-gray-200 sm:gap-0">
             {/* 어디로 */}
             <button
               onClick={() => setIsRegionModalOpen(true)}
-              className="flex flex-col gap-0.5 flex-1 px-4 text-left"
+              className="flex flex-col gap-0.5 px-3 py-2 text-left border border-gray-100 rounded-xl
+                         sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none"
             >
               <span className="text-xs text-gray-400">어디로</span>
               <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
@@ -124,7 +125,8 @@ export default function SearchBar() {
             </button>
 
             {/* 예산 */}
-            <div className="relative flex-1 px-4">
+            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
+                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
               <button
                 onClick={() => toggleDropdown("budget")}
                 className="flex flex-col gap-0.5 w-full text-left"
@@ -152,7 +154,8 @@ export default function SearchBar() {
             </div>
 
             {/* 시간 */}
-            <div className="relative flex-1 px-4">
+            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
+                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
               <button
                 onClick={() => toggleDropdown("time")}
                 className="flex flex-col gap-0.5 w-full text-left"
@@ -180,7 +183,8 @@ export default function SearchBar() {
             </div>
 
             {/* 동행 */}
-            <div className="relative flex-1 px-4">
+            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
+                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
               <button
                 onClick={() => toggleDropdown("companion")}
                 className="flex flex-col gap-0.5 w-full text-left"
@@ -208,11 +212,13 @@ export default function SearchBar() {
             </div>
 
             {/* 검색 버튼 */}
-            <div className="pl-4">
+            <div className="col-span-2 sm:col-auto sm:pl-4">
               <button
                 onClick={handleSearch}
                 disabled={isPending}
-                className="flex items-center gap-1.5 px-6 py-3 rounded-xl bg-pink-400 text-white text-sm font-semibold whitespace-nowrap disabled:opacity-60"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5
+                           px-6 py-3 rounded-xl bg-pink-400 text-white text-sm font-semibold
+                           whitespace-nowrap disabled:opacity-60"
               >
                 <Search className="w-4 h-4" />
                 {isPending ? "생성 중..." : "검색"}

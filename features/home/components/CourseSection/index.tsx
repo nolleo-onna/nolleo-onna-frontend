@@ -24,8 +24,8 @@ const mockCourses: Course[] = [
   { id: 6, imageSrc: "https://picsum.photos/seed/nature/400/600", badge: "상황별", emoji: "🌿", subTitle: "NATURE WALK", title: "자연 힐링 코스", description: "태종대 + 이기대" },
 ];
 
-const VISIBLE_COUNT_MOBILE = 1;
-const VISIBLE_COUNT_TABLET = 2;
+const VISIBLE_COUNT_MOBILE = 2;
+const VISIBLE_COUNT_TABLET = 4;
 const VISIBLE_COUNT_DESKTOP = 3;
 const AUTO_PLAY_INTERVAL = 3000;
 
@@ -66,11 +66,12 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
   }, [updateIndex]);
 
   useEffect(() => {
+    // updateVisible 로직 변경 — 브레이크포인트 기준 조정
     const updateVisible = () => {
-      if (window.innerWidth < 768) setVisibleCount(VISIBLE_COUNT_MOBILE);
-      else if (window.innerWidth < 1280) setVisibleCount(VISIBLE_COUNT_TABLET);
-      else setVisibleCount(VISIBLE_COUNT_DESKTOP);
-      setMounted(true); // 여기로 이동
+      if (window.innerWidth >= 1280) setVisibleCount(VISIBLE_COUNT_DESKTOP);      // 데스크탑: 3장
+      else if (window.innerWidth >= 768) setVisibleCount(VISIBLE_COUNT_TABLET);   // 태블릿: 4장
+      else setVisibleCount(VISIBLE_COUNT_MOBILE);                                  // 모바일: 2장
+      setMounted(true);
     };
     updateVisible();
     window.addEventListener("resize", updateVisible);
