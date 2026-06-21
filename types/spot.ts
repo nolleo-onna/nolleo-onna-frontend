@@ -1,6 +1,3 @@
-import { clientFetch } from "@/libs/clientFetch";
-
-console.log("API_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
 // 공통 응답 래퍼
 export interface ApiResponse<T> {
   status: number;
