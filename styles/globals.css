@@ -297,3 +297,26 @@
 		background: transparent;
 	}
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-2deg); }
+  30% { transform: rotate(2deg); }
+  45% { transform: rotate(-2deg); }
+  60% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 1.5s ease-in-out infinite;
+  transform-origin: center;
+}

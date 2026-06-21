@@ -10,6 +10,7 @@ interface CoursePlaceDetailProps {
   selectedDay: number;
   place: CoursePlace;
   onSelectDay: (day: number) => void;
+  onPlaceClick: () => void;
 }
 
 export default function CoursePlaceDetail({
@@ -17,6 +18,7 @@ export default function CoursePlaceDetail({
   selectedDay,
   place,
   onSelectDay,
+  onPlaceClick,
 }: CoursePlaceDetailProps) {
   return (
     <div className="absolute inset-x-6 bottom-6 z-10 rounded-2xl bg-white p-5 shadow-lg">
@@ -42,7 +44,10 @@ export default function CoursePlaceDetail({
       </div>
 
       {/* 장소 정보 */}
-      <div className="flex items-center gap-4">
+      <div
+        className="flex items-center gap-4 cursor-pointer"
+        onClick={onPlaceClick}
+      >
         <Image
           src={place.imageUrl}
           alt={place.name}

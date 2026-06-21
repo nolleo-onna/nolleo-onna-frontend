@@ -56,6 +56,7 @@ export default function SearchBar() {
   const [selectedTime, setSelectedTime] = useState("반나절");
   const [selectedCompanion, setSelectedCompanion] = useState("연인");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const handleTabClick = (tab: Tab) => {
     if (tab === "spot") {
@@ -78,10 +79,18 @@ export default function SearchBar() {
     });
   };
 
+  const handleInteract = () => {
+    setHasInteracted(true);
+  };
+
   return (
     <>
-      <div className="w-full max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-4">
-        {/* 탭 */}
+      <div
+        onClick={handleInteract}
+        className={`w-full max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-4 ${
+          !hasInteracted ? "animate-wiggle" : ""
+        }`}
+      >
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleTabClick("course")}
