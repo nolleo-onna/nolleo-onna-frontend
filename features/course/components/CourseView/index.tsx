@@ -5,6 +5,7 @@ import { useState } from "react";
 import CourseMap from "@/features/course/components/CourseMap";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
+import CoursePlaceModal from "@/features/course/components/CoursePlaceModal";
 import {
   type CoursePlace,
   MOCK_COURSE,
@@ -15,6 +16,7 @@ export default function CourseView() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(
     MOCK_COURSE.days[0].places[0].id,
   );
+  const [modalPlace, setModalPlace] = useState<CoursePlace | null>(null); // 추가
 
   const currentDay =
     MOCK_COURSE.days.find((d) => d.day === selectedDay) ?? MOCK_COURSE.days[0];
@@ -46,15 +48,25 @@ export default function CourseView() {
         <CourseMap
           places={currentDay.places}
           selectedPlaceId={selectedPlaceId}
-          onSelectPlace={handleSelectPlace}
+          onSelectPlace={(place) => {
+            handleSelectPlace(place);
+            setModalPlace(place); // 지도 마커 클릭 → 모달
+          }}
         />
         <CoursePlaceDetail
           course={MOCK_COURSE}
           selectedDay={selectedDay}
           place={selectedPlace}
           onSelectDay={handleSelectDay}
+          onPlaceClick={() => setModalPlace(selectedPlace)} // 바텀카드 클릭 → 모달
         />
       </main>
+
+      {/* 모달 */}
+      <CoursePlaceModal
+        place={modalPlace}
+        onClose={() => setModalPlace(null)}
+      />
     </div>
   );
 }
