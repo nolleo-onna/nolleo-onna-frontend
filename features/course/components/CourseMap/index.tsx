@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { CoursePlace } from "@/features/course/data/mockCourse";
 
@@ -19,6 +19,7 @@ export default function CourseMap({
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const polylineRef = useRef<kakao.maps.Polyline | null>(null);
+  const [mapReady, setMapReady] = useState(false);  // ← 초기화 완료 신호
 
   // 지도 초기화 (SDK 로드 폴링)
   useEffect(() => {
@@ -32,13 +33,14 @@ export default function CourseMap({
           center: new window.kakao.maps.LatLng(35.1532, 129.1186),
           level: 5,
         });
+        setMapReady(true);  // ← 지도 준비 완료 → 마커 effect 트리거
       });
     }, 100);
 
     return () => clearInterval(interval);
   }, []);
 
-  // 마커 + 폴리라인 갱신
+  // 마커 + 폴리라인 갱신 — mapReady 포함으로 초기 렌더 시에도 실행
   useEffect(() => {
     const map = mapRef.current;
     if (!map || places.length === 0) return;
@@ -76,9 +78,7 @@ export default function CourseMap({
     });
 
     polylineRef.current = new window.kakao.maps.Polyline({
-      path: places.map(
-        (p) => new window.kakao.maps.LatLng(p.lat, p.lng),
-      ),
+      path: places.map((p) => new window.kakao.maps.LatLng(p.lat, p.lng)),
       strokeWeight: 2,
       strokeColor: "#1B2A4A",
       strokeOpacity: 0.8,
@@ -87,7 +87,7 @@ export default function CourseMap({
     polylineRef.current.setMap(map);
 
     map.setBounds(bounds, 80, 80, 200, 80);
-  }, [places, selectedPlaceId, onSelectPlace]);
+  }, [places, selectedPlaceId, onSelectPlace, mapReady]);  // ← mapReady 추가
 
   // 선택 장소로 이동
   useEffect(() => {
