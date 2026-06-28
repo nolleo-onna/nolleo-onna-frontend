@@ -1,6 +1,5 @@
 "use client";
 
-import { Star } from "lucide-react";
 import Image from "next/image";
 
 import type { Course, CoursePlace } from "@/features/course/data/mockCourse";
@@ -48,13 +47,18 @@ export default function CoursePlaceDetail({
         className="flex items-center gap-4 cursor-pointer"
         onClick={onPlaceClick}
       >
-        <Image
-          src={place.imageUrl}
-          alt={place.name}
-          width={72}
-          height={72}
-          className="h-18 w-18 shrink-0 rounded-xl object-cover"
-        />
+        {place.imageUrl ? (
+          <Image
+            src={place.imageUrl}
+            alt={place.name}
+            width={72}
+            height={72}
+            className="w-[72px] h-[72px] shrink-0 rounded-xl object-cover"
+          />
+        ) : (
+          <div className="w-[72px] h-[72px] shrink-0 rounded-xl bg-gray-100" />
+        )}
+
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-base font-bold text-navy-900">
@@ -64,20 +68,12 @@ export default function CoursePlaceDetail({
               {place.category}
             </span>
           </div>
-          <p className="mt-1 truncate text-sm text-gray-500">
-            {place.description}
-          </p>
-          <div className="mt-1.5 flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold text-navy-900">
-              {place.rating}
-            </span>
-            <span className="text-xs text-gray-400">
-              ({place.reviewCount.toLocaleString()})
-            </span>
-          </div>
+          {place.description && (
+            <p className="mt-1 truncate text-sm text-gray-500">
+              {place.description}
+            </p>
+          )}
         </div>
-
       </div>
     </div>
   );

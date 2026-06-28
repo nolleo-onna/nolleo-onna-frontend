@@ -18,6 +18,7 @@ declare global {
       constructor(container: HTMLElement, options: { center: LatLng; level: number });
       setBounds(bounds: LatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number): void;
       panTo(latlng: LatLng): void;
+      setCenter(latlng: LatLng): void;
       getLevel(): number;
       setLevel(level: number): void;
     }

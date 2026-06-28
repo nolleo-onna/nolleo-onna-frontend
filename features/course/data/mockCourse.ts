@@ -1,13 +1,14 @@
 export interface CoursePlace {
   id: number;
   name: string;
-  category: "관광명소" | "음식점" | "카페" | "쇼핑" | "술집/바";
+  category: string;  // union → string (API category가 FD, VE 등 자유 문자열)
   description: string;
   lat: number;
   lng: number;
   rating: number;
   reviewCount: number;
   imageUrl: string;
+  originalId?: string;  // SpotDetailModal 연동용
 }
 
 export interface CourseDay {

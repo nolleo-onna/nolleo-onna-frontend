@@ -13,11 +13,37 @@ interface SpotMapProps {
 }
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
-const DEFAULT_ZOOM = 8;
+const CLUSTER_ZOOM_THRESHOLD = 7; // 이 레벨 이하(축소)면 클러스터, 초과(확대)면 개별 마커
+
+// 구별 클러스터 정의
+const DISTRICT_CLUSTERS: {
+  name: string;
+  lat: number;
+  lng: number;
+  color: string;
+}[] = [
+  { name: "해운대구", lat: 35.1631, lng: 129.1635, color: "#4F86F7" },
+  { name: "수영구",   lat: 35.1453, lng: 129.1133, color: "#7C6FF7" },
+  { name: "남구",     lat: 35.1367, lng: 129.0844, color: "#F76F6F" },
+  { name: "동구",     lat: 35.1296, lng: 129.0456, color: "#F7A94F" },
+  { name: "중구",     lat: 35.1059, lng: 129.0325, color: "#F76FA9" },
+  { name: "서구",     lat: 35.0977, lng: 129.0241, color: "#4FC5F7" },
+  { name: "사하구",   lat: 35.1045, lng: 128.9745, color: "#6FF7A0" },
+  { name: "강서구",   lat: 35.2121, lng: 128.9803, color: "#F7E04F" },
+  { name: "북구",     lat: 35.1974, lng: 128.9904, color: "#A04FF7" },
+  { name: "사상구",   lat: 35.1524, lng: 128.9921, color: "#F7974F" },
+  { name: "부산진구", lat: 35.1630, lng: 129.0530, color: "#4FF7D4" },
+  { name: "동래구",   lat: 35.1996, lng: 129.0837, color: "#F74F4F" },
+  { name: "연제구",   lat: 35.1762, lng: 129.0806, color: "#4FF779" },
+  { name: "금정구",   lat: 35.2429, lng: 129.0927, color: "#F7C84F" },
+  { name: "기장군",   lat: 35.2446, lng: 129.2224, color: "#4F97F7" },
+  { name: "영도구",   lat: 35.0912, lng: 129.0706, color: "#F74FAA" },
+];
 
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const clusterOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
 
@@ -29,7 +55,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       kakao.maps.load(() => {
         const map = new kakao.maps.Map(mapRef.current!, {
           center: new kakao.maps.LatLng(BUSAN_CENTER.lat, BUSAN_CENTER.lng),
-          level: DEFAULT_ZOOM,
+          level: 8,
         });
         (mapInstanceRef as React.MutableRefObject<kakao.maps.Map | null>).current = map;
       });
@@ -50,14 +76,71 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     }
   }, [mapInstanceRef]);
 
-  // 마커 렌더링
-  useEffect(() => {
-    if (!mapInstanceRef.current || markers.length === 0) return;
+  // 클러스터 오버레이 그리기
+  const renderClusters = (map: kakao.maps.Map, spots: SpotMarker[]) => {
+    clusterOverlaysRef.current.forEach((o) => o.setMap(null));
+    clusterOverlaysRef.current = [];
 
+    DISTRICT_CLUSTERS.forEach((district) => {
+      // 해당 구 스팟 수 계산 (lDongSignguCd 없으면 이름 매칭 생략하고 전체 표시)
+      const count = spots.length > 0
+        ? Math.floor(spots.length / DISTRICT_CLUSTERS.length) // 임시: 균등 분배
+        : 0;
+
+      const content = document.createElement("div");
+      content.innerHTML = `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          user-select: none;
+        ">
+          <div style="
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: ${district.color};
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 1.2;
+          ">
+            <span style="font-size: 11px; font-weight: 600; opacity: 0.9;">${district.name.replace("구","").replace("군","")}</span>
+            <span style="font-size: 12px;">${count}</span>
+          </div>
+        </div>
+      `;
+
+      content.addEventListener("click", () => {
+        // 클릭 시 해당 구로 줌인
+        map.setCenter(new kakao.maps.LatLng(district.lat, district.lng));
+        map.setLevel(5);
+      });
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(district.lat, district.lng),
+        content,
+        yAnchor: 0.5,
+        zIndex: 1,
+      });
+      overlay.setMap(map);
+      clusterOverlaysRef.current.push(overlay);
+    });
+  };
+
+  // 개별 마커 그리기
+  const renderMarkers = (map: kakao.maps.Map, spots: SpotMarker[]) => {
     overlaysRef.current.forEach((o) => o.setMap(null));
     overlaysRef.current = [];
 
-    markers.forEach((spot: SpotMarker) => {
+    spots.forEach((spot: SpotMarker) => {
       const isSelected = spot.contentId === selectedId;
       const content = document.createElement("div");
 
@@ -70,7 +153,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         ">
           <svg width="${isSelected ? "24" : "20"}" height="${isSelected ? "30" : "24"}" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 14 10 14s10-6.5 10-14C20 4.5 15.5 0 10 0z"
-              fill="${isSelected ? "#ff4d8f" : "#6b90f4"}"/>
+              fill="${isSelected ? "#ff4d8f" : "#0d3080"}"/>
             <circle cx="10" cy="10" r="4" fill="white"/>
           </svg>
         </div>
@@ -83,10 +166,37 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         content,
         yAnchor: 0.5,
       });
-      overlay.setMap(mapInstanceRef.current!);
+      overlay.setMap(map);
       overlaysRef.current.push(overlay);
     });
-  }, [markers, selectedId, onSelectMarker, mapInstanceRef]);
+  };
+
+  // 줌 레벨에 따라 클러스터 / 개별 마커 전환
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || markers.length === 0) return;
+
+    const update = () => {
+      const level = map.getLevel();
+      if (level >= CLUSTER_ZOOM_THRESHOLD) {
+        // 축소 → 클러스터
+        overlaysRef.current.forEach((o) => o.setMap(null));
+        overlaysRef.current = [];
+        renderClusters(map, markers);
+      } else {
+        // 확대 → 개별 마커
+        clusterOverlaysRef.current.forEach((o) => o.setMap(null));
+        clusterOverlaysRef.current = [];
+        renderMarkers(map, markers);
+      }
+    };
+
+    update(); // 초기 실행
+
+    kakao.maps.event.addListener(map, "zoom_changed", update);
+    return () => kakao.maps.event.removeListener(map, "zoom_changed", update);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markers, selectedId, mapInstanceRef]);
 
   return (
     <section className="relative flex-1">
