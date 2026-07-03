@@ -11,6 +11,6 @@ export const useSpotMarkers = () => {
   return useQuery({
     queryKey: spotKeys.markers(),
     queryFn: fetchSpotMarkers,
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: 1000 * 60 * 5,
   });
 };

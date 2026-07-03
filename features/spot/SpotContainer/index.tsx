@@ -5,29 +5,54 @@ import SpotFilterSidebar from "../SpotFilterSidebar";
 import SpotMap from "../SpotMap";
 import SpotListSidebar from "../SpotListSidebar";
 import SpotDetailModal from "../components/SpotDetailModal";
+import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 
 export default function SpotContainer() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [modalId, setModalId] = useState<string | null>(null);
+  const [modalInfo, setModalInfo] = useState<{
+    id: string;
+    placeType: "SPOT" | "FOOD";
+    mapPlaceId: number;
+  } | null>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
 
-  const handleSelectSpot = (id: string, lat: number, lng: number) => {
+  const handleSelectSpot = (
+    id: string,
+    lat: number,
+    lng: number,
+    placeType: "SPOT" | "FOOD",
+    mapPlaceId: number
+  ) => {
     setSelectedId(id);
-    setModalId(id); // 모달 열기
+    setModalInfo({ id, placeType, mapPlaceId });
     if (mapRef.current) {
       mapRef.current.panTo(new kakao.maps.LatLng(lat, lng));
       mapRef.current.setLevel(4);
     }
   };
 
+  const handleSelectRegion = (region: string | null) => {
+    if (!mapRef.current) return;
+    if (!region) {
+      // 전체 선택 시 부산 전체로 줌아웃
+      mapRef.current.setCenter(new kakao.maps.LatLng(35.1796, 129.0756));
+      mapRef.current.setLevel(8);
+      return;
+    }
+    const coords = DISTRICT_COORDS[region];
+    if (!coords) return;
+    mapRef.current.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
+    mapRef.current.setLevel(5);
+  };
+
   return (
     <main className="flex h-[calc(100vh-64px)] mt-16 w-full overflow-hidden">
-      <SpotFilterSidebar />
+      <SpotFilterSidebar onSelectRegion={handleSelectRegion} />
       <SpotMap
         selectedId={selectedId}
         onSelectMarker={(id) => {
           setSelectedId(id);
-          setModalId(id); // 지도 핀 클릭도 모달 열기
+          setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 });
         }}
         mapInstanceRef={mapRef}
       />
@@ -35,11 +60,11 @@ export default function SpotContainer() {
         selectedId={selectedId}
         onSelectSpot={handleSelectSpot}
       />
-
-      {/* 상세 모달 */}
       <SpotDetailModal
-        contentId={modalId}
-        onClose={() => setModalId(null)}
+        contentId={modalInfo?.id ?? null}
+        placeType={modalInfo?.placeType ?? null}
+        mapPlaceId={modalInfo?.mapPlaceId ?? null}
+        onClose={() => setModalInfo(null)}
       />
     </main>
   );
