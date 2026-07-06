@@ -20,8 +20,8 @@ export default function CrowdView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filtered = (data ?? []).filter((spot) => {
-    const matchFilter = filter === "전체" || getCrowdLevel(spot.cnctrRate) === filter;
-    const matchSearch = spot.tatsNm.includes(search) || spot.signguNm.includes(search);
+    const matchFilter = filter === "전체" || getCrowdLevel(spot.rate) === filter;
+    const matchSearch = spot.name.includes(search) || spot.district.includes(search);
     return matchFilter && matchSearch;
   });
 
@@ -71,21 +71,21 @@ export default function CrowdView() {
             </div>
           ) : (
             filtered.map((spot, index) => {
-              const level = getCrowdLevel(spot.cnctrRate);
+              const level = getCrowdLevel(spot.rate);
               const style = CROWD_STYLE[level];
-              const isSelected = selectedId === `${spot.tatsNm}-${index}`;
+              const isSelected = selectedId === `${spot.name}-${index}`;
               return (
                 <button
-                  key={`${spot.tatsNm}-${index}`}
-                  onClick={() => setSelectedId(`${spot.tatsNm}-${index}`)}
+                  key={`${spot.name}-${index}`}
+                  onClick={() => setSelectedId(`${spot.name}-${index}`)}
                   className={`w-full flex items-center justify-between px-5 py-4 border-b border-gray-50 text-left transition-colors ${
                     isSelected ? "bg-pink-50" : "hover:bg-gray-50"
                   }`}
                 >
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{spot.tatsNm}</p>
+                    <p className="text-sm font-semibold text-gray-900">{spot.name}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {spot.signguNm} · 집중률 {spot.cnctrRate}%
+                      {spot.district} · 집중률 {spot.rate}%
                     </p>
                   </div>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text}`}>

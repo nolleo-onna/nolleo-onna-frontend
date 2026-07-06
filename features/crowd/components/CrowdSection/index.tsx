@@ -37,11 +37,11 @@ export default function CrowdSection() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {top4.map((spot, i) => {
-            const level = getCrowdLevel(spot.cnctrRate);
+            const level = getCrowdLevel(spot.rate);
             const style = CROWD_STYLE[level];
             return (
-              <div 
-                key={`${spot.tatsNm}-${i}`}
+              <div
+                key={`${spot.name}-${i}`}
                 onClick={() => router.push("/crowd")}
                 className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group bg-gray-200"
               >
@@ -57,8 +57,8 @@ export default function CrowdSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-[1]" />
                 {/* 텍스트 */}
                 <div className="absolute bottom-3 left-3 z-10">
-                  <p className="text-white font-bold text-sm">{spot.tatsNm}</p>
-                  <p className="text-white/70 text-xs">{spot.signguNm} · 집중률 {spot.cnctrRate}%</p>
+                  <p className="text-white font-bold text-sm">{spot.name}</p>
+                  <p className="text-white/70 text-xs">{spot.district} · 집중률 {spot.rate}%</p>
                 </div>
               </div>
             );
