@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://api-dev.nolleo-onna.site
+        NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY}
+    container_name: onna-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
