@@ -1,4 +1,14 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 import SpotCard from "@/components/ui/Card/SpotCard";
+import { useCongestion } from "@/features/home/hooks/useCongestion";
+import {
+  getTopCongested,
+  getLeastCongested,
+  type CongestionSpot,
+} from "@/features/home/utils/congestion";
 
 type CrowdType = "crowd" | "relaxed";
 
@@ -32,9 +42,35 @@ type Props = {
   spots?: Spot[];
 };
 
+// 백엔드가 이미지를 주지 않을 때 사용할 기본 이미지
+const DEFAULT_SPOT_IMAGE = "/images/default-spot.svg";
+
+// 혼잡도 데이터를 카드(Spot) 형태로 변환.
+// overlay 카드는 이미지/이름/위치/혼잡도만 표시하므로 rating/reviewCount/price는 표시에 쓰이지 않는다.
+function toSpots(list: CongestionSpot[]): Spot[] {
+  return list.map((s, index) => ({
+    id: index + 1,
+    imageSrc: s.imageUrl ?? DEFAULT_SPOT_IMAGE,
+    name: s.name,
+    location: s.district ? `${s.district} · 집중률 ${s.rate}%` : `집중률 ${s.rate}%`,
+    rating: 0,
+    reviewCount: "",
+    crowdStatus: s.level,
+    price: null,
+  }));
+}
+
 export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
+  const router = useRouter();
   const isCrowd = type === "crowd";
-  const data = spots ?? (isCrowd ? mockCrowdSpots : mockRelaxedSpots);
+
+  // 혼잡도 실데이터: 붐빌 곳=집중률 상위 4, 여유로운 곳=하위 4 (prop > 실데이터 > mock)
+  const { data: congestion } = useCongestion();
+  const realSpots = congestion?.length
+    ? toSpots(isCrowd ? getTopCongested(congestion, 4) : getLeastCongested(congestion, 4))
+    : undefined;
+
+  const data = spots ?? realSpots ?? (isCrowd ? mockCrowdSpots : mockRelaxedSpots);
 
   return (
     <section className="py-6 md:py-10">
@@ -48,11 +84,14 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
             {isCrowd ? "사람 많을 곳 미리 알기" : "붐빔 피해서 한가하게"}
           </h2>
           <p className="text-xs text-gray-400">
-            {isCrowd ? "관광공사 혼잡도 예측 · 5월 3일 기준" : "사람 많은 곳이 부담스럽다면"}
+            {isCrowd ? "관광공사 혼잡도 예측 · 오늘 기준" : "사람 많은 곳이 부담스럽다면"}
           </p>
         </div>
         {isCrowd && (
-          <button className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5">
+          <button
+            onClick={() => router.push("/crowd")}
+            className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5"
+          >
             전체보기
           </button>
         )}
@@ -71,6 +110,7 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
             reviewCount={spot.reviewCount}
             crowdStatus={spot.crowdStatus}
             price={spot.price}
+            onClick={() => router.push("/crowd")}
             topLeftSlot={
               isCrowd ? (
                 <span className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-900 text-white text-xs font-bold">

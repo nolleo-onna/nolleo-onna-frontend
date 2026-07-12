@@ -1,44 +1,73 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
-import { useSpotMarkers } from "../hooks/useSpotMarkers";
-import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
-import type { SpotMarker } from "@/types/spot";
+import { useMapPlaces } from "../hooks/useMapPlaces";
+import type { MapPlace } from "@/types/map";
 
 interface SpotListSidebarProps {
   selectedId: string | null;
-  onSelectSpot: (id: string, lat: number, lng: number) => void;
+  onSelectSpot: (
+    id: string,
+    lat: number,
+    lng: number,
+    placeType: "SPOT" | "FOOD",
+    mapPlaceId: number
+  ) => void;
 }
 
 const CATEGORY_LABEL: Record<string, { label: string; emoji: string }> = {
   VE: { label: "관광·문화", emoji: "🏛️" },
-  HS: { label: "역사·종교", emoji: "⛩️" },
-  EX: { label: "체험·레저", emoji: "🎢" },
+  HS: { label: "역사·문화유산", emoji: "🏯" },
+  EX: { label: "체험·액티비티", emoji: "🎢" },
   NA: { label: "자연·해변", emoji: "🌊" },
-  LS: { label: "스포츠", emoji: "🏄" },
-  AC: { label: "캠핑", emoji: "🏕️" },
+  LS: { label: "레저스포츠", emoji: "🏄" },
   FD: { label: "맛집·카페", emoji: "🍽️" },
 };
 
-
-
 export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSidebarProps) {
-  const spots = useFilteredMarkers();
-  const { isLoading, isError } = useSpotMarkers();
+  const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
   const selectedRef = useRef<HTMLLIElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
+
+  const allPlaces = useMemo(() => {
+    return data?.pages.flatMap((page) => page.content) ?? [];
+  }, [data]);
+
+  const places = useMemo(() => {
+    let list = allPlaces;
+    if (freeOnly) list = list.filter((p) => p.free);
+    if (search.trim()) {
+      list = list.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    return list;
+  }, [allPlaces, freeOnly, search]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedId]);
 
-  const filtered = useMemo(() => {
-  if (!search.trim()) return spots;
-  return spots.filter((s) =>
-    s.title.toLowerCase().includes(search.toLowerCase())
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
   );
-}, [spots, search]);
+
+  useEffect(() => {
+    const el = bottomRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.5 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  const totalCount = data?.pages[0]?.totalElements ?? 0;
 
   if (isLoading) {
     return (
@@ -65,16 +94,12 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
 
   return (
     <aside className="w-[360px] shrink-0 flex flex-col border-l border-gray-100 bg-gray-50 overflow-hidden">
-      {/* 헤더 */}
       <div className="bg-white border-b border-gray-100 px-4 pt-3 pb-3">
-        {/* 타이틀 + 드롭다운 */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-900">
-            총 <span className="text-navy-400 font-bold">{filtered.length}</span>개의 스팟
+            총 <span className="text-navy-400 font-bold">{totalCount}</span>개의 스팟
           </h3>
         </div>
-
-        {/* 검색창 */}
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -95,66 +120,84 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
         </div>
       </div>
 
-      {/* 리스트 */}
       <ul className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-        {filtered.length === 0 ? (
+        {places.length === 0 ? (
           <li className="flex flex-col items-center justify-center py-16 text-gray-400">
             <span className="text-3xl mb-2">🔍</span>
             <p className="text-sm">검색 결과가 없어요</p>
           </li>
         ) : (
-          filtered.map((spot: SpotMarker) => {
-            const isSelected = spot.contentId === selectedId;
-            const category = CATEGORY_LABEL[spot.lclsSystm1] ?? { label: spot.lclsSystm1, emoji: "📍" };
+          <>
+            {places.map((place: MapPlace) => {
+              const isSelected = place.originalId === selectedId;
+              const category = CATEGORY_LABEL[place.category] ?? { label: place.category, emoji: "📍" };
 
-            return (
-              <li
-                key={spot.contentId}
-                ref={isSelected ? selectedRef : null}
-                onClick={() => onSelectSpot(spot.contentId, spot.mapY, spot.mapX)}
-                className={`
-                  flex gap-3 cursor-pointer rounded-xl p-3 transition-all
-                  ${isSelected
-                    ? "bg-white ring-2 ring-navy-400 shadow-sm"
-                    : "bg-white hover:shadow-sm hover:ring-1 hover:ring-gray-200"
-                  }
-                `}
-              >
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
-                  {spot.firstImage ? (
-                    <img
-                      src={spot.firstImage}
-                      alt={spot.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-2xl">
-                      {category.emoji}
+              return (
+                <li
+                  key={place.id}
+                  ref={isSelected ? selectedRef : null}
+                  onClick={() => onSelectSpot(
+                    place.originalId,
+                    place.latitude,
+                    place.longitude,
+                    place.placeType,
+                    place.id
+                  )}
+                  className={`
+                    flex gap-3 cursor-pointer rounded-xl p-3 transition-all
+                    ${isSelected
+                      ? "bg-white ring-2 ring-navy-400 shadow-sm"
+                      : "bg-white hover:shadow-sm hover:ring-1 hover:ring-gray-200"
+                    }
+                  `}
+                >
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+                    {place.imageUrl ? (
+                      <img
+                        src={place.imageUrl}
+                        alt={place.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-100 text-2xl">
+                        {category.emoji}
+                      </div>
+                    )}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-navy-400/10 rounded-lg" />
+                    )}
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                    <p className={`truncate text-sm font-semibold ${isSelected ? "text-navy-600" : "text-gray-900"}`}>
+                      {place.name}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs">{category.emoji}</span>
+                      <span className="text-xs text-gray-500">{category.label}</span>
+                    </div>
+                    {place.avgRating > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-yellow-400">★</span>
+                        <span className="text-xs text-gray-500">{place.avgRating.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {isSelected && (
+                    <div className="flex items-center shrink-0">
+                      <div className="h-2 w-2 rounded-full bg-navy-400" />
                     </div>
                   )}
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-navy-400/10 rounded-lg" />
-                  )}
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                  <p className={`truncate text-sm font-semibold ${isSelected ? "text-navy-600" : "text-gray-900"}`}>
-                    {spot.title}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs">{category.emoji}</span>
-                    <span className="text-xs text-gray-500">{category.label}</span>
-                  </div>
-                </div>
-
-                {isSelected && (
-                  <div className="flex items-center shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-navy-400" />
-                  </div>
-                )}
-              </li>
-            );
-          })
+                </li>
+              );
+            })}
+            <div ref={bottomRef} className="py-2 flex justify-center">
+              {isFetchingNextPage && (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-navy-400 border-t-transparent" />
+              )}
+            </div>
+          </>
         )}
       </ul>
     </aside>

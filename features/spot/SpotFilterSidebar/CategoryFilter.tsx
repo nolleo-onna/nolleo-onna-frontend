@@ -5,11 +5,12 @@ import { useCallback } from "react";
 import { Check } from "lucide-react";
 
 export const CATEGORIES = [
-  { id: "food",    label: "맛집 · 카페",  emoji: "🍽️", codes: ["FD01", "FD02", "FD03", "FD05"] },
-  { id: "nature",  label: "자연 · 해변",  emoji: "🌊", codes: ["NA01", "NA02", "NA03", "NA04", "NA05"] },
-  { id: "culture", label: "관광 · 문화",  emoji: "🏛️", codes: ["VE01", "VE02", "VE03", "VE04", "VE05", "VE06", "VE07", "VE09", "VE10", "VE12", "HS01", "HS02", "HS03"] },
-  { id: "leisure", label: "체험 · 레저",  emoji: "🎢", codes: ["EX02", "EX03", "EX05", "EX06", "EX07", "LS01", "LS02", "LS04"] },
-  { id: "camping", label: "캠핑",         emoji: "🏕️", codes: ["AC05"] },
+  { id: "FD", label: "맛집 · 카페",  emoji: "🍽️" },
+  { id: "NA", label: "자연 · 해변",  emoji: "🌊" },
+  { id: "VE", label: "관광 · 문화",  emoji: "🏛️" },
+  { id: "HS", label: "역사 · 문화유산", emoji: "🏯" },
+  { id: "EX", label: "체험 · 액티비티", emoji: "🎢" },
+  { id: "LS", label: "레저스포츠",   emoji: "🏄" },
 ];
 
 export default function CategoryFilter() {
