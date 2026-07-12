@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, MapPin, Wallet, Clock, Users, Search } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
@@ -37,6 +37,27 @@ const COMPANION_MAP: Record<string, CourseGenerateRequest["companion"]> = {
   "단체": "FRIENDS",
 };
 
+// 홈 <-> 스팟 페이지를 오가도 검색 조건이 유지되도록 sessionStorage에 저장
+const STORAGE_KEY = "searchbar-selection";
+
+type StoredSelection = {
+  activeTab: Tab;
+  selectedRegion: string;
+  selectedBudget: string;
+  selectedTime: string;
+  selectedCompanion: string;
+  hasInteracted: boolean;
+};
+
+const DEFAULT_SELECTION: StoredSelection = {
+  activeTab: "course",
+  selectedRegion: "광안리",
+  selectedBudget: "5만원",
+  selectedTime: "반나절",
+  selectedCompanion: "연인",
+  hasInteracted: false,
+};
+
 function Chevron({ isOpen }: { isOpen: boolean }) {
   return isOpen ? (
     <ChevronUp className="w-3 h-3 inline-block ml-0.5" />
@@ -49,14 +70,56 @@ export default function SearchBar() {
   const router = useRouter();
   const { mutate, isPending } = useCourseGenerate();
 
-  const [activeTab, setActiveTab] = useState<Tab>("course");
+  const [activeTab, setActiveTab] = useState<Tab>(DEFAULT_SELECTION.activeTab);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState("광안리");
-  const [selectedBudget, setSelectedBudget] = useState("5만원");
-  const [selectedTime, setSelectedTime] = useState("반나절");
-  const [selectedCompanion, setSelectedCompanion] = useState("연인");
+  const [selectedRegion, setSelectedRegion] = useState(DEFAULT_SELECTION.selectedRegion);
+  const [selectedBudget, setSelectedBudget] = useState(DEFAULT_SELECTION.selectedBudget);
+  const [selectedTime, setSelectedTime] = useState(DEFAULT_SELECTION.selectedTime);
+  const [selectedCompanion, setSelectedCompanion] = useState(DEFAULT_SELECTION.selectedCompanion);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(DEFAULT_SELECTION.hasInteracted);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // 최초 마운트 시 sessionStorage에 저장된 값이 있으면 복원
+  // (SSR과의 hydration mismatch를 피하기 위해 useEffect에서 처리)
+  useEffect(() => {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<StoredSelection>;
+      /* eslint-disable react-hooks/set-state-in-effect */
+      if (saved.activeTab) setActiveTab(saved.activeTab);
+      if (saved.selectedRegion) setSelectedRegion(saved.selectedRegion);
+      if (saved.selectedBudget) setSelectedBudget(saved.selectedBudget);
+      if (saved.selectedTime) setSelectedTime(saved.selectedTime);
+      if (saved.selectedCompanion) setSelectedCompanion(saved.selectedCompanion);
+      if (saved.hasInteracted) setHasInteracted(saved.hasInteracted);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  } catch {
+    // sessionStorage 접근 실패 시 기본값 그대로 사용
+  } finally {
+    setIsHydrated(true);
+  }
+}, []);
+
+  // 선택값이 바뀔 때마다 sessionStorage에 저장 (복원 이전에는 저장하지 않음)
+  useEffect(() => {
+    if (!isHydrated) return;
+    const toSave: StoredSelection = {
+      activeTab,
+      selectedRegion,
+      selectedBudget,
+      selectedTime,
+      selectedCompanion,
+      hasInteracted,
+    };
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch {
+      // 저장 실패는 무시 (사파리 시크릿 모드 등)
+    }
+  }, [isHydrated, activeTab, selectedRegion, selectedBudget, selectedTime, selectedCompanion, hasInteracted]);
 
   const handleTabClick = (tab: Tab) => {
     if (tab === "spot") {
