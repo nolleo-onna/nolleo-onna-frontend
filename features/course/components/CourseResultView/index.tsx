@@ -24,6 +24,7 @@ function toPlace(item: CourseItemResponse): CoursePlace {
     rating: 0,
     reviewCount: 0,
     originalId: item.originalId,
+    mapPlaceId: item.serialNum,
   };
 }
 
@@ -56,6 +57,8 @@ export default function CourseResultView() {
   const [selectedType, setSelectedType] = useState<CourseResponse["courseType"]>("CULTURE");
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
+  const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
+  const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
 
   if (isLoading || !data) {
     return (
@@ -86,6 +89,21 @@ export default function CourseResultView() {
   const handleSelectType = (type: CourseResponse["courseType"]) => {
     setSelectedType(type);
     setSelectedPlaceId(null);
+  };
+
+  const handlePlaceClick = () => {
+    if (!selectedPlace) return;
+    // CourseItemResponse의 placeType을 활용하려면 place에 저장해야 하나,
+    // 현재 CoursePlace에 없으므로 일단 SPOT으로 고정
+    setModalContentId(selectedPlace.originalId ?? null);
+    setModalPlaceType("SPOT");
+    setModalMapPlaceId(selectedPlace.mapPlaceId ?? null);
+  };
+
+  const handleModalClose = () => {
+    setModalContentId(null);
+    setModalPlaceType(null);
+    setModalMapPlaceId(null);
   };
 
   return (
@@ -129,7 +147,7 @@ export default function CourseResultView() {
                 selectedDay={1}
                 place={selectedPlace}
                 onSelectDay={() => {}}
-                onPlaceClick={() => setModalContentId(selectedPlace.originalId ?? null)}
+                onPlaceClick={handlePlaceClick}
               />
             )}
           </main>
@@ -138,7 +156,9 @@ export default function CourseResultView() {
 
       <SpotDetailModal
         contentId={modalContentId}
-        onClose={() => setModalContentId(null)}
+        placeType={modalPlaceType}
+        mapPlaceId={modalMapPlaceId}
+        onClose={handleModalClose}
       />
     </>
   );

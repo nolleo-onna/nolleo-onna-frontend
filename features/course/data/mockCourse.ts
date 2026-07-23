@@ -9,6 +9,7 @@ export interface CoursePlace {
   reviewCount: number;
   imageUrl: string;
   originalId?: string;  // SpotDetailModal 연동용
+  mapPlaceId?: number;
 }
 
 export interface CourseDay {
