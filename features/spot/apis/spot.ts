@@ -1,9 +1,9 @@
 import { clientFetch } from "@/libs/clientFetch";
-import type { ApiResponse, SpotDetail, SpotMarker, FoodDetail } from "@/types/spot";
+import type { ApiResponse, SpotDetail, FoodDetail, MapMarker } from "@/types/spot";
 
-export const fetchSpotMarkers = async (): Promise<SpotMarker[]> => {
-  const res = await clientFetch("/api/v1/spots/markers");
-  const json: ApiResponse<SpotMarker[]> = await res.json();
+export const fetchSpotMarkers = async (): Promise<MapMarker[]> => {
+  const res = await clientFetch("/api/v1/map/markers");
+  const json: ApiResponse<MapMarker[]> = await res.json();
   return json.data ?? [];
 };
 
@@ -29,4 +29,12 @@ export const postReview = async (mapPlaceId: number, rating: number): Promise<vo
     body: JSON.stringify({ mapPlaceId, rating }),
   });
   if (!res.ok) throw new Error("Failed to post review");
+};
+
+export const patchReview = async (mapPlaceId: number, rating: number): Promise<void> => {
+  const res = await clientFetch(`/api/v1/reviews/${mapPlaceId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ rating }),
+  });
+  if (!res.ok) throw new Error("Failed to patch review");
 };

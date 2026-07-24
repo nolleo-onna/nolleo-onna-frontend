@@ -1,9 +1,9 @@
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { useSpotMarkers } from "./useSpotMarkers";
-import type { SpotMarker } from "@/types/spot";
+import type { MapMarker } from "@/types/spot";
 
-export function useFilteredMarkers(): SpotMarker[] {
+export function useFilteredMarkers(): MapMarker[] {
   const { data: markers = [] } = useSpotMarkers();
   const searchParams = useSearchParams();
 
@@ -13,7 +13,7 @@ export function useFilteredMarkers(): SpotMarker[] {
     if (selectedCategories.length === 0) return markers;
 
     return markers.filter((m) =>
-      selectedCategories.includes(m.lclsSystm1)
+      selectedCategories.includes(m.category)  // lclsSystm1 → category
     );
   }, [markers, selectedCategories]);
 }

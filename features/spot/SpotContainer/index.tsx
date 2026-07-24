@@ -52,7 +52,7 @@ export default function SpotContainer() {
         selectedId={selectedId}
         onSelectMarker={(id) => {
           setSelectedId(id);
-          setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 });
+          setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
         }}
         mapInstanceRef={mapRef}
       />

@@ -20,11 +20,14 @@ export const useMapPlaces = () => {
   const district = regions.length === 1 ? regions[0] : undefined;
   const category = categories.length === 1 ? categories[0] : undefined;
 
+  // 검색어 있으면 전체 로드
+
+
   const params: MapPlacesParams = {
     ...(district && { district }),
     ...(category && { category }),
     ...(maxBudget !== undefined && maxBudget > 0 && { maxBudget }),
-    size: 20,
+    size: 9999,
   };
 
   const query = useInfiniteQuery({
