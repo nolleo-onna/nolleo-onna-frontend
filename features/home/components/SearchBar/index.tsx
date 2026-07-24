@@ -10,7 +10,7 @@ import type { CourseGenerateRequest } from "@/types/course";
 type Tab = "course" | "spot" | "ai";
 
 const BUDGET_OPTIONS = ["무지출", "1만원", "3만원", "5만원", "제한 없음"];
-const TIME_OPTIONS = ["오전", "오후", "저녁", "하루"];
+const TIME_OPTIONS = ["오전", "오후", "반나절"];
 const COMPANION_OPTIONS = ["혼자", "연인", "친구", "가족", "단체"];
 
 const BUDGET_MAP: Record<string, number> = {

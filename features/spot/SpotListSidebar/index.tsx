@@ -2,6 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
+import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
 import type { MapPlace } from "@/types/map";
 
@@ -26,10 +27,10 @@ const CATEGORY_LABEL: Record<string, { label: string; emoji: string }> = {
 };
 
 export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSidebarProps) {
-  const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
   const selectedRef = useRef<HTMLLIElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState("");
+  const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
 
   const allPlaces = useMemo(() => {
     return data?.pages.flatMap((page) => page.content) ?? [];
@@ -153,10 +154,11 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                     {place.imageUrl ? (
-                      <img
+                      <Image
                         src={place.imageUrl}
                         alt={place.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gray-100 text-2xl">

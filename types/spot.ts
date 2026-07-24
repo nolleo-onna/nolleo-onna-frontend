@@ -86,3 +86,13 @@ export interface FoodDetail {
   mapY: number;
   menus: FoodMenu[];
 }
+
+export interface MapMarker {
+  type: "SPOT" | "FOOD";
+  id: string;
+  title: string;
+  mapX: number;
+  mapY: number;
+  firstImage: string | null;
+  category: string;
+}

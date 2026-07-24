@@ -5,9 +5,8 @@ import { X, MapPin, Phone, Clock, ParkingSquare, ExternalLink } from "lucide-rea
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
-import { fetchFoodDetail, postReview } from "@/features/spot/apis/spot";
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
-
+import { fetchFoodDetail, postReview, patchReview } from "@/features/spot/apis/spot";
 type Props = {
   contentId: string | null;
   placeType: "SPOT" | "FOOD" | null;
@@ -36,14 +35,17 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (rating: number) => postReview(mapPlaceId, rating),
-    onSuccess: () => {
-      localStorage.setItem(storageKey, String(selected));
-      setSubmitted(true);
-      setEditing(false);
-      queryClient.invalidateQueries({ queryKey: mapPlaceKeys.all });
-    },
-  });
+  mutationFn: (rating: number) => {
+    const already = Number(localStorage.getItem(storageKey) ?? 0) > 0;
+    return already ? patchReview(mapPlaceId, rating) : postReview(mapPlaceId, rating);
+  },
+  onSuccess: () => {
+    localStorage.setItem(storageKey, String(selected));
+    setSubmitted(true);
+    setEditing(false);
+    queryClient.invalidateQueries({ queryKey: mapPlaceKeys.all });
+  },
+});
 
   const handleSubmit = () => {
     if (selected === 0) return;
@@ -212,7 +214,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                   {stripHtml(spotData.overview)}
                 </p>
               )}
-              {mapPlaceId && <StarRating mapPlaceId={mapPlaceId} />}
+              {mapPlaceId != null && mapPlaceId > 0 && <StarRating mapPlaceId={mapPlaceId} />}
               {spotData.homepage && (
                 <a
                   href={extractUrl(spotData.homepage)}

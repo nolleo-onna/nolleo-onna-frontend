@@ -2,12 +2,13 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 import CourseMap from "@/features/course/components/CourseMap";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
+import CourseRegenerateModal from "@/features/course/components/CourseRegenerateModal";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import type { CourseItemResponse, CourseResponse } from "@/features/course/hooks/useCourseResult";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
@@ -59,6 +60,7 @@ export default function CourseResultView() {
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
+  const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -93,8 +95,6 @@ export default function CourseResultView() {
 
   const handlePlaceClick = () => {
     if (!selectedPlace) return;
-    // CourseItemResponse의 placeType을 활용하려면 place에 저장해야 하나,
-    // 현재 CoursePlace에 없으므로 일단 SPOT으로 고정
     setModalContentId(selectedPlace.originalId ?? null);
     setModalPlaceType("SPOT");
     setModalMapPlaceId(selectedPlace.mapPlaceId ?? null);
@@ -110,7 +110,7 @@ export default function CourseResultView() {
     <>
       <div className="flex h-screen flex-col pt-16">
         {/* 코스 타입 탭 */}
-        <div className="flex gap-2 border-b border-gray-100 bg-white px-6 py-3">
+        <div className="flex items-center gap-2 border-b border-gray-100 bg-white px-6 py-3">
           {data.courses.map((c) => (
             <button
               key={c.courseType}
@@ -124,6 +124,14 @@ export default function CourseResultView() {
               {COURSE_TYPE_LABEL[c.courseType]}
             </button>
           ))}
+
+          <button
+            onClick={() => setIsRegenerateOpen(true)}
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-pink-300 px-4 py-1.5 text-sm font-semibold text-pink-400 hover:bg-pink-50 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            코스 재생성
+          </button>
         </div>
 
         {/* 사이드바 + 지도 */}
@@ -159,6 +167,11 @@ export default function CourseResultView() {
         placeType={modalPlaceType}
         mapPlaceId={modalMapPlaceId}
         onClose={handleModalClose}
+      />
+
+      <CourseRegenerateModal
+        isOpen={isRegenerateOpen}
+        onClose={() => setIsRegenerateOpen(false)}
       />
     </>
   );

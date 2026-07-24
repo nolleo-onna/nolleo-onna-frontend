@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useSpotMarkers } from "../hooks/useSpotMarkers";
 import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
-import type { SpotMarker } from "@/types/spot";
+import type { MapMarker } from "@/types/spot";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 
 interface SpotMapProps {
@@ -159,7 +159,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         </div>
       `;
 
-      content.addEventListener("click", () => onSelectMarker(spot.contentId));
+      content.addEventListener("click", () => onSelectMarker(spot.id));
 
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
