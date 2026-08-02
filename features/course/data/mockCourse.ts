@@ -10,6 +10,8 @@ export interface CoursePlace {
   imageUrl: string;
   originalId?: string;  // SpotDetailModal 연동용
   mapPlaceId?: number;
+  expectedCost?: number;
+  distanceFromPrevM?: number;
 }
 
 export interface CourseDay {
