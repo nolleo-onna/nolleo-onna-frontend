@@ -23,6 +23,8 @@ interface ChatResponse {
 interface UseAIChatReturn {
   messages: ChatMessage[];
   conversationId: string | null;
+  inputValue: string;
+  setInputValue: (v: string) => void;
   isLoading: boolean;
   isAwaitingConfirmation: boolean;
   completedPairId: string | null;
@@ -41,6 +43,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 export function useAIChat(): UseAIChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
   const [completedPairId, setCompletedPairId] = useState<string | null>(null);
@@ -52,12 +55,7 @@ export function useAIChat(): UseAIChatReturn {
 
   const addMessage = useCallback(
     (role: MessageRole, content: string, extra?: Partial<ChatMessage>) => {
-      const msg: ChatMessage = {
-        id: `${Date.now()}-${Math.random()}`,
-        role,
-        content,
-        ...extra,
-      };
+      const msg: ChatMessage = { id: `${Date.now()}-${Math.random()}`, role, content, ...extra };
       setMessages((prev) => [...prev, msg]);
       return msg;
     },
@@ -74,13 +72,11 @@ export function useAIChat(): UseAIChatReturn {
           setInputError(`메시지는 ${MAX_INPUT_LENGTH}자 이내로 입력해주세요.`);
           return;
         }
-
         const now = Date.now();
         if (now - lastSentAtRef.current < COOLDOWN_MS) {
           setInputError('조금 천천히 보내주세요 🙏');
           return;
         }
-
         if (trimmed === lastSentTextRef.current && trimmed !== '코스 생성 시작') {
           setInputError('방금 보낸 메시지와 같아요. 다른 내용을 입력해주세요.');
           return;
@@ -88,6 +84,7 @@ export function useAIChat(): UseAIChatReturn {
       }
 
       setInputError(null);
+      setInputValue('');
       lastSentTextRef.current = trimmed;
       lastSentAtRef.current = Date.now();
 
@@ -99,14 +96,10 @@ export function useAIChat(): UseAIChatReturn {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            message: trimmed,
-            conversationId: conversationId ?? null,
-          }),
+          body: JSON.stringify({ message: trimmed, conversationId: conversationId ?? null }),
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const json = await res.json();
         const data: ChatResponse = json.data ?? json;
 
@@ -114,28 +107,22 @@ export function useAIChat(): UseAIChatReturn {
 
         if (data.status === 'OFF_TOPIC') {
           offTopicStreakRef.current += 1;
-          const streak = offTopicStreakRef.current;
-          const reply =
-            streak >= MAX_OFF_TOPIC_STREAK
-              ? '여행 관련 이야기를 해주셔야 코스를 만들어드릴 수 있어요 😅\n예: "해운대 커플 코스 짜줘", "서면에서 5만원으로 놀고 싶어"'
-              : data.reply;
+          const reply = offTopicStreakRef.current >= MAX_OFF_TOPIC_STREAK
+            ? '여행 관련 이야기를 해주셔야 코스를 만들어드릴 수 있어요 😅\n예: "해운대 커플 코스 짜줘", "서면에서 5만원으로 놀고 싶어"'
+            : data.reply;
           addMessage('assistant', reply, { status: 'OFF_TOPIC' });
-
         } else if (data.status === 'LIMIT_EXCEEDED') {
           offTopicStreakRef.current = 0;
           addMessage('assistant', data.reply, { status: 'LIMIT_EXCEEDED' });
           setIsAwaitingConfirmation(false);
-
         } else if (data.status === 'COMPLETED' && data.pairId) {
           offTopicStreakRef.current = 0;
           setCompletedPairId(data.pairId);
           setIsAwaitingConfirmation(false);
           addMessage('assistant', data.reply, { status: 'COMPLETED', pairId: data.pairId });
-
         } else {
           offTopicStreakRef.current = 0;
-          const isConfirmationQuestion =
-            data.status === 'NEED_MORE_INFO' && data.reply.includes('코스 생성 시작');
+          const isConfirmationQuestion = data.status === 'NEED_MORE_INFO' && data.reply.includes('코스 생성 시작');
           setIsAwaitingConfirmation(isConfirmationQuestion);
           addMessage('assistant', data.reply, { status: data.status });
         }
@@ -158,6 +145,7 @@ export function useAIChat(): UseAIChatReturn {
   const reset = useCallback(() => {
     setMessages([]);
     setConversationId(null);
+    setInputValue('');
     setIsAwaitingConfirmation(false);
     setCompletedPairId(null);
     setInputError(null);
@@ -169,6 +157,8 @@ export function useAIChat(): UseAIChatReturn {
   return {
     messages,
     conversationId,
+    inputValue,
+    setInputValue,
     isLoading,
     isAwaitingConfirmation,
     completedPairId,
