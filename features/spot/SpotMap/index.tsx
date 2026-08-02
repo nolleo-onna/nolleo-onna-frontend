@@ -13,9 +13,8 @@ interface SpotMapProps {
 }
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
-const CLUSTER_ZOOM_THRESHOLD = 7; // 이 레벨 이하(축소)면 클러스터, 초과(확대)면 개별 마커
+const CLUSTER_ZOOM_THRESHOLD = 7;
 
-// 구별 클러스터 정의
 const DISTRICT_CLUSTERS: {
   name: string;
   lat: number;
@@ -47,7 +46,6 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
 
-  // 지도 초기화
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -77,14 +75,13 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   }, [mapInstanceRef]);
 
   // 클러스터 오버레이 그리기
-  const renderClusters = (map: kakao.maps.Map, spots: SpotMarker[]) => {
+  const renderClusters = (map: kakao.maps.Map, spots: MapMarker[]) => {
     clusterOverlaysRef.current.forEach((o) => o.setMap(null));
     clusterOverlaysRef.current = [];
 
     DISTRICT_CLUSTERS.forEach((district) => {
-      // 해당 구 스팟 수 계산 (lDongSignguCd 없으면 이름 매칭 생략하고 전체 표시)
       const count = spots.length > 0
-        ? Math.floor(spots.length / DISTRICT_CLUSTERS.length) // 임시: 균등 분배
+        ? Math.floor(spots.length / DISTRICT_CLUSTERS.length)
         : 0;
 
       const content = document.createElement("div");
@@ -119,7 +116,6 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       `;
 
       content.addEventListener("click", () => {
-        // 클릭 시 해당 구로 줌인
         map.setCenter(new kakao.maps.LatLng(district.lat, district.lng));
         map.setLevel(5);
       });
@@ -136,12 +132,12 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   };
 
   // 개별 마커 그리기
-  const renderMarkers = (map: kakao.maps.Map, spots: SpotMarker[]) => {
+  const renderMarkers = (map: kakao.maps.Map, spots: MapMarker[]) => {
     overlaysRef.current.forEach((o) => o.setMap(null));
     overlaysRef.current = [];
 
-    spots.forEach((spot: SpotMarker) => {
-      const isSelected = spot.contentId === selectedId;
+    spots.forEach((spot: MapMarker) => {
+      const isSelected = spot.id === selectedId;
       const content = document.createElement("div");
 
       content.innerHTML = `
@@ -171,7 +167,6 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     });
   };
 
-  // 줌 레벨에 따라 클러스터 / 개별 마커 전환
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || markers.length === 0) return;
@@ -179,19 +174,17 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const update = () => {
       const level = map.getLevel();
       if (level >= CLUSTER_ZOOM_THRESHOLD) {
-        // 축소 → 클러스터
         overlaysRef.current.forEach((o) => o.setMap(null));
         overlaysRef.current = [];
         renderClusters(map, markers);
       } else {
-        // 확대 → 개별 마커
         clusterOverlaysRef.current.forEach((o) => o.setMap(null));
         clusterOverlaysRef.current = [];
         renderMarkers(map, markers);
       }
     };
 
-    update(); // 초기 실행
+    update();
 
     kakao.maps.event.addListener(map, "zoom_changed", update);
     return () => kakao.maps.event.removeListener(map, "zoom_changed", update);
