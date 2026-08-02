@@ -2,13 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
-
+import { Loader2 } from "lucide-react";
 import CourseMap from "@/features/course/components/CourseMap";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
-import CourseRegenerateModal from "@/features/course/components/CourseRegenerateModal";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import type { CourseItemResponse, CourseResponse } from "@/features/course/hooks/useCourseResult";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
@@ -60,7 +58,6 @@ export default function CourseResultView() {
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
-  const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -125,13 +122,6 @@ export default function CourseResultView() {
             </button>
           ))}
 
-          <button
-            onClick={() => setIsRegenerateOpen(true)}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-pink-300 px-4 py-1.5 text-sm font-semibold text-pink-400 hover:bg-pink-50 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            코스 재생성
-          </button>
         </div>
 
         {/* 사이드바 + 지도 */}
@@ -169,10 +159,6 @@ export default function CourseResultView() {
         onClose={handleModalClose}
       />
 
-      <CourseRegenerateModal
-        isOpen={isRegenerateOpen}
-        onClose={() => setIsRegenerateOpen(false)}
-      />
     </>
   );
 }
