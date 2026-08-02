@@ -21,15 +21,15 @@ export default function AIChatFAB() {
     Math.floor(Math.random() * HINT_MESSAGES.length)
   );
 
-  // 힌트 자동 노출 → 자동 숨김
+  // 힌트 자동 노출 → 자동 숨김 (한 번만)
   useEffect(() => {
     if (hintDismissed) return;
 
     const showTimer = setTimeout(() => setShowHint(true), HINT_SHOW_DELAY);
-    const hideTimer = setTimeout(
-      () => setShowHint(false),
-      HINT_SHOW_DELAY + HINT_HIDE_DELAY
-    );
+    const hideTimer = setTimeout(() => {
+      setShowHint(false);
+      setHintDismissed(true);
+    }, HINT_SHOW_DELAY + HINT_HIDE_DELAY);
 
     return () => {
       clearTimeout(showTimer);
@@ -51,7 +51,6 @@ export default function AIChatFAB() {
 
   return (
     <>
-      {/* FAB 영역 */}
       <div className="fixed bottom-6 right-6 z-30 flex items-center gap-2.5">
         {/* 말풍선 힌트 */}
         <div
@@ -81,16 +80,14 @@ export default function AIChatFAB() {
         <button
           onClick={handleOpen}
           aria-label="AI 코스 메이커 열기"
-          className="group relative flex h-14 w-14 flex-shrink-0 items-center justify-center
+          className="flex h-14 w-14 flex-shrink-0 items-center justify-center
                      rounded-full bg-gradient-to-br from-[#FF6B9D] to-[#ff4d8f]
                      shadow-[0_6px_20px_rgba(255,77,143,0.40)]
                      transition-all duration-200
                      hover:shadow-[0_8px_26px_rgba(255,77,143,0.52)]
-                     hover:brightness-105 active:scale-90"
+                     hover:brightness-105 hover:scale-105 active:scale-95"
         >
-          {/* 펄스 링 */}
-          <span className="absolute inset-0 animate-ping rounded-full bg-[#FF6B9D] opacity-20" />
-          <MessageCircle className="relative h-6 w-6 text-white" />
+          <MessageCircle className="h-6 w-6 text-white" />
         </button>
       </div>
 
