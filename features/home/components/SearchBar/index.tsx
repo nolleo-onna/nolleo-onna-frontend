@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Wallet, Clock, Users, Sparkles } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
 import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
-import { useAIChat } from "@/hooks/useAIChat";
-import type { CourseGenerateRequest } from "@/types/course";
 
 type Tab = "course" | "spot";
 
@@ -14,31 +12,10 @@ const BUDGET_OPTIONS = ["무지출", "1만원", "3만원", "5만원", "제한 �
 const TIME_OPTIONS = ["오전", "오후", "반나절"];
 const COMPANION_OPTIONS = ["혼자", "연인", "친구", "가족", "단체"];
 
-const BUDGET_MAP: Record<string, number> = {
-  "무지출": 0,
-  "1만원": 10000,
-  "3만원": 30000,
-  "5만원": 50000,
-  "제한 없음": 200000,
-};
-
-const TIME_MAP: Record<string, CourseGenerateRequest["duration"]> = {
-  "오전": "HALF_DAY",
-  "오후": "HALF_DAY",
-  "반나절": "HALF_DAY",
-};
-
-const COMPANION_MAP: Record<string, CourseGenerateRequest["companion"]> = {
-  "혼자": "SOLO",
-  "연인": "COUPLE",
-  "친구": "FRIENDS",
-  "가족": "FAMILY",
-  "단체": "FRIENDS",
-};
-
+// 자연어 프롬프트 변환용 라벨
 const TIME_LABEL: Record<string, string> = {
-  "오전": "오전 나들이로",
-  "오후": "오후 일정으로",
+  "오전": "오전에",
+  "오후": "오후에",
   "반나절": "반나절 동안",
 };
 
@@ -77,7 +54,7 @@ type FieldCardProps = {
   label: string;
   value: string;
   onClick: () => void;
-  children?: React.ReactNode; // 드롭다운
+  children?: React.ReactNode;
 };
 
 function FieldCard({ icon, iconBg, label, value, onClick, children }: FieldCardProps) {
@@ -135,12 +112,14 @@ function Dropdown({
   );
 }
 
+// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 export default function SearchBar() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<Tab>(DEFAULT_SELECTION.activeTab);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(DEFAULT_SELECTION.selectedRegion);
   const [selectedBudget, setSelectedBudget] = useState(DEFAULT_SELECTION.selectedBudget);
   const [selectedTime, setSelectedTime] = useState(DEFAULT_SELECTION.selectedTime);
@@ -149,8 +128,7 @@ export default function SearchBar() {
   const [hasInteracted, setHasInteracted] = useState(DEFAULT_SELECTION.hasInteracted);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const { sendMessage, reset } = useAIChat();
-
+  // sessionStorage 복원
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -172,6 +150,7 @@ export default function SearchBar() {
     }
   }, []);
 
+  // sessionStorage 저장
   useEffect(() => {
     if (!isHydrated) return;
     const toSave: StoredSelection = {
@@ -201,24 +180,32 @@ export default function SearchBar() {
     setActiveTab(tab);
   };
 
+  // AI 버튼 → 빈 채팅창
   const openAIChat = () => {
-    reset();
+    setInitialPrompt("");
     setIsAIChatOpen(true);
   };
 
-  // 검색 → 선택 조건을 자연어 메시지로 변환해 채팅 API 전송
+  // 검색 버튼 → 선택 조건을 자연어로 변환해 prefill
   const handleSearch = () => {
     const budgetLabel =
-      selectedBudget === "제한 없음" ? "예산 제한 없이" : `${selectedBudget} 예산으로`;
+      selectedBudget === "제한 없음"
+        ? "예산 제한 없이"
+        : selectedBudget === "무지출"
+          ? "돈 안 쓰고"
+          : `${selectedBudget} 예산으로`;
     const timeLabel = TIME_LABEL[selectedTime] ?? selectedTime;
     const companionLabel = COMPANION_LABEL[selectedCompanion] ?? selectedCompanion;
-    const message = `${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`;
 
-    reset();
+    setInitialPrompt(
+      `${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`
+    );
     setIsAIChatOpen(true);
-    setTimeout(() => {
-      sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<void>;
-    }, 100);
+  };
+
+  const handleCloseChat = () => {
+    setIsAIChatOpen(false);
+    setInitialPrompt("");
   };
 
   const handleInteract = () => setHasInteracted(true);
@@ -226,6 +213,7 @@ export default function SearchBar() {
   return (
     <>
       <div
+        id="search-bar"
         onClick={handleInteract}
         className={`w-full max-w-3xl mx-auto rounded-[20px] border border-gray-100 bg-white
                     shadow-[0_4px_24px_rgba(13,48,128,0.06)] p-5 ${
@@ -265,87 +253,91 @@ export default function SearchBar() {
         </div>
 
         {/* ── 필드 그리드 ── */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <FieldCard
-            icon={<MapPin className="w-[19px] h-[19px]" style={{ color: "#185FA5" }} />}
-            iconBg="#E6F1FB"
-            label="어디로"
-            value={selectedRegion}
-            onClick={() => setIsRegionModalOpen(true)}
-          />
-
-          <FieldCard
-            icon={<Wallet className="w-[19px] h-[19px]" style={{ color: "#3B6D11" }} />}
-            iconBg="#EAF3DE"
-            label="예산"
-            value={selectedBudget}
-            onClick={() => toggleDropdown("budget")}
-          >
-            {openDropdown === "budget" && (
-              <Dropdown
-                options={BUDGET_OPTIONS}
-                selected={selectedBudget}
-                onSelect={(v) => {
-                  setSelectedBudget(v);
-                  setOpenDropdown(null);
-                }}
+        {activeTab === "course" && (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <FieldCard
+                icon={<MapPin className="w-[19px] h-[19px]" style={{ color: "#185FA5" }} />}
+                iconBg="#E6F1FB"
+                label="어디로"
+                value={selectedRegion}
+                onClick={() => setIsRegionModalOpen(true)}
               />
-            )}
-          </FieldCard>
 
-          <FieldCard
-            icon={<Clock className="w-[19px] h-[19px]" style={{ color: "#854F0B" }} />}
-            iconBg="#FAEEDA"
-            label="시간"
-            value={selectedTime}
-            onClick={() => toggleDropdown("time")}
-          >
-            {openDropdown === "time" && (
-              <Dropdown
-                options={TIME_OPTIONS}
-                selected={selectedTime}
-                onSelect={(v) => {
-                  setSelectedTime(v);
-                  setOpenDropdown(null);
-                }}
-              />
-            )}
-          </FieldCard>
+              <FieldCard
+                icon={<Wallet className="w-[19px] h-[19px]" style={{ color: "#3B6D11" }} />}
+                iconBg="#EAF3DE"
+                label="예산"
+                value={selectedBudget}
+                onClick={() => toggleDropdown("budget")}
+              >
+                {openDropdown === "budget" && (
+                  <Dropdown
+                    options={BUDGET_OPTIONS}
+                    selected={selectedBudget}
+                    onSelect={(v) => {
+                      setSelectedBudget(v);
+                      setOpenDropdown(null);
+                    }}
+                  />
+                )}
+              </FieldCard>
 
-          <FieldCard
-            icon={<Users className="w-[19px] h-[19px]" style={{ color: "#993556" }} />}
-            iconBg="#FBEAF0"
-            label="동행"
-            value={selectedCompanion}
-            onClick={() => toggleDropdown("companion")}
-          >
-            {openDropdown === "companion" && (
-              <Dropdown
-                options={COMPANION_OPTIONS}
-                selected={selectedCompanion}
-                onSelect={(v) => {
-                  setSelectedCompanion(v);
-                  setOpenDropdown(null);
-                }}
-              />
-            )}
-          </FieldCard>
-        </div>
+              <FieldCard
+                icon={<Clock className="w-[19px] h-[19px]" style={{ color: "#854F0B" }} />}
+                iconBg="#FAEEDA"
+                label="시간"
+                value={selectedTime}
+                onClick={() => toggleDropdown("time")}
+              >
+                {openDropdown === "time" && (
+                  <Dropdown
+                    options={TIME_OPTIONS}
+                    selected={selectedTime}
+                    onSelect={(v) => {
+                      setSelectedTime(v);
+                      setOpenDropdown(null);
+                    }}
+                  />
+                )}
+              </FieldCard>
 
-        {/* ── 검색 버튼 ── */}
-        <button
-          onClick={handleSearch}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl py-4
-                     bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white
-                     text-[15px] font-bold
-                     shadow-[0_4px_16px_rgba(255,77,143,0.35)]
-                     hover:shadow-[0_6px_22px_rgba(255,77,143,0.45)]
-                     hover:brightness-105 active:scale-[0.98]
-                     transition-all duration-150"
-        >
-          <Sparkles className="w-[18px] h-[18px]" />
-          내 코스 만들기
-        </button>
+              <FieldCard
+                icon={<Users className="w-[19px] h-[19px]" style={{ color: "#993556" }} />}
+                iconBg="#FBEAF0"
+                label="동행"
+                value={selectedCompanion}
+                onClick={() => toggleDropdown("companion")}
+              >
+                {openDropdown === "companion" && (
+                  <Dropdown
+                    options={COMPANION_OPTIONS}
+                    selected={selectedCompanion}
+                    onSelect={(v) => {
+                      setSelectedCompanion(v);
+                      setOpenDropdown(null);
+                    }}
+                  />
+                )}
+              </FieldCard>
+            </div>
+
+            {/* ── 검색 버튼 ── */}
+            <button
+              onClick={handleSearch}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl py-4
+                         bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white
+                         text-[15px] font-bold
+                         shadow-[0_4px_16px_rgba(255,77,143,0.35)]
+                         hover:shadow-[0_6px_22px_rgba(255,77,143,0.45)]
+                         hover:brightness-105 active:scale-[0.98]
+                         transition-all duration-150"
+            >
+              <Sparkles className="w-[18px] h-[18px]" />
+              내 코스 만들기
+            </button>
+          </>
+        )}
       </div>
 
       {/* 지역 모달 */}
@@ -360,7 +352,11 @@ export default function SearchBar() {
       />
 
       {/* AI 채팅 모달 */}
-      <AIChatModal isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+      <AIChatModal
+        isOpen={isAIChatOpen}
+        onClose={handleCloseChat}
+        initialMessage={initialPrompt}
+      />
     </>
   );
 }
