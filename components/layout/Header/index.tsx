@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, User, LogOut } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,6 +15,102 @@ const NAV_ITEMS = [
   { label: "한끗", href: "/hankkut" },
 ] as const;
 
+// ── 아바타 이니셜 칩 + 드롭다운 ──────────────────────────────────────────────
+function UserChip({
+  nickname,
+  onLogout,
+  isLoggingOut,
+}: {
+  nickname: string;
+  onLogout: () => void;
+  isLoggingOut: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const initial = nickname.charAt(0);
+
+  return (
+    <div ref={ref} className="relative hidden md:block">
+      {/* 트리거 칩 */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`
+          flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200
+          ${open
+            ? 'bg-[#0d3080] border-[#0d3080] text-white shadow-md'
+            : 'bg-white border-gray-200 text-gray-700 hover:border-[#0d3080]/40 hover:shadow-sm'
+          }
+        `}
+      >
+        {/* 이니셜 아바타 */}
+        <div
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 transition-colors
+            ${open ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] text-white'}
+          `}
+        >
+          {initial}
+        </div>
+        <span className="text-[13px] font-semibold">{nickname}님</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {/* 드롭다운 */}
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+8px)] w-44 bg-white rounded-2xl shadow-[0_8px_32px_rgba(13,48,128,0.15)] border border-gray-100 overflow-hidden z-50">
+          {/* 유저 정보 헤더 */}
+          <div className="px-4 py-3 bg-gradient-to-br from-[#f6f8ff] to-[#fdf6f9] border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+                {initial}
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-gray-800">{nickname}</p>
+                <p className="text-[10px] text-gray-400">부산 여행 탐험가 ✈️</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 메뉴 항목 */}
+          <div className="py-1">
+            <Link
+              href="/mypage"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-[#f6f8ff] hover:text-[#0d3080] transition-colors"
+            >
+              <User className="w-3.5 h-3.5" />
+              마이페이지
+            </Link>
+            <button
+              type="button"
+              onClick={() => { onLogout(); setOpen(false); }}
+              disabled={isLoggingOut}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 메인 헤더 ────────────────────────────────────────────────────────────────
 export default function Header() {
   const pathname = usePathname();
   const { user, isLoading, isLoggedIn, logout, isLoggingOut } = useAuth();
@@ -56,22 +153,11 @@ export default function Header() {
             {/* 우측 영역 */}
             <div className="flex items-center gap-3">
               {isLoading ? null : isLoggedIn ? (
-                <>
-                  <Link
-                    href="/mypage"
-                    className="hidden md:block text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors"
-                  >
-                    {user?.nickname}님
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => logout()}
-                    disabled={isLoggingOut}
-                    className="hidden md:block text-sm font-semibold text-gray-500 hover:text-pink-600 transition-colors disabled:opacity-50"
-                  >
-                    {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
-                  </button>
-                </>
+                <UserChip
+                  nickname={user?.nickname ?? ''}
+                  onLogout={logout}
+                  isLoggingOut={isLoggingOut}
+                />
               ) : (
                 <Link
                   href="/login"
@@ -89,13 +175,11 @@ export default function Header() {
                 aria-label="메뉴"
               >
                 {isMenuOpen ? (
-                  // X 아이콘
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 ) : (
-                  // 햄버거 아이콘
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="3" y1="6" x2="21" y2="6" />
                     <line x1="3" y1="12" x2="21" y2="12" />
@@ -111,13 +195,10 @@ export default function Header() {
       {/* 모바일 드롭다운 */}
       {isMenuOpen && (
         <>
-          {/* 백드롭 */}
           <div
             className="fixed inset-0 z-40 bg-black/20 md:hidden"
             onClick={() => setIsMenuOpen(false)}
           />
-
-          {/* 메뉴 패널 */}
           <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-lg md:hidden">
             <nav className="flex flex-col px-5 py-3">
               {NAV_ITEMS.map(({ label, href }) => {
@@ -136,24 +217,31 @@ export default function Header() {
                 );
               })}
 
-              {/* 모바일 로그인/로그아웃 */}
+              {/* 모바일 유저 영역 */}
               <div className="pt-3 pb-1">
                 {isLoading ? null : isLoggedIn ? (
                   <div className="flex items-center justify-between">
+                    {/* 모바일 아바타 칩 */}
                     <Link
                       href="/mypage"
                       onClick={() => setIsMenuOpen(false)}
-                      className="text-sm font-medium text-gray-700"
+                      className="flex items-center gap-2"
                     >
-                      {user?.nickname}님
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center text-white text-[12px] font-bold">
+                        {user?.nickname?.charAt(0)}
+                      </div>
+                      <span className="text-[13px] font-semibold text-gray-700">
+                        {user?.nickname}님
+                      </span>
                     </Link>
                     <button
                       type="button"
                       onClick={() => { logout(); setIsMenuOpen(false); }}
                       disabled={isLoggingOut}
-                      className="text-sm font-semibold text-gray-500 disabled:opacity-50"
+                      className="flex items-center gap-1.5 text-[13px] text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
                     >
-                      {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
+                      <LogOut className="w-3.5 h-3.5" />
+                      {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
                     </button>
                   </div>
                 ) : (
@@ -173,4 +261,3 @@ export default function Header() {
     </>
   );
 }
-
