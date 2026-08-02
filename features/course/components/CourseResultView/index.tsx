@@ -3,35 +3,33 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+
 import CourseMap from "@/features/course/components/CourseMap";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
-import type { CourseItemResponse, CourseResponse } from "@/features/course/hooks/useCourseResult";
+import type {
+  CourseItemResponse,
+  CourseResponse,
+} from "@/features/course/hooks/useCourseResult";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
 function toPlace(item: CourseItemResponse): CoursePlace {
   return {
     id: item.serialNum,
-    name: item.name,
+    name: item.title,
     category: item.category,
-    lat: item.latitude,
-    lng: item.longitude,
-    imageUrl: item.imageUrl,
-    description: item.warningMessage ?? "",
+    lat: item.mapY,
+    lng: item.mapX,
+    imageUrl: item.firstImage ?? "",
+    description: "",
     rating: 0,
     reviewCount: 0,
-    originalId: item.originalId,
+    originalId: item.spotContentId,
     mapPlaceId: item.serialNum,
   };
 }
-
-const COURSE_TYPE_LABEL: Record<CourseResponse["courseType"], string> = {
-  ACTIVE: "🏃 액티브",
-  CULTURE: "🎨 문화",
-  FOOD_TOUR: "🍜 맛집",
-};
 
 function toCourse(course: CourseResponse): Course {
   return {
@@ -40,7 +38,7 @@ function toCourse(course: CourseResponse): Course {
     days: [
       {
         day: 1,
-        title: COURSE_TYPE_LABEL[course.courseType],
+        title: course.description || course.title,
         places: course.items.map(toPlace),
       },
     ],
@@ -53,13 +51,13 @@ export default function CourseResultView() {
 
   const { data, isLoading, isError } = useCourseResult(pairId);
 
-  const [selectedType, setSelectedType] = useState<CourseResponse["courseType"]>("CULTURE");
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
 
-  if (isLoading || !data) {
+  if (isLoading || !data || data.length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-pink-400" />
@@ -71,22 +69,24 @@ export default function CourseResultView() {
   if (isError) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-sm text-gray-500">코스를 불러오지 못했어요. 다시 시도해주세요.</p>
+        <p className="text-sm text-gray-500">
+          코스를 불러오지 못했어요. 다시 시도해주세요.
+        </p>
       </div>
     );
   }
 
   const activeCourse =
-    data.courses.find((c) => c.courseType === selectedType) ?? data.courses[0];
+    data.find((c) => c.id === selectedCourseId) ?? data[0];
   const course = toCourse(activeCourse);
   const places = course.days[0].places;
-  const resolvedPlaceId = selectedPlaceId ?? (places[0]?.id ?? null);
+  const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
   const selectedPlace = places.find((p) => p.id === resolvedPlaceId) ?? places[0];
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
 
-  const handleSelectType = (type: CourseResponse["courseType"]) => {
-    setSelectedType(type);
+  const handleSelectCourse = (id: number) => {
+    setSelectedCourseId(id);
     setSelectedPlaceId(null);
   };
 
@@ -106,23 +106,24 @@ export default function CourseResultView() {
   return (
     <>
       <div className="flex h-screen flex-col pt-16">
-        {/* 코스 타입 탭 */}
-        <div className="flex items-center gap-2 border-b border-gray-100 bg-white px-6 py-3">
-          {data.courses.map((c) => (
-            <button
-              key={c.courseType}
-              onClick={() => handleSelectType(c.courseType)}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-                selectedType === c.courseType
-                  ? "bg-navy-400 text-white"
-                  : "border border-gray-200 text-gray-500 hover:border-gray-300"
-              }`}
-            >
-              {COURSE_TYPE_LABEL[c.courseType]}
-            </button>
-          ))}
-
-        </div>
+        {/* 코스 선택 탭 (2개 이상일 때만 노출) */}
+        {data.length > 1 && (
+          <div className="flex items-center gap-2 border-b border-gray-100 bg-white px-6 py-3 overflow-x-auto">
+            {data.map((c, idx) => (
+              <button
+                key={c.id}
+                onClick={() => handleSelectCourse(c.id)}
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                  activeCourse.id === c.id
+                    ? "bg-navy-400 text-white"
+                    : "border border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                {c.title || `코스 ${idx + 1}`}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 사이드바 + 지도 */}
         <div className="flex flex-1 overflow-hidden">
@@ -158,7 +159,6 @@ export default function CourseResultView() {
         mapPlaceId={modalMapPlaceId}
         onClose={handleModalClose}
       />
-
     </>
   );
 }
