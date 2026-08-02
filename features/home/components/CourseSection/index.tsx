@@ -2,45 +2,35 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import CourseCard from "@/components/ui/Card/CourseCard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-
-type Course = {
-  id: number;
-  imageSrc: string;
-  badge?: string;
-  emoji?: string;
-  subTitle?: string;
-  title: string;
-  description?: string;
-};
-
-const mockCourses: Course[] = [
-  { id: 1, imageSrc: "https://picsum.photos/seed/beach/400/600", badge: "상황별", emoji: "🏖️", subTitle: "SOLO HEALING", title: "혼자 여행", description: "조용한 바다 + 카페 1곳" },
-  { id: 2, imageSrc: "https://picsum.photos/seed/rose/400/600", badge: "상황별", emoji: "🌹", subTitle: "CHEAP & CHIC", title: "짠내 데이트", description: "5만원 이하 감성 코스" },
-  { id: 3, imageSrc: "https://picsum.photos/seed/rain/400/600", badge: "상황별", emoji: "🌧️", subTitle: "RAINY DAY", title: "비오는 날 여행", description: "실내 위주 큐레이션" },
-  { id: 4, imageSrc: "https://picsum.photos/seed/night/400/600", badge: "상황별", emoji: "🌙", subTitle: "NIGHT VIBE", title: "부산 야경 투어", description: "광안리 + 해운대 야경" },
-  { id: 5, imageSrc: "https://picsum.photos/seed/food/400/600", badge: "상황별", emoji: "🍜", subTitle: "FOOD TRIP", title: "부산 먹방 투어", description: "국제시장 + 자갈치" },
-  { id: 6, imageSrc: "https://picsum.photos/seed/nature/400/600", badge: "상황별", emoji: "🌿", subTitle: "NATURE WALK", title: "자연 힐링 코스", description: "태종대 + 이기대" },
-];
+import ThemeCourseCard from "@/components/ui/Card/ThemeCourseCard";
+import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
+import { useAIChat } from "@/hooks/useAIChat";
+import { THEME_COURSES } from "@/features/home/data/themeCourses";
+import type { ThemeCourse } from "@/features/home/data/themeCourses";
 
 const VISIBLE_COUNT_MOBILE = 2;
 const VISIBLE_COUNT_TABLET = 4;
 const VISIBLE_COUNT_DESKTOP = 3;
-const AUTO_PLAY_INTERVAL = 3000;
+const AUTO_PLAY_INTERVAL = 4000;
 
 type Props = {
-  courses?: Course[];
+  courses?: ThemeCourse[];
 };
 
-export default function CourseCarousel({ courses = mockCourses }: Props) {
+export default function CourseSection({ courses = THEME_COURSES }: Props) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+
   const currentIndexRef = useRef(0);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { sendMessage, reset } = useAIChat();
 
   const cloned = [...courses, ...courses, ...courses];
   const offset = courses.length;
@@ -50,6 +40,15 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
       behavior: "smooth",
       block: "center",
     });
+  };
+
+  // 테마 카드 클릭 → AI 채팅 모달 열고 프롬프트 자동 전송
+  const handleThemeClick = (course: ThemeCourse) => {
+    reset();
+    setIsAIChatOpen(true);
+    setTimeout(() => {
+      sendMessage(course.prompt, { skipGuards: true });
+    }, 100);
   };
 
   const updateIndex = useCallback((index: number) => {
@@ -66,11 +65,10 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
   }, [updateIndex]);
 
   useEffect(() => {
-    // updateVisible 로직 변경 — 브레이크포인트 기준 조정
     const updateVisible = () => {
-      if (window.innerWidth >= 1280) setVisibleCount(VISIBLE_COUNT_DESKTOP);      // 데스크탑: 3장
-      else if (window.innerWidth >= 768) setVisibleCount(VISIBLE_COUNT_TABLET);   // 태블릿: 4장
-      else setVisibleCount(VISIBLE_COUNT_MOBILE);                                  // 모바일: 2장
+      if (window.innerWidth >= 1280) setVisibleCount(VISIBLE_COUNT_DESKTOP);
+      else if (window.innerWidth >= 768) setVisibleCount(VISIBLE_COUNT_TABLET);
+      else setVisibleCount(VISIBLE_COUNT_MOBILE);
       setMounted(true);
     };
     updateVisible();
@@ -84,6 +82,15 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     };
   }, [restartAutoPlay]);
+
+  // 모달 열려있으면 자동 재생 정지
+  useEffect(() => {
+    if (isAIChatOpen && autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+    } else if (!isAIChatOpen) {
+      restartAutoPlay();
+    }
+  }, [isAIChatOpen, restartAutoPlay]);
 
   const handlePrev = () => {
     restartAutoPlay();
@@ -108,80 +115,101 @@ export default function CourseCarousel({ courses = mockCourses }: Props) {
     }
   };
 
-  const translateX = visibleCount > 0
-    ? -((offset + currentIndex) * (100 / visibleCount))
-    : 0;
+  const translateX =
+    visibleCount > 0 ? -((offset + currentIndex) * (100 / visibleCount)) : 0;
 
   return (
-    <section className="py-6 md:py-10">
-      {/* 헤더 */}
-      <div className="flex items-center gap-2 mb-6">
-        <h2 className="text-lg md:text-xl font-bold text-navy-900">
-          오늘 어떻게 놀까?
-        </h2>
-        <span className="text-xs text-gray-400">추천 코스 {courses.length}</span>
-      </div>
-
-      {/* 캐러셀 wrapper */}
-      <div className="relative">
-        {/* 좌측 화살표 */}
-        <button
-          onClick={handlePrev}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
-        >
-          ←
-        </button>
-
-        {/* 카드 트랙 */}
-        <div className="overflow-hidden mx-4">
-          <div
-            className={`flex ${isTransitioning ? "transition-transform duration-500 ease-in-out" : ""}`}
-            style={{ transform: mounted ? `translateX(${translateX}%)` : "none" }}
-            onTransitionEnd={handleTransitionEnd}
-          >
-            {mounted && cloned.map((course, i) => (
-              <div
-                key={`${course.id}-${i}`}
-                className="shrink-0 px-2"
-                style={{ width: `${100 / visibleCount}%` }}
-              >
-                <CourseCard
-                  imageSrc={course.imageSrc}
-                  badge={course.badge}
-                  emoji={course.emoji}
-                  subTitle={course.subTitle}
-                  title={course.title}
-                  description={course.description}
-                />
-              </div>
-            ))}
+    <>
+      <section className="py-6 md:py-10">
+        {/* 헤더 */}
+        <div className="mb-6 flex items-end justify-between">
+          <div>
+            <p className="mb-1 text-[11px] font-semibold tracking-wide text-pink-500">
+              AI 추천
+            </p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[#0d3080] md:text-xl">
+                오늘 어떻게 놀까?
+              </h2>
+              <span className="text-xs text-gray-400">
+                테마 {courses.length}개
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 우측 화살표 */}
-        <button
-          onClick={handleNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
-        >
-          →
-        </button>
-      </div>
+        {/* 캐러셀 */}
+        <div className="relative">
+          <button
+            onClick={handlePrev}
+            aria-label="이전 코스"
+            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-x-4 -translate-y-1/2
+                       items-center justify-center rounded-full border border-gray-100 bg-white
+                       shadow-[0_2px_12px_rgba(13,48,128,0.10)]
+                       transition-all hover:border-gray-200 hover:shadow-[0_4px_16px_rgba(13,48,128,0.14)]
+                       active:scale-90"
+          >
+            <ChevronLeft className="h-4 w-4 text-gray-600" />
+          </button>
 
-      {/* 버튼 */}
-      <div className="flex justify-center gap-3 mt-8">
-        <button
-          onClick={handleScrollToSearch}
-          className="px-6 py-2.5 rounded-full bg-navy-500 text-white text-sm font-medium"
-        >
-          코스 추천받기
-        </button>
-        <button
-          onClick={() => router.push("/spot")}
-          className="px-6 py-2.5 rounded-full border border-navy-500 text-navy-500 text-sm font-medium"
-        >
-          스팟 둘러보기
-        </button>
-      </div>
-    </section>
+          <div className="mx-4 overflow-hidden">
+            <div
+              className={`flex ${
+                isTransitioning ? "transition-transform duration-500 ease-in-out" : ""
+              }`}
+              style={{ transform: mounted ? `translateX(${translateX}%)` : "none" }}
+              onTransitionEnd={handleTransitionEnd}
+            >
+              {mounted &&
+                cloned.map((course, i) => (
+                  <div
+                    key={`${course.id}-${i}`}
+                    className="shrink-0 px-2"
+                    style={{ width: `${100 / visibleCount}%` }}
+                  >
+                    <ThemeCourseCard
+                      course={course}
+                      onClick={() => handleThemeClick(course)}
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleNext}
+            aria-label="다음 코스"
+            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-4
+                       items-center justify-center rounded-full border border-gray-100 bg-white
+                       shadow-[0_2px_12px_rgba(13,48,128,0.10)]
+                       transition-all hover:border-gray-200 hover:shadow-[0_4px_16px_rgba(13,48,128,0.14)]
+                       active:scale-90"
+          >
+            <ChevronRight className="h-4 w-4 text-gray-600" />
+          </button>
+        </div>
+
+        {/* 하단 버튼 */}
+        <div className="mt-8 flex justify-center gap-3">
+          <button
+            onClick={handleScrollToSearch}
+            className="rounded-full bg-[#0d3080] px-6 py-2.5 text-sm font-semibold text-white
+                       transition-all hover:brightness-110 active:scale-95"
+          >
+            직접 조건 고르기
+          </button>
+          <button
+            onClick={() => router.push("/spot")}
+            className="rounded-full border border-[#0d3080] px-6 py-2.5 text-sm font-semibold text-[#0d3080]
+                       transition-all hover:bg-[#0d3080]/5 active:scale-95"
+          >
+            스팟 둘러보기
+          </button>
+        </div>
+      </section>
+
+      {/* AI 채팅 모달 */}
+      <AIChatModal isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+    </>
   );
 }

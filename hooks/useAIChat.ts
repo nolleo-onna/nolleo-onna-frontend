@@ -27,7 +27,7 @@ interface UseAIChatReturn {
   isAwaitingConfirmation: boolean;
   completedPairId: string | null;
   inputError: string | null;
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<void>;
   sendConfirmation: () => Promise<void>;
   reset: () => void;
 }

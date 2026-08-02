@@ -28,6 +28,8 @@ function toPlace(item: CourseItemResponse): CoursePlace {
     reviewCount: 0,
     originalId: item.spotContentId,
     mapPlaceId: item.serialNum,
+    expectedCost: item.expectedCost,
+    distanceFromPrevM: item.distanceFromPrevM,
   };
 }
 
@@ -38,7 +40,7 @@ function toCourse(course: CourseResponse): Course {
     days: [
       {
         day: 1,
-        title: course.description || course.title,
+        title: course.description || "",
         places: course.items.map(toPlace),
       },
     ],
@@ -76,8 +78,7 @@ export default function CourseResultView() {
     );
   }
 
-  const activeCourse =
-    data.find((c) => c.id === selectedCourseId) ?? data[0];
+  const activeCourse = data.find((c) => c.id === selectedCourseId) ?? data[0];
   const course = toCourse(activeCourse);
   const places = course.days[0].places;
   const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
@@ -106,16 +107,16 @@ export default function CourseResultView() {
   return (
     <>
       <div className="flex h-screen flex-col pt-16">
-        {/* 코스 선택 탭 (2개 이상일 때만 노출) */}
+        {/* 코스 선택 탭 (2개 이상일 때만) */}
         {data.length > 1 && (
-          <div className="flex items-center gap-2 border-b border-gray-100 bg-white px-6 py-3 overflow-x-auto">
+          <div className="flex items-center gap-2 overflow-x-auto border-b border-gray-100 bg-white px-6 py-3">
             {data.map((c, idx) => (
               <button
                 key={c.id}
                 onClick={() => handleSelectCourse(c.id)}
                 className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
                   activeCourse.id === c.id
-                    ? "bg-navy-400 text-white"
+                    ? "bg-[#0d3080] text-white"
                     : "border border-gray-200 text-gray-500 hover:border-gray-300"
                 }`}
               >

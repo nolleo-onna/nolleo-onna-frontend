@@ -1,15 +1,9 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { Footprints } from "lucide-react";
+import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
-import {
-  type Course,
-  type CoursePlace,
-  formatDistance,
-  getDistance,
-} from "@/features/course/data/mockCourse";
-
-interface CourseSidebarProps {
+interface Props {
   course: Course;
   selectedDay: number;
   selectedPlaceId: number | null;
@@ -17,102 +11,142 @@ interface CourseSidebarProps {
   onSelectPlace: (place: CoursePlace) => void;
 }
 
+function formatDistance(m: number) {
+  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`;
+}
+
+function formatCost(won: number) {
+  if (won >= 10000) return `${(won / 10000).toFixed(1)}만`;
+  return `${won.toLocaleString()}원`;
+}
+
 export default function CourseSidebar({
   course,
-  selectedDay,
   selectedPlaceId,
-  onSelectDay,
   onSelectPlace,
-}: CourseSidebarProps) {
+}: Props) {
+  const places = course.days[0]?.places ?? [];
+
+  const totalDistance = places.reduce(
+    (sum, p) => sum + (p.distanceFromPrevM ?? 0),
+    0
+  );
+  const totalCost = places.reduce((sum, p) => sum + (p.expectedCost ?? 0), 0);
+
   return (
-    <aside className="flex h-full w-[340px] shrink-0 flex-col border-r border-gray-100 bg-white">
-      {/* 코스 제목 */}
-      <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-xs font-semibold text-pink-500">부산 여행 코스</p>
-        <h1 className="mt-1 text-lg font-bold text-navy-900">{course.title}</h1>
-      </div>
+    <aside className="w-[340px] flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white">
+      <div className="p-5">
+        {/* 헤더 */}
+        <p className="mb-1 text-[11px] font-semibold tracking-wide text-pink-500">
+          부산 여행 코스
+        </p>
+        <h1 className="mb-4 text-[19px] font-bold leading-snug text-gray-800">
+          {course.title}
+        </h1>
 
-      {/* 일차별 타임라인 */}
-      <div className="flex-1 overflow-y-auto px-5 py-4">
-        {course.days.map((courseDay) => {
-          const isActiveDay = courseDay.day === selectedDay;
+        {/* 요약 통계 */}
+        <div className="mb-5 grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
+            <p className="mb-0.5 text-[10px] text-gray-400">장소</p>
+            <p className="text-[15px] font-bold text-gray-800">{places.length}곳</p>
+          </div>
+          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
+            <p className="mb-0.5 text-[10px] text-gray-400">총 거리</p>
+            <p className="text-[15px] font-bold text-gray-800">
+              {totalDistance > 0 ? formatDistance(totalDistance) : "-"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
+            <p className="mb-0.5 text-[10px] text-gray-400">예상 비용</p>
+            <p className="text-[15px] font-bold text-[#0d3080]">
+              {totalCost > 0 ? formatCost(totalCost) : "무료"}
+            </p>
+          </div>
+        </div>
 
-          return (
-            <section key={courseDay.day} className="mb-6">
-              <button
-                type="button"
-                onClick={() => onSelectDay(courseDay.day)}
-                className={`mb-3 flex items-center gap-2 text-sm font-bold ${
-                  isActiveDay ? "text-navy-900" : "text-gray-400"
-                }`}
-              >
-                day{courseDay.day}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    isActiveDay
-                      ? "bg-lime-300 text-navy-900"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {courseDay.title}
-                </span>
-              </button>
+        {/* 코스 설명 */}
+        {course.days[0]?.title && (
+          <div className="mb-5 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#fdf6f9] px-3.5 py-3">
+            <p className="text-[12px] leading-relaxed text-gray-600">
+              {course.days[0].title}
+            </p>
+          </div>
+        )}
 
-              <ol>
-                {courseDay.places.map((place, index) => {
-                  const isSelected = place.id === selectedPlaceId;
-                  const prev = courseDay.places[index - 1];
+        {/* 타임라인 */}
+        <ol className="relative">
+          {places.map((place, i) => {
+            const isSelected = place.id === selectedPlaceId;
+            const isLast = i === places.length - 1;
+            const nextDistance = places[i + 1]?.distanceFromPrevM;
 
-                  return (
-                    <li key={place.id}>
-                      {/* 이전 장소와의 거리 */}
-                      {prev && (
-                        <div className="flex items-center gap-3 py-1">
-                          <span className="flex w-7 justify-center">
-                            <span className="h-6 w-px border-l border-dashed border-gray-300" />
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {formatDistance(getDistance(prev, place))}
-                          </span>
-                        </div>
-                      )}
+            return (
+              <li key={place.id}>
+                <div className="flex gap-3">
+                  {/* 번호 + 연결선 */}
+                  <div className="flex flex-shrink-0 flex-col items-center">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
+                        isSelected
+                          ? "bg-pink-400 text-white shadow-[0_2px_8px_rgba(255,107,157,0.4)]"
+                          : "border border-gray-200 bg-white text-gray-500"
+                      }`}
+                    >
+                      {i + 1}
+                    </div>
+                    {!isLast && <div className="w-[2px] flex-1 bg-gray-100" />}
+                  </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onSelectDay(courseDay.day);
-                          onSelectPlace(place);
-                        }}
-                        className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                          isSelected
-                            ? "border-pink-400 bg-pink-50"
-                            : "border-gray-100 bg-white hover:border-gray-200"
+                  {/* 카드 */}
+                  <button
+                    onClick={() => onSelectPlace(place)}
+                    className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
+                      isSelected
+                        ? "bg-pink-50 ring-1 ring-pink-200"
+                        : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
+                    }`}
+                  >
+                    <p
+                      className={`mb-0.5 truncate text-[14px] font-semibold ${
+                        isSelected ? "text-pink-900" : "text-gray-800"
+                      }`}
+                    >
+                      {place.name}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[11px] ${
+                          isSelected ? "text-pink-500" : "text-gray-400"
                         }`}
                       >
+                        {place.category}
+                      </span>
+                      {place.expectedCost !== undefined && place.expectedCost > 0 && (
                         <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
-                            isSelected ? "bg-pink-500" : "bg-navy-900"
+                          className={`text-[11px] ${
+                            isSelected ? "text-pink-500" : "text-gray-400"
                           }`}
                         >
-                          {index + 1}
+                          · {place.expectedCost.toLocaleString()}원
                         </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold text-navy-900">
-                            {place.name}
-                          </span>
-                          <span className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
-                            <MapPin className="h-3 w-3" />
-                            {place.category}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
-          );
-        })}
+                      )}
+                    </div>
+                  </button>
+                </div>
+
+                {/* 이동 거리 */}
+                {!isLast && nextDistance !== undefined && nextDistance > 0 && (
+                  <div className="flex items-center gap-1.5 py-1 pl-[38px]">
+                    <Footprints className="h-3 w-3 text-gray-300" />
+                    <span className="text-[11px] text-gray-400">
+                      {formatDistance(nextDistance)}
+                    </span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </aside>
   );
