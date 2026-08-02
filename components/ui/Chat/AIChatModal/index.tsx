@@ -164,7 +164,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     if (completedPairId) {
       const timer = setTimeout(() => {
         onClose();
-        router.push(`/course/${completedPairId}`);
+        router.push(`/course/result?pairId=${completedPairId}`);
       }, 2000);
       return () => clearTimeout(timer);
     }
