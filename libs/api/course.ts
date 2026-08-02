@@ -2,34 +2,21 @@ import { clientFetch } from "@/libs/clientFetch";
 import type {
   ApiResponse,
   CoursePairResponse,
-  CourseGenerateRequest,
+  MyCourseSummary,
 } from "@/types/course";
-
-export async function generateCourse(
-  body: CourseGenerateRequest
-): Promise<CoursePairResponse> {
-  const res = await clientFetch("/api/v1/courses/generate", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
-  const json: ApiResponse<CoursePairResponse> = await res.json();
+ 
+// 내가 생성한 코스 목록 조회
+export async function fetchMyCourses(): Promise<MyCourseSummary[]> {
+  const res = await clientFetch("/api/v1/courses/me");
+  const json: ApiResponse<MyCourseSummary[]> = await res.json();
   return json.data;
 }
-
+ 
+// pairId로 생성된 코스 조회
 export async function fetchCoursePair(
   pairId: string
 ): Promise<CoursePairResponse> {
-  const res = await clientFetch(`/api/v1/courses/pair/${pairId}`);
-  const json: ApiResponse<CoursePairResponse> = await res.json();
-  return json.data;
-}
-
-export async function regenerateCourse(
-  courseId: number
-): Promise<CoursePairResponse> {
-  const res = await clientFetch(`/api/v1/courses/${courseId}/regenerate`, {
-    method: "POST",
-  });
+  const res = await clientFetch(`/api/v1/courses/${pairId}`);
   const json: ApiResponse<CoursePairResponse> = await res.json();
   return json.data;
 }

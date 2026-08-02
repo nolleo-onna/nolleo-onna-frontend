@@ -1,5 +1,5 @@
-import CourseView from "@/features/course/components/CourseView";
+import MyCourseListView from "@/features/course/components/MyCourseListView";
 
 export default function CoursePage() {
-  return <CourseView />;
+  return <MyCourseListView />;
 }
