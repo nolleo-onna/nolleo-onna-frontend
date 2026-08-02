@@ -38,7 +38,7 @@ export interface CoursePairResponse {
 }
 
 async function fetchCourseResult(pairId: string): Promise<CoursePairResponse> {
-  const res = await clientFetch(`/api/v1/courses/pair/${pairId}`);
+  const res = await clientFetch(`/api/v1/courses/${pairId}`);
   if (!res.ok) throw new Error("코스 조회 실패");
   const json = await res.json();
   return json.data;
