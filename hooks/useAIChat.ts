@@ -65,29 +65,31 @@ export function useAIChat(): UseAIChatReturn {
   );
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, opts?: { skipGuards?: boolean }) => {
       const trimmed = text.trim();
       if (!trimmed || isLoading) return;
 
-      if (trimmed.length > MAX_INPUT_LENGTH) {
-        setInputError(`메시지는 ${MAX_INPUT_LENGTH}자 이내로 입력해주세요.`);
-        return;
-      }
+      if (!opts?.skipGuards) {
+        if (trimmed.length > MAX_INPUT_LENGTH) {
+          setInputError(`메시지는 ${MAX_INPUT_LENGTH}자 이내로 입력해주세요.`);
+          return;
+        }
 
-      const now = Date.now();
-      if (now - lastSentAtRef.current < COOLDOWN_MS) {
-        setInputError('조금 천천히 보내주세요 🙏');
-        return;
-      }
+        const now = Date.now();
+        if (now - lastSentAtRef.current < COOLDOWN_MS) {
+          setInputError('조금 천천히 보내주세요 🙏');
+          return;
+        }
 
-      if (trimmed === lastSentTextRef.current && trimmed !== '코스 생성 시작') {
-        setInputError('방금 보낸 메시지와 같아요. 다른 내용을 입력해주세요.');
-        return;
+        if (trimmed === lastSentTextRef.current && trimmed !== '코스 생성 시작') {
+          setInputError('방금 보낸 메시지와 같아요. 다른 내용을 입력해주세요.');
+          return;
+        }
       }
 
       setInputError(null);
       lastSentTextRef.current = trimmed;
-      lastSentAtRef.current = now;
+      lastSentAtRef.current = Date.now();
 
       addMessage('user', trimmed);
       setIsLoading(true);
@@ -106,7 +108,6 @@ export function useAIChat(): UseAIChatReturn {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const json = await res.json();
-        // 백엔드 공통 래퍼: { status, message, data }
         const data: ChatResponse = json.data ?? json;
 
         if (data.conversationId) setConversationId(data.conversationId);
@@ -133,7 +134,6 @@ export function useAIChat(): UseAIChatReturn {
 
         } else {
           offTopicStreakRef.current = 0;
-          // 백엔드가 "코스 생성" 확인을 요청하는 시점 감지
           const isConfirmationQuestion =
             data.status === 'NEED_MORE_INFO' && data.reply.includes('코스 생성 시작');
           setIsAwaitingConfirmation(isConfirmationQuestion);

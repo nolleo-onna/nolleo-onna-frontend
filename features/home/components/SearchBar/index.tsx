@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, MapPin, Wallet, Clock, Users, Search } from "lucide-react";
+import { ChevronDown, MapPin, Wallet, Clock, Users, Sparkles } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
-import { useCourseGenerate } from "@/features/course/hooks/useCourseGenerate";
+import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
+import { useAIChat } from "@/hooks/useAIChat";
 import type { CourseGenerateRequest } from "@/types/course";
 
-type Tab = "course" | "spot" | "ai";
+type Tab = "course" | "spot";
 
 const BUDGET_OPTIONS = ["무지출", "1만원", "3만원", "5만원", "제한 없음"];
 const TIME_OPTIONS = ["오전", "오후", "반나절"];
@@ -24,8 +25,6 @@ const BUDGET_MAP: Record<string, number> = {
 const TIME_MAP: Record<string, CourseGenerateRequest["duration"]> = {
   "오전": "HALF_DAY",
   "오후": "HALF_DAY",
-  "저녁": "HALF_DAY",
-  "하루": "ONE_DAY",
   "반나절": "HALF_DAY",
 };
 
@@ -37,7 +36,20 @@ const COMPANION_MAP: Record<string, CourseGenerateRequest["companion"]> = {
   "단체": "FRIENDS",
 };
 
-// 홈 <-> 스팟 페이지를 오가도 검색 조건이 유지되도록 sessionStorage에 저장
+const TIME_LABEL: Record<string, string> = {
+  "오전": "오전 나들이로",
+  "오후": "오후 일정으로",
+  "반나절": "반나절 동안",
+};
+
+const COMPANION_LABEL: Record<string, string> = {
+  "혼자": "혼자",
+  "연인": "연인과",
+  "친구": "친구와",
+  "가족": "가족과",
+  "단체": "단체로",
+};
+
 const STORAGE_KEY = "searchbar-selection";
 
 type StoredSelection = {
@@ -58,20 +70,77 @@ const DEFAULT_SELECTION: StoredSelection = {
   hasInteracted: false,
 };
 
-function Chevron({ isOpen }: { isOpen: boolean }) {
-  return isOpen ? (
-    <ChevronUp className="w-3 h-3 inline-block ml-0.5" />
-  ) : (
-    <ChevronDown className="w-3 h-3 inline-block ml-0.5" />
+// ── 필드 카드 ────────────────────────────────────────────────────────────────
+type FieldCardProps = {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  value: string;
+  onClick: () => void;
+  children?: React.ReactNode; // 드롭다운
+};
+
+function FieldCard({ icon, iconBg, label, value, onClick, children }: FieldCardProps) {
+  return (
+    <div className="relative">
+      <button
+        onClick={onClick}
+        className="w-full flex items-center gap-3 rounded-2xl bg-gray-50 p-3.5
+                   hover:bg-gray-100 active:scale-[0.98] transition-all duration-150 text-left"
+      >
+        <div
+          className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: iconBg }}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] text-gray-400 leading-none mb-1">{label}</p>
+          <p className="text-[15px] font-semibold text-gray-800 truncate">{value}</p>
+        </div>
+        <ChevronDown className="w-4 h-4 text-gray-300 flex-shrink-0" />
+      </button>
+      {children}
+    </div>
+  );
+}
+
+// ── 드롭다운 ──────────────────────────────────────────────────────────────────
+function Dropdown({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: string[];
+  selected: string;
+  onSelect: (v: string) => void;
+}) {
+  return (
+    <ul className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100
+                   rounded-2xl shadow-[0_8px_24px_rgba(13,48,128,0.12)] z-30 overflow-hidden py-1">
+      {options.map((opt) => (
+        <li
+          key={opt}
+          onClick={() => onSelect(opt)}
+          className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${
+            selected === opt
+              ? "text-pink-500 font-semibold bg-pink-50/60"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          {opt}
+        </li>
+      ))}
+    </ul>
   );
 }
 
 export default function SearchBar() {
   const router = useRouter();
-  const { mutate, isPending } = useCourseGenerate();
 
   const [activeTab, setActiveTab] = useState<Tab>(DEFAULT_SELECTION.activeTab);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(DEFAULT_SELECTION.selectedRegion);
   const [selectedBudget, setSelectedBudget] = useState(DEFAULT_SELECTION.selectedBudget);
   const [selectedTime, setSelectedTime] = useState(DEFAULT_SELECTION.selectedTime);
@@ -80,30 +149,29 @@ export default function SearchBar() {
   const [hasInteracted, setHasInteracted] = useState(DEFAULT_SELECTION.hasInteracted);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // 최초 마운트 시 sessionStorage에 저장된 값이 있으면 복원
-  // (SSR과의 hydration mismatch를 피하기 위해 useEffect에서 처리)
-  useEffect(() => {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw) as Partial<StoredSelection>;
-      /* eslint-disable react-hooks/set-state-in-effect */
-      if (saved.activeTab) setActiveTab(saved.activeTab);
-      if (saved.selectedRegion) setSelectedRegion(saved.selectedRegion);
-      if (saved.selectedBudget) setSelectedBudget(saved.selectedBudget);
-      if (saved.selectedTime) setSelectedTime(saved.selectedTime);
-      if (saved.selectedCompanion) setSelectedCompanion(saved.selectedCompanion);
-      if (saved.hasInteracted) setHasInteracted(saved.hasInteracted);
-      /* eslint-enable react-hooks/set-state-in-effect */
-    }
-  } catch {
-    // sessionStorage 접근 실패 시 기본값 그대로 사용
-  } finally {
-    setIsHydrated(true);
-  }
-}, []);
+  const { sendMessage, reset } = useAIChat();
 
-  // 선택값이 바뀔 때마다 sessionStorage에 저장 (복원 이전에는 저장하지 않음)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Partial<StoredSelection>;
+        /* eslint-disable react-hooks/set-state-in-effect */
+        if (saved.activeTab) setActiveTab(saved.activeTab);
+        if (saved.selectedRegion) setSelectedRegion(saved.selectedRegion);
+        if (saved.selectedBudget) setSelectedBudget(saved.selectedBudget);
+        if (saved.selectedTime) setSelectedTime(saved.selectedTime);
+        if (saved.selectedCompanion) setSelectedCompanion(saved.selectedCompanion);
+        if (saved.hasInteracted) setHasInteracted(saved.hasInteracted);
+        /* eslint-enable react-hooks/set-state-in-effect */
+      }
+    } catch {
+      // sessionStorage 접근 실패 시 기본값 사용
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isHydrated) return;
     const toSave: StoredSelection = {
@@ -117,9 +185,13 @@ export default function SearchBar() {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch {
-      // 저장 실패는 무시 (사파리 시크릿 모드 등)
+      // 저장 실패 무시
     }
   }, [isHydrated, activeTab, selectedRegion, selectedBudget, selectedTime, selectedCompanion, hasInteracted]);
+
+  const toggleDropdown = (key: string) => {
+    setOpenDropdown((prev) => (prev === key ? null : key));
+  };
 
   const handleTabClick = (tab: Tab) => {
     if (tab === "spot") {
@@ -129,175 +201,151 @@ export default function SearchBar() {
     setActiveTab(tab);
   };
 
-  const toggleDropdown = (key: string) => {
-    setOpenDropdown((prev) => (prev === key ? null : key));
+  const openAIChat = () => {
+    reset();
+    setIsAIChatOpen(true);
   };
 
+  // 검색 → 선택 조건을 자연어 메시지로 변환해 채팅 API 전송
   const handleSearch = () => {
-    mutate({
-      signgu: selectedRegion,
-      budget: BUDGET_MAP[selectedBudget] ?? 50000,
-      duration: TIME_MAP[selectedTime] ?? "HALF_DAY",
-      companion: COMPANION_MAP[selectedCompanion] ?? "COUPLE",
-    });
+    const budgetLabel =
+      selectedBudget === "제한 없음" ? "예산 제한 없이" : `${selectedBudget} 예산으로`;
+    const timeLabel = TIME_LABEL[selectedTime] ?? selectedTime;
+    const companionLabel = COMPANION_LABEL[selectedCompanion] ?? selectedCompanion;
+    const message = `${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`;
+
+    reset();
+    setIsAIChatOpen(true);
+    setTimeout(() => {
+      sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<void>;
+    }, 100);
   };
 
-  const handleInteract = () => {
-    setHasInteracted(true);
-  };
+  const handleInteract = () => setHasInteracted(true);
 
   return (
     <>
       <div
         onClick={handleInteract}
-        className={`w-full max-w-3xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-4 ${
-          !hasInteracted ? "animate-wiggle" : ""
-        }`}
+        className={`w-full max-w-3xl mx-auto rounded-[20px] border border-gray-100 bg-white
+                    shadow-[0_4px_24px_rgba(13,48,128,0.06)] p-5 ${
+                      !hasInteracted ? "animate-wiggle" : ""
+                    }`}
       >
-        <div className="flex items-center gap-2">
+        {/* ── 상단: 탭 + AI 버튼 ── */}
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div className="inline-flex bg-gray-50 rounded-xl p-1 gap-0.5">
+            <button
+              onClick={() => handleTabClick("course")}
+              className={`px-3.5 py-2 rounded-lg text-xs sm:text-[13px] font-semibold transition-all ${
+                activeTab === "course"
+                  ? "bg-white text-[#0d3080] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              코스 추천
+            </button>
+            <button
+              onClick={() => handleTabClick("spot")}
+              className="px-3.5 py-2 rounded-lg text-xs sm:text-[13px] font-semibold text-gray-500 hover:text-gray-700 transition-all"
+            >
+              스팟 검색
+            </button>
+          </div>
+
           <button
-            onClick={() => handleTabClick("course")}
-            className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
-              activeTab === "course"
-                ? "bg-navy-400 text-white"
-                : "border border-gray-300 text-gray-600"
-            }`}
+            onClick={openAIChat}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-pink-50
+                       text-pink-500 text-xs sm:text-[13px] font-semibold
+                       hover:bg-pink-100 active:scale-95 transition-all whitespace-nowrap"
           >
-            코스 추천
-          </button>
-          <button
-            onClick={() => handleTabClick("spot")}
-            className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-gray-300 text-gray-600"
-          >
-            스팟 검색
-          </button>
-          <button
-            onClick={() => handleTabClick("ai")}
-            className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-pink-400 text-pink-400"
-          >
-            ✨ AI 에게 말하기
+            <Sparkles className="w-3.5 h-3.5" />
+            AI에게 말하기
           </button>
         </div>
 
-        {/* 필드 */}
-        {(activeTab === "course" || activeTab === "ai") && (
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:divide-x sm:divide-gray-200 sm:gap-0">
-            {/* 어디로 */}
-            <button
-              onClick={() => setIsRegionModalOpen(true)}
-              className="flex flex-col gap-0.5 px-3 py-2 text-left border border-gray-100 rounded-xl
-                         sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none"
-            >
-              <span className="text-xs text-gray-400">어디로</span>
-              <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-pink-400" />
-                {selectedRegion}
-                <ChevronDown className="w-3 h-3 ml-0.5" />
-              </span>
-            </button>
+        {/* ── 필드 그리드 ── */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <FieldCard
+            icon={<MapPin className="w-[19px] h-[19px]" style={{ color: "#185FA5" }} />}
+            iconBg="#E6F1FB"
+            label="어디로"
+            value={selectedRegion}
+            onClick={() => setIsRegionModalOpen(true)}
+          />
 
-            {/* 예산 */}
-            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
-                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
-              <button
-                onClick={() => toggleDropdown("budget")}
-                className="flex flex-col gap-0.5 w-full text-left"
-              >
-                <span className="text-xs text-gray-400">예산</span>
-                <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
-                  <Wallet className="w-3.5 h-3.5 text-pink-400" />
-                  {selectedBudget}
-                  <Chevron isOpen={openDropdown === "budget"} />
-                </span>
-              </button>
-              {openDropdown === "budget" && (
-                <ul className="absolute top-full left-0 mt-2 w-36 bg-white border border-gray-200 rounded-xl shadow-md z-20 overflow-hidden">
-                  {BUDGET_OPTIONS.map((opt) => (
-                    <li
-                      key={opt}
-                      onClick={() => { setSelectedBudget(opt); setOpenDropdown(null); }}
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <FieldCard
+            icon={<Wallet className="w-[19px] h-[19px]" style={{ color: "#3B6D11" }} />}
+            iconBg="#EAF3DE"
+            label="예산"
+            value={selectedBudget}
+            onClick={() => toggleDropdown("budget")}
+          >
+            {openDropdown === "budget" && (
+              <Dropdown
+                options={BUDGET_OPTIONS}
+                selected={selectedBudget}
+                onSelect={(v) => {
+                  setSelectedBudget(v);
+                  setOpenDropdown(null);
+                }}
+              />
+            )}
+          </FieldCard>
 
-            {/* 시간 */}
-            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
-                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
-              <button
-                onClick={() => toggleDropdown("time")}
-                className="flex flex-col gap-0.5 w-full text-left"
-              >
-                <span className="text-xs text-gray-400">시간</span>
-                <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-pink-400" />
-                  {selectedTime}
-                  <Chevron isOpen={openDropdown === "time"} />
-                </span>
-              </button>
-              {openDropdown === "time" && (
-                <ul className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-200 rounded-xl shadow-md z-20 overflow-hidden">
-                  {TIME_OPTIONS.map((opt) => (
-                    <li
-                      key={opt}
-                      onClick={() => { setSelectedTime(opt); setOpenDropdown(null); }}
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <FieldCard
+            icon={<Clock className="w-[19px] h-[19px]" style={{ color: "#854F0B" }} />}
+            iconBg="#FAEEDA"
+            label="시간"
+            value={selectedTime}
+            onClick={() => toggleDropdown("time")}
+          >
+            {openDropdown === "time" && (
+              <Dropdown
+                options={TIME_OPTIONS}
+                selected={selectedTime}
+                onSelect={(v) => {
+                  setSelectedTime(v);
+                  setOpenDropdown(null);
+                }}
+              />
+            )}
+          </FieldCard>
 
-            {/* 동행 */}
-            <div className="relative px-3 py-2 border border-gray-100 rounded-xl
-                            sm:flex-1 sm:px-4 sm:py-0 sm:border-0 sm:rounded-none">
-              <button
-                onClick={() => toggleDropdown("companion")}
-                className="flex flex-col gap-0.5 w-full text-left"
-              >
-                <span className="text-xs text-gray-400">동행</span>
-                <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-pink-400" />
-                  {selectedCompanion}
-                  <Chevron isOpen={openDropdown === "companion"} />
-                </span>
-              </button>
-              {openDropdown === "companion" && (
-                <ul className="absolute top-full left-0 mt-2 w-32 bg-white border border-gray-200 rounded-xl shadow-md z-20 overflow-hidden">
-                  {COMPANION_OPTIONS.map((opt) => (
-                    <li
-                      key={opt}
-                      onClick={() => { setSelectedCompanion(opt); setOpenDropdown(null); }}
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <FieldCard
+            icon={<Users className="w-[19px] h-[19px]" style={{ color: "#993556" }} />}
+            iconBg="#FBEAF0"
+            label="동행"
+            value={selectedCompanion}
+            onClick={() => toggleDropdown("companion")}
+          >
+            {openDropdown === "companion" && (
+              <Dropdown
+                options={COMPANION_OPTIONS}
+                selected={selectedCompanion}
+                onSelect={(v) => {
+                  setSelectedCompanion(v);
+                  setOpenDropdown(null);
+                }}
+              />
+            )}
+          </FieldCard>
+        </div>
 
-            {/* 검색 버튼 */}
-            <div className="col-span-2 sm:col-auto sm:pl-4">
-              <button
-                onClick={handleSearch}
-                disabled={isPending}
-                className="w-full sm:w-auto flex items-center justify-center gap-1.5
-                           px-6 py-3 rounded-xl bg-pink-400 text-white text-sm font-semibold
-                           whitespace-nowrap disabled:opacity-60"
-              >
-                <Search className="w-4 h-4" />
-                {isPending ? "생성 중..." : "검색"}
-              </button>
-            </div>
-          </div>
-        )}
+        {/* ── 검색 버튼 ── */}
+        <button
+          onClick={handleSearch}
+          className="w-full flex items-center justify-center gap-2 rounded-2xl py-4
+                     bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white
+                     text-[15px] font-bold
+                     shadow-[0_4px_16px_rgba(255,77,143,0.35)]
+                     hover:shadow-[0_6px_22px_rgba(255,77,143,0.45)]
+                     hover:brightness-105 active:scale-[0.98]
+                     transition-all duration-150"
+        >
+          <Sparkles className="w-[18px] h-[18px]" />
+          내 코스 만들기
+        </button>
       </div>
 
       {/* 지역 모달 */}
@@ -310,6 +358,9 @@ export default function SearchBar() {
           setIsRegionModalOpen(false);
         }}
       />
+
+      {/* AI 채팅 모달 */}
+      <AIChatModal isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
     </>
   );
 }

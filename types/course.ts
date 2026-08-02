@@ -47,3 +47,12 @@ export type ApiResponse<T> = {
   message: string;
   data: T;
 };
+
+export interface MyCourseSummary {
+  id: number;
+  pairId: string;
+  title: string;
+  description: string;
+  totalCost: number;
+  spotTitles: string[];
+}
