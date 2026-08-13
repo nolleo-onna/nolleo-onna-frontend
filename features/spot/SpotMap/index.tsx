@@ -25,36 +25,45 @@ interface SpotMapProps {
 }
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
-const CLUSTER_ZOOM_THRESHOLD = 7;
+// 클러스터로 묶을 화면 픽셀 반경 — 줌 레벨과 무관하게 "화면상 이만큼 가까우면
+// 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
+const CLUSTER_RADIUS_PX = 44;
 
-const DISTRICT_CLUSTERS: {
-  name: string;
-  lat: number;
-  lng: number;
-  color: string;
-}[] = [
-  { name: "해운대구", lat: 35.1631, lng: 129.1635, color: "#4F86F7" },
-  { name: "수영구",   lat: 35.1453, lng: 129.1133, color: "#7C6FF7" },
-  { name: "남구",     lat: 35.1367, lng: 129.0844, color: "#F76F6F" },
-  { name: "동구",     lat: 35.1296, lng: 129.0456, color: "#F7A94F" },
-  { name: "중구",     lat: 35.1059, lng: 129.0325, color: "#F76FA9" },
-  { name: "서구",     lat: 35.0977, lng: 129.0241, color: "#4FC5F7" },
-  { name: "사하구",   lat: 35.1045, lng: 128.9745, color: "#6FF7A0" },
-  { name: "강서구",   lat: 35.2121, lng: 128.9803, color: "#F7E04F" },
-  { name: "북구",     lat: 35.1974, lng: 128.9904, color: "#A04FF7" },
-  { name: "사상구",   lat: 35.1524, lng: 128.9921, color: "#F7974F" },
-  { name: "부산진구", lat: 35.1630, lng: 129.0530, color: "#4FF7D4" },
-  { name: "동래구",   lat: 35.1996, lng: 129.0837, color: "#F74F4F" },
-  { name: "연제구",   lat: 35.1762, lng: 129.0806, color: "#4FF779" },
-  { name: "금정구",   lat: 35.2429, lng: 129.0927, color: "#F7C84F" },
-  { name: "기장군",   lat: 35.2446, lng: 129.2224, color: "#4F97F7" },
-  { name: "영도구",   lat: 35.0912, lng: 129.0706, color: "#F74FAA" },
-];
+interface Cluster {
+  x: number;
+  y: number;
+  members: MapMarker[];
+}
+
+function clusterMarkers(map: kakao.maps.Map, spots: MapMarker[]): Cluster[] {
+  const proj = map.getProjection();
+  const cellSize = CLUSTER_RADIUS_PX * 2;
+  const cells = new Map<string, Cluster>();
+
+  spots.forEach((spot) => {
+    const point = proj.pointFromCoords(new kakao.maps.LatLng(spot.mapY, spot.mapX));
+    const key = `${Math.floor(point.x / cellSize)}_${Math.floor(point.y / cellSize)}`;
+
+    const cell = cells.get(key);
+    if (cell) {
+      cell.members.push(spot);
+      cell.x += point.x;
+      cell.y += point.y;
+    } else {
+      cells.set(key, { x: point.x, y: point.y, members: [spot] });
+    }
+  });
+
+  return Array.from(cells.values()).map((c) => ({
+    ...c,
+    x: c.x / c.members.length,
+    y: c.y / c.members.length,
+  }));
+}
 
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
-  const clusterOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
 
@@ -86,138 +95,122 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     }
   }, [mapInstanceRef]);
 
-  // 클러스터 오버레이 그리기
-  const renderClusters = (map: kakao.maps.Map, spots: MapMarker[]) => {
-    clusterOverlaysRef.current.forEach((o) => o.setMap(null));
-    clusterOverlaysRef.current = [];
+  // 클러스터 배지: 여러 카테고리가 섞여있을 수 있어 카테고리색 대신 브랜드 그라디언트로,
+  // "여기 더 있다"는 느낌을 명확히 구분한다.
+  const renderCluster = (map: kakao.maps.Map, cluster: Cluster) => {
+    const proj = map.getProjection();
+    const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
+    const count = cluster.members.length;
+    const size = Math.round(Math.min(34 + Math.sqrt(count) * 6, 60));
 
-    DISTRICT_CLUSTERS.forEach((district) => {
-      const count = spots.length > 0
-        ? Math.floor(spots.length / DISTRICT_CLUSTERS.length)
-        : 0;
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <button type="button" aria-label="${count}개 스팟 확대해서 보기" style="
+        all: unset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 9999px;
+        background: linear-gradient(140deg, #34a6ff, #0a84ff);
+        border: 3px solid #ffffff;
+        box-shadow: 0 6px 16px rgba(10,132,255,0.38), 0 1px 2px rgba(0,0,0,0.12);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: ${count >= 100 ? 13 : 14}px;
+        letter-spacing: -0.01em;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      ">${count}</button>
+    `;
 
-      const content = document.createElement("div");
-      content.innerHTML = `
-        <div style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          cursor: pointer;
-          user-select: none;
-        ">
-          <div style="
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: ${district.color};
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 13px;
-            line-height: 1.2;
-          ">
-            <span style="font-size: 11px; font-weight: 600; opacity: 0.9;">${district.name.replace("구","").replace("군","")}</span>
-            <span style="font-size: 12px;">${count}</span>
-          </div>
-        </div>
-      `;
-
-      content.addEventListener("click", () => {
-        map.setCenter(new kakao.maps.LatLng(district.lat, district.lng));
-        map.setLevel(5);
-      });
-
-      const overlay = new kakao.maps.CustomOverlay({
-        position: new kakao.maps.LatLng(district.lat, district.lng),
-        content,
-        yAnchor: 0.5,
-        zIndex: 1,
-      });
-      overlay.setMap(map);
-      clusterOverlaysRef.current.push(overlay);
+    const el = content.firstElementChild as HTMLElement;
+    el.addEventListener("pointerenter", () => {
+      el.style.transform = "scale(1.08)";
+      el.style.boxShadow = "0 8px 20px rgba(10,132,255,0.46), 0 1px 2px rgba(0,0,0,0.12)";
     });
+    el.addEventListener("pointerleave", () => {
+      el.style.transform = "scale(1)";
+      el.style.boxShadow = "0 6px 16px rgba(10,132,255,0.38), 0 1px 2px rgba(0,0,0,0.12)";
+    });
+    el.addEventListener("click", () => {
+      map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
+    });
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position,
+      content,
+      yAnchor: 0.5,
+      zIndex: 2,
+    });
+    overlay.setMap(map);
+    overlaysRef.current.push(overlay);
   };
 
-  // 개별 마커 그리기
-  const renderMarkers = (map: kakao.maps.Map, spots: MapMarker[]) => {
-    overlaysRef.current.forEach((o) => o.setMap(null));
-    overlaysRef.current = [];
+  const renderSingle = (map: kakao.maps.Map, spot: MapMarker) => {
+    const isSelected = spot.id === selectedId;
+    const { color, emoji } = markerStyle(spot);
+    const size = isSelected ? 40 : 32;
 
-    spots.forEach((spot: MapMarker) => {
-      const isSelected = spot.id === selectedId;
-      const { color, emoji } = markerStyle(spot);
-      const content = document.createElement("div");
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <button type="button" aria-label="${spot.title}" style="
+        all: unset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 9999px;
+        background: ${color};
+        border: ${isSelected ? "3px" : "2.5px"} solid #ffffff;
+        box-shadow: 0 3px 10px rgba(13,48,128,0.28), 0 1px 2px rgba(0,0,0,0.14);
+        cursor: pointer;
+        font-size: ${isSelected ? "17px" : "14px"};
+        line-height: 1;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      ">${emoji}</button>
+    `;
 
-      // 카테고리별 색상 + 이모지로 클릭 전에도 무슨 장소인지 구분되게 한다.
-      // 선택 상태는 색을 바꾸는 대신 크기와 흰 테두리로 표시해 카테고리 색을 유지한다.
-      const width = isSelected ? 28 : 24;
-      const height = width * 1.2;
-      const emojiSize = isSelected ? 15 : 13;
-      const emojiTop = height * (10 / 24);
+    const el = content.firstElementChild as HTMLElement;
+    el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.12)"; });
+    el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
+    el.addEventListener("click", () => onSelectMarker(spot.id));
 
-      content.innerHTML = `
-        <div style="
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          cursor: pointer;
-        ">
-          <svg width="${width}" height="${height}" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 14 10 14s10-6.5 10-14C20 4.5 15.5 0 10 0z"
-              fill="${color}" stroke="${isSelected ? "#ffffff" : "none"}" stroke-width="${isSelected ? 1.5 : 0}"/>
-            <circle cx="10" cy="10" r="6" fill="white"/>
-          </svg>
-          <span style="
-            position: absolute;
-            top: ${emojiTop}px;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: ${emojiSize}px;
-            line-height: 1;
-            pointer-events: none;
-          ">${emoji}</span>
-        </div>
-      `;
-
-      content.addEventListener("click", () => onSelectMarker(spot.id));
-
-      const overlay = new kakao.maps.CustomOverlay({
-        position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
-        content,
-        yAnchor: 0.5,
-      });
-      overlay.setMap(map);
-      overlaysRef.current.push(overlay);
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
+      content,
+      yAnchor: 0.5,
+      zIndex: isSelected ? 3 : 1,
     });
+    overlay.setMap(map);
+    overlaysRef.current.push(overlay);
   };
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || markers.length === 0) return;
+    if (!map) return;
 
-    const update = () => {
-      const level = map.getLevel();
-      if (level >= CLUSTER_ZOOM_THRESHOLD) {
-        overlaysRef.current.forEach((o) => o.setMap(null));
-        overlaysRef.current = [];
-        renderClusters(map, markers);
-      } else {
-        clusterOverlaysRef.current.forEach((o) => o.setMap(null));
-        clusterOverlaysRef.current = [];
-        renderMarkers(map, markers);
-      }
+    const render = () => {
+      overlaysRef.current.forEach((o) => o.setMap(null));
+      overlaysRef.current = [];
+
+      clusterMarkers(map, markers).forEach((cluster) => {
+        if (cluster.members.length === 1) {
+          renderSingle(map, cluster.members[0]);
+        } else {
+          renderCluster(map, cluster);
+        }
+      });
     };
 
-    update();
+    render();
 
-    kakao.maps.event.addListener(map, "zoom_changed", update);
-    return () => kakao.maps.event.removeListener(map, "zoom_changed", update);
+    // 줌이 바뀌면 화면 픽셀 밀도가 달라져 클러스터 묶음이 다시 계산돼야 한다.
+    // (팬은 오버레이가 좌표에 붙어있어 카카오맵이 알아서 따라가므로 재계산 불필요)
+    kakao.maps.event.addListener(map, "zoom_changed", render);
+    return () => kakao.maps.event.removeListener(map, "zoom_changed", render);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers, selectedId, mapInstanceRef]);
 
