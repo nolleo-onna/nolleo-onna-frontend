@@ -65,10 +65,13 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
   const isCrowd = type === "crowd";
 
   // 혼잡도 실데이터: 붐빌 곳=집중률 상위 4, 여유로운 곳=하위 4 (prop > 실데이터 > mock)
+  // congestion은 구 목록이라 캐시가 비어도(attractions: []) length가 0이 아니므로,
+  // 실제로 뽑아낸 관광지 목록이 비었는지로 다시 판단해야 mock으로 제대로 대체된다.
   const { data: congestion } = useCongestion();
-  const realSpots = congestion?.length
-    ? toSpots(isCrowd ? getTopCongested(congestion, 4) : getLeastCongested(congestion, 4))
-    : undefined;
+  const congestionSpots = congestion?.length
+    ? (isCrowd ? getTopCongested(congestion, 4) : getLeastCongested(congestion, 4))
+    : [];
+  const realSpots = congestionSpots.length ? toSpots(congestionSpots) : undefined;
 
   const data = spots ?? realSpots ?? (isCrowd ? mockCrowdSpots : mockRelaxedSpots);
 
