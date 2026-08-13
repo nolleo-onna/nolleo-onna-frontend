@@ -52,7 +52,7 @@ export default function CourseResultView() {
   const searchParams = useSearchParams();
   const pairId = searchParams.get("pairId");
 
-  const { data, isLoading, isError, hasTimedOut } = useCourseResult(pairId);
+  const { data, isLoading, isError } = useCourseResult(pairId);
 
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
@@ -65,16 +65,6 @@ export default function CourseResultView() {
       <div className="flex h-screen items-center justify-center">
         <p className="text-sm text-gray-500">
           코스를 불러오지 못했어요. 다시 시도해주세요.
-        </p>
-      </div>
-    );
-  }
-
-  if (!isLoading && hasTimedOut && (!data || data.length === 0)) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-sm text-gray-500">
-          코스 생성이 지연되고 있어요. 잠시 후 다시 시도해주세요.
         </p>
       </div>
     );

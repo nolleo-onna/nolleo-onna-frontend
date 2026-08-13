@@ -1,12 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { clientFetch } from "@/libs/clientFetch";
-
-// 코스 생성 폴링 최대 대기 시간 — 빈 배열 응답이 "생성 중"인지 "정상적으로 0건"인지
-// API가 구분해주지 않으므로, 이 시간이 지나도 결과가 없으면 폴링을 포기한다.
-const MAX_POLL_MS = 60_000;
 
 // ── API 응답 타입 (신 스펙) ────────────────────────────────
 export interface CourseItemResponse {
@@ -39,30 +34,14 @@ async function fetchCourseResult(pairId: string): Promise<CourseResponse[]> {
   return json.data ?? [];
 }
 
+// GET /api/v1/courses/{pairId}는 코스 생성이 끝난 뒤에만 받는 pairId를 조회하는
+// API라 결과가 없으면 200+빈 배열이 아니라 404/403으로 응답한다. 그래서 폴링이 필요 없다.
 export function useCourseResult(pairId: string | null) {
-  const [hasTimedOut, setHasTimedOut] = useState(false);
-  const [trackedPairId, setTrackedPairId] = useState(pairId);
-
-  // pairId가 바뀌면(새 코스 조회 시작) 이전 타임아웃 상태를 리셋
-  if (pairId !== trackedPairId) {
-    setTrackedPairId(pairId);
-    setHasTimedOut(false);
-  }
-
-  const query = useQuery({
+  return useQuery({
     queryKey: ["courseResult", pairId],
     queryFn: () => fetchCourseResult(pairId!),
-    enabled: !!pairId && !hasTimedOut,
-    // 생성 중일 수 있으므로 3초마다 폴링, 데이터 오면 중단
-    refetchInterval: (query) => (query.state.data?.length ? false : 3000),
-    staleTime: 0,
+    enabled: !!pairId,
+    staleTime: 1000 * 60,
+    retry: false,
   });
-
-  useEffect(() => {
-    if (!pairId) return;
-    const timer = setTimeout(() => setHasTimedOut(true), MAX_POLL_MS);
-    return () => clearTimeout(timer);
-  }, [pairId]);
-
-  return { ...query, hasTimedOut };
 }
