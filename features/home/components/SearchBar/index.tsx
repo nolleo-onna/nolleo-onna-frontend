@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Wallet, Clock, Users, Sparkles } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
-import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
+import { useAIChatContext } from "@/providers/AIChatProvider";
 
 type Tab = "course" | "spot";
 
@@ -115,11 +115,10 @@ function Dropdown({
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 export default function SearchBar() {
   const router = useRouter();
+  const { openChat } = useAIChatContext();
 
   const [activeTab, setActiveTab] = useState<Tab>(DEFAULT_SELECTION.activeTab);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
-  const [initialPrompt, setInitialPrompt] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(DEFAULT_SELECTION.selectedRegion);
   const [selectedBudget, setSelectedBudget] = useState(DEFAULT_SELECTION.selectedBudget);
   const [selectedTime, setSelectedTime] = useState(DEFAULT_SELECTION.selectedTime);
@@ -182,8 +181,7 @@ export default function SearchBar() {
 
   // AI 버튼 → 빈 채팅창
   const openAIChat = () => {
-    setInitialPrompt("");
-    setIsAIChatOpen(true);
+    openChat();
   };
 
   // 검색 버튼 → 선택 조건을 자연어로 변환해 prefill
@@ -197,15 +195,7 @@ export default function SearchBar() {
     const timeLabel = TIME_LABEL[selectedTime] ?? selectedTime;
     const companionLabel = COMPANION_LABEL[selectedCompanion] ?? selectedCompanion;
 
-    setInitialPrompt(
-      `${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`
-    );
-    setIsAIChatOpen(true);
-  };
-
-  const handleCloseChat = () => {
-    setIsAIChatOpen(false);
-    setInitialPrompt("");
+    openChat(`${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`);
   };
 
   const handleInteract = () => setHasInteracted(true);
@@ -349,13 +339,6 @@ export default function SearchBar() {
           setSelectedRegion(region);
           setIsRegionModalOpen(false);
         }}
-      />
-
-      {/* AI 채팅 모달 */}
-      <AIChatModal
-        isOpen={isAIChatOpen}
-        onClose={handleCloseChat}
-        initialMessage={initialPrompt}
       />
     </>
   );

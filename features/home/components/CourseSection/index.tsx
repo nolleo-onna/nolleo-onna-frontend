@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import ThemeCourseCard from "@/components/ui/Card/ThemeCourseCard";
-import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
+import { useAIChatContext } from "@/providers/AIChatProvider";
 import { THEME_COURSES } from "@/features/home/data/themeCourses";
 import type { ThemeCourse } from "@/features/home/data/themeCourses";
 
@@ -20,12 +20,11 @@ type Props = {
 
 export default function CourseSection({ courses = THEME_COURSES }: Props) {
   const router = useRouter();
+  const { isOpen: isAIChatOpen, openChat } = useAIChatContext();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(true);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
-  const [initialPrompt, setInitialPrompt] = useState('');
 
   const currentIndexRef = useRef(0);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -39,13 +38,7 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
 
   // 테마 카드 클릭 → 프롬프트 prefill 후 모달 오픈
   const handleThemeClick = (course: ThemeCourse) => {
-    setInitialPrompt(course.prompt);
-    setIsAIChatOpen(true);
-  };
-
-  const handleCloseChat = () => {
-    setIsAIChatOpen(false);
-    setInitialPrompt('');
+    openChat(course.prompt);
   };
 
   const updateIndex = useCallback((index: number) => {
@@ -191,13 +184,6 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
           </button>
         </div>
       </section>
-
-      {/* AI 채팅 모달 */}
-      <AIChatModal
-        isOpen={isAIChatOpen}
-        onClose={handleCloseChat}
-        initialMessage={initialPrompt}
-      />
     </>
   );
 }

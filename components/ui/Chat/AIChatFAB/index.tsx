@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageCircle, X } from "lucide-react";
-import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
+import { useAIChatContext } from "@/providers/AIChatProvider";
 
 const HINT_MESSAGES = [
   "어디로 갈지 고민되나요?",
@@ -14,17 +14,19 @@ const HINT_SHOW_DELAY = 2000;   // 진입 후 힌트 노출까지
 const HINT_HIDE_DELAY = 6000;   // 힌트 유지 시간
 
 export default function AIChatFAB() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { openChat } = useAIChatContext();
   const [showHint, setShowHint] = useState(false);
   const [hintDismissed, setHintDismissed] = useState(false);
-  const [hintIndex] = useState(() =>
-    Math.floor(Math.random() * HINT_MESSAGES.length)
-  );
+  // 서버/클라이언트 첫 렌더에서 같은 값이어야 하므로 랜덤 선택은 마운트 후에만 한다
+  // (Math.random()을 초기 상태로 쓰면 하이드레이션 시 텍스트 불일치 경고가 뜬다).
+  const [hintIndex, setHintIndex] = useState(0);
 
   // 힌트 자동 노출 → 자동 숨김 (한 번만)
   useEffect(() => {
     if (hintDismissed) return;
 
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 후에만 랜덤값을 정해야 하이드레이션 불일치가 안 생김 */
+    setHintIndex(Math.floor(Math.random() * HINT_MESSAGES.length));
     const showTimer = setTimeout(() => setShowHint(true), HINT_SHOW_DELAY);
     const hideTimer = setTimeout(() => {
       setShowHint(false);
@@ -38,7 +40,7 @@ export default function AIChatFAB() {
   }, [hintDismissed]);
 
   const handleOpen = () => {
-    setIsOpen(true);
+    openChat();
     setShowHint(false);
     setHintDismissed(true);
   };
@@ -90,9 +92,6 @@ export default function AIChatFAB() {
           <MessageCircle className="h-6 w-6 text-white" />
         </button>
       </div>
-
-      {/* 채팅 모달 */}
-      <AIChatModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 }

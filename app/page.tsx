@@ -9,25 +9,28 @@ import ServiceIntroSection from "@/features/home/components/ServiceIntroSection"
 import AIChatFAB from "@/components/ui/Chat/AIChatFAB";
 import Footer from "@/components/layout/Footer";
 import Container from "@/components/layout/Container";
+import AIChatProvider from "@/providers/AIChatProvider";
 
 export default function HomePage() {
   return (
-    <main>
-      <HeroSection />
-      <Container>
-        <div id="search-bar">
-          <SearchBar />
-        </div>
-        <CourseCarousel />
-        <WeatherSection />
-        <SpotsPreviewSection type="crowd" />
-        <SpotsPreviewSection type="relaxed" />
-        <TourCourseSection />
-        <PopularSpotsSection />
-        <ServiceIntroSection />
-      </Container>
-      <Footer />
-      <AIChatFAB />
-    </main>
+    <AIChatProvider>
+      <main>
+        <HeroSection />
+        <Container>
+          <div id="search-bar">
+            <SearchBar />
+          </div>
+          <CourseCarousel />
+          <WeatherSection />
+          <SpotsPreviewSection type="crowd" />
+          <SpotsPreviewSection type="relaxed" />
+          <TourCourseSection />
+          <PopularSpotsSection />
+          <ServiceIntroSection />
+        </Container>
+        <Footer />
+        <AIChatFAB />
+      </main>
+    </AIChatProvider>
   );
 }
