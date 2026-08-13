@@ -9,6 +9,7 @@ import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
+import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
 import type {
   CourseItemResponse,
   CourseResponse,
@@ -51,13 +52,23 @@ export default function CourseResultView() {
   const searchParams = useSearchParams();
   const pairId = searchParams.get("pairId");
 
-  const { data, isLoading, isError } = useCourseResult(pairId);
+  const { data, isLoading, isError, hasTimedOut } = useCourseResult(pairId);
 
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
+
+  if (!isLoading && hasTimedOut && (!data || data.length === 0)) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-sm text-gray-500">
+          코스 생성이 지연되고 있어요. 잠시 후 다시 시도해주세요.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading || !data || data.length === 0) {
     return (
@@ -94,7 +105,7 @@ export default function CourseResultView() {
   const handlePlaceClick = () => {
     if (!selectedPlace) return;
     setModalContentId(selectedPlace.originalId ?? null);
-    setModalPlaceType("SPOT");
+    setModalPlaceType(isFoodCategory(selectedPlace.category) ? "FOOD" : "SPOT");
     setModalMapPlaceId(selectedPlace.mapPlaceId ?? null);
   };
 

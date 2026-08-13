@@ -5,7 +5,7 @@ import { fetchSpotDetail, fetchFoodDetail } from "@/features/spot/apis/spot";
 
 const FOOD_CATEGORIES = ["음식점", "카페", "맛집"];
 
-function isFoodCategory(category?: string) {
+export function isFoodCategory(category?: string) {
   if (!category) return false;
   return FOOD_CATEGORIES.some((c) => category.includes(c));
 }
