@@ -27,6 +27,10 @@ export const useMapPlaces = () => {
     ...(district && { district }),
     ...(category && { category }),
     ...(maxBudget !== undefined && maxBudget > 0 && { maxBudget }),
+    // 백엔드가 size를 100개로 캡해서 내려주는데, 기본 정렬(id순)이면 첫 페이지가
+    // 이미지 없는 항목(주로 맛집)으로만 채워질 수 있다. imageUrl 오름차순으로
+    // 정렬해서 이미지 있는 항목이 먼저 오게 한다.
+    sort: "imageUrl,asc",
     size: 9999,
   };
 
