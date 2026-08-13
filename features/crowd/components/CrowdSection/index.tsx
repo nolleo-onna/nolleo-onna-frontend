@@ -50,7 +50,10 @@ export default function CrowdSection() {
                   {i + 1}
                 </span>
                 {/* 혼잡도 뱃지 */}
-                <span className={`absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text}`}>
+                <span
+                  className="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: style.bg, color: style.text }}
+                >
                   {style.label}
                 </span>
                 {/* 그라데이션 */}

@@ -70,16 +70,26 @@ function CrowdRow({ spot, rank }: { spot: Spot; rank?: number }) {
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <p className="truncate text-sm font-semibold text-gray-900">{spot.name}</p>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${style.bg} ${style.text}`}>
+          <span
+            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+            style={{ backgroundColor: style.bg, color: style.text }}
+          >
             {style.label}
           </span>
         </div>
         {spot.rate !== undefined ? (
           <div className="flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+            {/* 메터: 채워진 부분은 상태색, 트랙은 같은 색의 옅은 톤(같은 색 계열 전체로 상태가 읽히게) */}
+            <div
+              className="h-1.5 flex-1 overflow-hidden rounded-full"
+              style={{ backgroundColor: `${style.bg}1f` }}
+            >
               <div
-                className={`h-full rounded-full ${style.bg}`}
-                style={{ width: `${Math.min(Math.max(spot.rate, 4), 100)}%` }}
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(Math.max(spot.rate, 4), 100)}%`,
+                  backgroundColor: style.bg,
+                }}
               />
             </div>
             <span className="shrink-0 text-[11px] tabular-nums text-gray-400">

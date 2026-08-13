@@ -88,7 +88,10 @@ export default function CrowdView() {
                       {spot.district} · 집중률 {spot.rate}%
                     </p>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text}`}>
+                  <span
+                    className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    style={{ backgroundColor: style.bg, color: style.text }}
+                  >
                     {style.label}
                   </span>
                 </button>
