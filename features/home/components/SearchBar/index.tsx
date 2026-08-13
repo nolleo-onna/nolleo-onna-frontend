@@ -115,7 +115,7 @@ function Dropdown({
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
 export default function SearchBar() {
   const router = useRouter();
-  const { openChat } = useAIChatContext();
+  const { openChat, generateCourse } = useAIChatContext();
 
   const [activeTab, setActiveTab] = useState<Tab>(DEFAULT_SELECTION.activeTab);
   const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
@@ -200,8 +200,8 @@ export default function SearchBar() {
     const trimmedExtra = extraRequest.trim();
 
     // 드롭다운으로 이미 모든 조건을 정한 뒤 누른 버튼이라, 그 자체가 확정 의사표시다.
-    // 챗봇이 "이대로 만들까요?" 되묻는 확인 단계를 한 번 더 거치게 하지 않는다.
-    openChat(trimmedExtra ? `${prompt}. ${trimmedExtra}` : prompt, { autoConfirm: true });
+    // 대화형 챗 모달 없이 바로 생성만 진행한다.
+    generateCourse(trimmedExtra ? `${prompt}. ${trimmedExtra}` : prompt);
   };
 
   const handleInteract = () => setHasInteracted(true);

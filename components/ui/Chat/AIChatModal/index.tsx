@@ -1,10 +1,10 @@
 // components/ui/Chat/AIChatModal/index.tsx
 'use client';
 
-import { useCallback, useEffect, useRef, KeyboardEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, KeyboardEvent } from 'react';
 import { X, Send, RotateCcw, Sparkles, MapPin, Wallet, Users, Palette } from 'lucide-react';
-import { useAIChat, MAX_INPUT_LENGTH } from '@/hooks/useAIChat';
+import { MAX_INPUT_LENGTH } from '@/hooks/useAIChat';
+import type { ChatMessage } from '@/hooks/useAIChat';
 
 // ── 인트로 카드 ───────────────────────────────────────────────────────────────
 const INTRO_ITEMS = [
@@ -133,50 +133,48 @@ function TypingIndicator() {
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
+// 채팅 상태(useAIChat)는 AIChatProvider가 소유하고, 이 컴포넌트는 그 상태를
+// props로 받아 그리기만 한다 — quick 모드에서는 아예 렌더되지 않아도 상태는
+// 유지돼야 하기 때문에 상태 소유권을 Provider로 올렸다.
 export interface AIChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** 열릴 때 입력창에 미리 채워줄 메시지 */
   initialMessage?: string;
-  /** true면 "이대로 만들까요?" 확인 단계를 자동으로 통과시킨다 (조건이 이미 확정된 요청용) */
-  autoConfirm?: boolean;
+  messages: ChatMessage[];
+  inputValue: string;
+  setInputValue: (v: string) => void;
+  isLoading: boolean;
+  isAwaitingConfirmation: boolean;
+  completedPairId: string | null;
+  inputError: string | null;
+  sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<boolean>;
+  sendConfirmation: () => Promise<void>;
+  reset: () => void;
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
-export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AIChatModalProps) {
-  const router = useRouter();
+export function AIChatModal({
+  isOpen,
+  onClose,
+  initialMessage,
+  messages,
+  inputValue,
+  setInputValue,
+  isLoading,
+  isAwaitingConfirmation,
+  completedPairId,
+  inputError,
+  sendMessage,
+  sendConfirmation,
+  reset,
+}: AIChatModalProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const autoConfirmedRef = useRef(false);
-
-  const {
-    messages,
-    inputValue,
-    setInputValue,
-    isLoading,
-    isAwaitingConfirmation,
-    completedPairId,
-    inputError,
-    sendMessage,
-    sendConfirmation,
-    reset,
-  } = useAIChat();
-
-  // 코스 생성 완료 후 자동 리다이렉트 전에 수동으로 닫으면, completedPairId가 남아있는 채로
-  // 다음에 다시 열렸을 때 입력창/전송 버튼이 이유 없이 비활성화된 상태가 된다.
-  // 대화가 이미 완료된 상태라 다음 오픈은 새 대화로 시작하는 게 자연스러워 reset한다.
-  const handleClose = useCallback(() => {
-    if (completedPairId) reset();
-    onClose();
-  }, [completedPairId, reset, onClose]);
 
   // 열릴 때 initialMessage prefill + 포커스
   useEffect(() => {
     if (!isOpen) return;
-
-    // 매번 새로 열릴 때마다 자동확인 가드를 리셋 — 이전 대화에서 이미 자동확인했더라도
-    // 다음에 새로 여는 대화에서는 다시 자동확인이 동작해야 한다.
-    autoConfirmedRef.current = false;
 
     // initialMessage가 없어도 항상 반영해야, 이전에 열었을 때 prefill됐던 텍스트가
     // "빈 채팅"으로 다시 열 때 그대로 남아있는 걸 막을 수 있다.
@@ -201,32 +199,15 @@ export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AI
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // 코스 생성 완료 → 결과 페이지 이동
-  useEffect(() => {
-    if (!completedPairId) return;
-    const timer = setTimeout(() => {
-      onClose();
-      router.push(`/course/result?pairId=${completedPairId}`);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [completedPairId, onClose, router]);
-
-  // 조건이 이미 확정된 요청(검색바 등)이면 "이대로 만들까요?" 확인을 자동으로 통과
-  useEffect(() => {
-    if (!autoConfirm || !isAwaitingConfirmation || autoConfirmedRef.current) return;
-    autoConfirmedRef.current = true;
-    sendConfirmation();
-  }, [autoConfirm, isAwaitingConfirmation, sendConfirmation]);
-
   // ESC로 닫기
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [isOpen, handleClose]);
+  }, [isOpen, onClose]);
 
   const handleSend = async () => {
     const text = inputValue.trim();
@@ -261,7 +242,7 @@ export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AI
       {/* 오버레이 */}
       <div
         className="fixed inset-0 bg-[#0d3080]/20 backdrop-blur-[3px] z-40 animate-fade-in"
-        onClick={handleClose}
+        onClick={onClose}
       />
 
       {/* 모달 */}
@@ -296,7 +277,7 @@ export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AI
               </button>
             )}
             <button
-              onClick={handleClose}
+              onClick={onClose}
               aria-label="닫기"
               className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             >
@@ -320,8 +301,8 @@ export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AI
 
           {isLoading && <TypingIndicator />}
 
-          {/* 확인 단계 액션 버튼 (자동확인 대상이면 버튼이 뜨는 순간 바로 sendConfirmation이 나가므로 숨김) */}
-          {isAwaitingConfirmation && !isLoading && !autoConfirm && (
+          {/* 확인 단계 액션 버튼 */}
+          {isAwaitingConfirmation && !isLoading && (
             <div className="flex justify-center gap-2 pt-1">
               <button
                 onClick={handleReset}
