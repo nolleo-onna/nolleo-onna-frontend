@@ -78,3 +78,22 @@ export function getOverallCongestion(
   );
   return { level: getCrowdLevel(avg), rate: avg };
 }
+
+export interface DistrictSummary {
+  district: string;
+  rate: number;
+  level: CrowdLevel;
+}
+
+/** 구 단위 집중률 요약 (혼잡도 지도의 구별 원형 마커용) */
+export function getDistrictSummaries(data: Congestion[]): DistrictSummary[] {
+  return data
+    .map((item) => {
+      const d = item as RawDistrict;
+      const district =
+        d.districtName ?? d.district ?? d.signguNm ?? d.sigunguName ?? d.guName ?? "";
+      const rate = item.rate ?? 0;
+      return { district, rate, level: getCrowdLevel(rate) };
+    })
+    .filter((d) => d.district);
+}

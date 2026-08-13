@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
 import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import CrowdMap from "@/features/crowd/components/CrowdMap";
 import type { CrowdLevel } from "@/types/crowd";
 
 const FILTER_OPTIONS: { label: string; value: CrowdLevel | "전체" }[] = [
@@ -18,12 +19,20 @@ export default function CrowdView() {
   const [filter, setFilter] = useState<CrowdLevel | "전체">("전체");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
   const filtered = (data ?? []).filter((spot) => {
     const matchFilter = filter === "전체" || getCrowdLevel(spot.rate) === filter;
     const matchSearch = spot.name.includes(search) || spot.district.includes(search);
     return matchFilter && matchSearch;
   });
+
+  // 지도의 구 마커를 클릭하면 그 구로 목록을 좁혀서 보여준다.
+  const handleSelectDistrict = useCallback((district: string) => {
+    setSelectedDistrict(district);
+    setSearch(district);
+    setSelectedId(null);
+  }, []);
 
   return (
     <div className="flex h-screen pt-16">
@@ -69,6 +78,15 @@ export default function CrowdView() {
             <div className="flex items-center justify-center h-40">
               <p className="text-sm text-gray-400">불러오는 중...</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 gap-1 px-5 text-center">
+              <p className="text-sm text-gray-500">
+                {(data ?? []).length === 0
+                  ? "혼잡도 데이터가 아직 없어요"
+                  : "조건에 맞는 스팟이 없어요"}
+              </p>
+              <p className="text-xs text-gray-400">잠시 후 다시 확인해주세요</p>
+            </div>
           ) : (
             filtered.map((spot, index) => {
               const level = getCrowdLevel(spot.rate);
@@ -101,10 +119,7 @@ export default function CrowdView() {
         </div>
       </aside>
 
-      {/* 지도 자리 — 카카오맵 추후 연결 */}
-      <main className="flex-1 bg-gray-100 flex items-center justify-center">
-        <p className="text-sm text-gray-400">지도 영역</p>
-      </main>
+      <CrowdMap selectedDistrict={selectedDistrict} onSelectDistrict={handleSelectDistrict} />
     </div>
   );
 }
