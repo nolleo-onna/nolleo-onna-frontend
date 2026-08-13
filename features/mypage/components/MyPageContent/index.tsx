@@ -108,7 +108,7 @@ export default function MyPageContent() {
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-navy-900">{user.nickname}</h1>
               {user.role === "ADMIN" && (
-                <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-bold text-pink-500">
+                <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
                   ADMIN
                 </span>
               )}

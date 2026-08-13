@@ -61,7 +61,7 @@ export const RankingCard: Story = {
 		imageSrc: "https://picsum.photos/600/400",
 		imageAlt: "sample image",
 		topLeftSlot: (
-			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-500 text-lg font-bold text-white">
+			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-ocean-500 text-lg font-bold text-white">
 				1
 			</div>
 		),

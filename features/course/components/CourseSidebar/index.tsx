@@ -37,7 +37,7 @@ export default function CourseSidebar({
     <aside className="w-[340px] flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white">
       <div className="p-5">
         {/* 헤더 */}
-        <p className="mb-1 text-[11px] font-semibold tracking-wide text-pink-500">
+        <p className="mb-1 text-[11px] font-semibold tracking-wide text-ocean-600">
           부산 여행 코스
         </p>
         <h1 className="mb-4 text-[19px] font-bold leading-snug text-gray-800">
@@ -66,7 +66,7 @@ export default function CourseSidebar({
 
         {/* 코스 설명 */}
         {course.days[0]?.title && (
-          <div className="mb-5 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#fdf6f9] px-3.5 py-3">
+          <div className="mb-5 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-gray-600">
               {course.days[0].title}
             </p>
@@ -88,7 +88,7 @@ export default function CourseSidebar({
                     <div
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
                         isSelected
-                          ? "bg-pink-400 text-white shadow-[0_2px_8px_rgba(255,107,157,0.4)]"
+                          ? "bg-ocean-500 text-white shadow-[0_2px_8px_rgba(10,132,255,0.4)]"
                           : "border border-gray-200 bg-white text-gray-500"
                       }`}
                     >
@@ -102,13 +102,13 @@ export default function CourseSidebar({
                     onClick={() => onSelectPlace(place)}
                     className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
                       isSelected
-                        ? "bg-pink-50 ring-1 ring-pink-200"
+                        ? "bg-ocean-50 ring-1 ring-ocean-200"
                         : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
                     }`}
                   >
                     <p
                       className={`mb-0.5 truncate text-[14px] font-semibold ${
-                        isSelected ? "text-pink-900" : "text-gray-800"
+                        isSelected ? "text-ocean-900" : "text-gray-800"
                       }`}
                     >
                       {place.name}
@@ -116,7 +116,7 @@ export default function CourseSidebar({
                     <div className="flex items-center gap-1.5">
                       <span
                         className={`text-[11px] ${
-                          isSelected ? "text-pink-500" : "text-gray-400"
+                          isSelected ? "text-ocean-600" : "text-gray-400"
                         }`}
                       >
                         {place.category}
@@ -124,7 +124,7 @@ export default function CourseSidebar({
                       {place.expectedCost !== undefined && place.expectedCost > 0 && (
                         <span
                           className={`text-[11px] ${
-                            isSelected ? "text-pink-500" : "text-gray-400"
+                            isSelected ? "text-ocean-600" : "text-gray-400"
                           }`}
                         >
                           · {place.expectedCost.toLocaleString()}원

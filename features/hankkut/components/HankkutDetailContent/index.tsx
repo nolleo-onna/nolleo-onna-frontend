@@ -27,7 +27,7 @@ export default function HankkutDetailContent({
       {/* 한끗 정보 */}
       <section className="mt-8">
         <h2 className="flex items-center gap-2 text-lg font-bold text-navy-900">
-          <Sparkles className="h-5 w-5 text-pink-500" />
+          <Sparkles className="h-5 w-5 text-ocean-600" />
           한끗 정보
         </h2>
         <div className="mt-4 rounded-2xl bg-gray-50 p-6">
@@ -39,7 +39,7 @@ export default function HankkutDetailContent({
       {hankkut.relatedSpots.length > 0 && (
         <section className="mt-10">
           <h2 className="flex items-center gap-2 text-lg font-bold text-navy-900">
-            <MapPin className="h-5 w-5 text-pink-500" />
+            <MapPin className="h-5 w-5 text-ocean-600" />
             관련 스팟
           </h2>
           <ul className="mt-4 space-y-3">
@@ -47,7 +47,7 @@ export default function HankkutDetailContent({
               <li key={spot.id}>
                 <Link
                   href={`/spot?keyword=${encodeURIComponent(spot.name)}`}
-                  className="flex items-center justify-between rounded-2xl border border-gray-100 p-4 transition-colors hover:border-pink-300"
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 p-4 transition-colors hover:border-ocean-300"
                 >
                   <div>
                     <p className="text-sm font-semibold text-navy-900">
@@ -57,7 +57,7 @@ export default function HankkutDetailContent({
                       {spot.region} · {spot.price}
                     </p>
                   </div>
-                  <span className="text-sm font-semibold text-pink-500">
+                  <span className="text-sm font-semibold text-ocean-600">
                     보기 →
                   </span>
                 </Link>

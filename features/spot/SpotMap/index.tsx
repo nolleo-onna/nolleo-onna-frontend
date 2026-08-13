@@ -149,7 +149,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         ">
           <svg width="${isSelected ? "24" : "20"}" height="${isSelected ? "30" : "24"}" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 14 10 14s10-6.5 10-14C20 4.5 15.5 0 10 0z"
-              fill="${isSelected ? "#ff4d8f" : "#0d3080"}"/>
+              fill="${isSelected ? "#0a84ff" : "#0d3080"}"/>
             <circle cx="10" cy="10" r="4" fill="white"/>
           </svg>
         </div>

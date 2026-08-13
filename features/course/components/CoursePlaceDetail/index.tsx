@@ -60,7 +60,7 @@ export default function CoursePlaceDetail({
           <div className="min-w-0 flex-1">
             {/* 배지 */}
             <div className="mb-1.5 flex items-center gap-2">
-              <span className="rounded-md bg-pink-50 px-2 py-[3px] text-[11px] font-semibold text-pink-500">
+              <span className="rounded-md bg-ocean-50 px-2 py-[3px] text-[11px] font-semibold text-ocean-600">
                 {index + 1}번째 코스
               </span>
               <span className="rounded-md bg-gray-50 px-2 py-[3px] text-[11px] text-gray-500">
@@ -103,7 +103,7 @@ export default function CoursePlaceDetail({
                   다음까지 {formatDistance(next.distanceFromPrevM)}
                 </span>
               )}
-              <span className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-pink-500">
+              <span className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-ocean-600">
                 상세보기
                 <ArrowRight className="h-3 w-3" />
               </span>

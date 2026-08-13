@@ -43,17 +43,17 @@
 	--color-lime-800: #2e3d02;
 	--color-lime-900: #141a00;
 
-	/* ─── Pink (Tertiary) ─── */
-	--color-pink-50: #fff0f5;
-	--color-pink-100: #ffd6e7;
-	--color-pink-200: #ffb3cf;
-	--color-pink-300: #ff8fb5;
-	--color-pink-400: #ff6b9d;
-	--color-pink-500: #ff4d8f;
-	--color-pink-600: #e6233f;
-	--color-pink-700: #cc1a52;
-	--color-pink-800: #99103d;
-	--color-pink-900: #660828;
+	/* ─── Ocean (Tertiary / Accent) ─── */
+	--color-ocean-50: #eaf6ff;
+	--color-ocean-100: #cfeaff;
+	--color-ocean-200: #a3d8ff;
+	--color-ocean-300: #6cc0ff;
+	--color-ocean-400: #34a6ff;
+	--color-ocean-500: #0a84ff;
+	--color-ocean-600: #0066d6;
+	--color-ocean-700: #004fa8;
+	--color-ocean-800: #003b7a;
+	--color-ocean-900: #002550;
 
 	/* ─── Error ─── */
 	--color-error: #e91616;

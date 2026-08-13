@@ -58,7 +58,7 @@ function UserChip({
       >
         <div
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 transition-colors ${
-            open ? "bg-white/20 text-white" : "bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] text-white"
+            open ? "bg-white/20 text-white" : "bg-gradient-to-br from-[#0d3080] to-[#0a84ff] text-white"
           }`}
         >
           {initial}
@@ -69,9 +69,9 @@ function UserChip({
 
       {open && (
         <div className="absolute right-0 top-[calc(100%+8px)] w-44 bg-white rounded-2xl shadow-[0_8px_32px_rgba(13,48,128,0.15)] border border-gray-100 overflow-hidden z-50">
-          <div className="px-4 py-3 bg-gradient-to-br from-[#f6f8ff] to-[#fdf6f9] border-b border-gray-100">
+          <div className="px-4 py-3 bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] border-b border-gray-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
                 {initial}
               </div>
               <div>
@@ -134,7 +134,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
                     key={href}
                     href={href}
                     className={`text-base font-medium transition-colors duration-200 ${
-                      isActive ? "text-pink-600" : "text-gray-700 hover:text-pink-600"
+                      isActive ? "text-ocean-600" : "text-gray-700 hover:text-ocean-600"
                     }`}
                   >
                     {label}
@@ -155,7 +155,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
               ) : (
                 <Link
                   href="/login"
-                  className="hidden md:block bg-pink-400 hover:bg-pink-500 text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors duration-200"
+                  className="hidden md:block bg-ocean-500 hover:bg-ocean-600 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 active:scale-95"
                 >
                   로그인
                 </Link>
@@ -195,7 +195,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
                     href={href}
                     onClick={() => setIsMenuOpen(false)}
                     className={`py-3.5 text-base font-medium border-b border-gray-100 last:border-0 transition-colors ${
-                      isActive ? "text-pink-600" : "text-gray-700"
+                      isActive ? "text-ocean-600" : "text-gray-700"
                     }`}
                   >
                     {label}
@@ -206,7 +206,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
                 {isLoading ? null : isLoggedIn ? (
                   <div className="flex items-center justify-between">
                     <Link href="/mypage" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center text-white text-[12px] font-bold">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center text-white text-[12px] font-bold">
                         {user?.nickname?.charAt(0)}
                       </div>
                       <span className="text-[13px] font-semibold text-gray-700">{user?.nickname}님</span>
@@ -222,7 +222,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
                     </button>
                   </div>
                 ) : (
-                  <Link href="/login" onClick={() => setIsMenuOpen(false)} className="block w-full text-center bg-pink-400 hover:bg-pink-500 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors">
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)} className="block w-full text-center bg-ocean-500 hover:bg-ocean-600 text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-sm transition-all duration-200 active:scale-95">
                     로그인
                   </Link>
                 )}

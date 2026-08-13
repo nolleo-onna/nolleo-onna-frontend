@@ -68,7 +68,7 @@ export default function HankkutDetailHeader({
         <h1 className="mt-3 text-2xl font-bold text-white md:text-3xl">
           {hankkut.title}
         </h1>
-        <p className="mt-2 text-sm text-pink-300 md:text-base">
+        <p className="mt-2 text-sm text-ocean-300 md:text-base">
           {hankkut.summary}
         </p>
       </div>

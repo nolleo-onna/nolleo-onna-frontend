@@ -119,7 +119,7 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
         {/* 헤더 */}
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <p className="mb-1 text-[11px] font-semibold tracking-wide text-pink-500">AI 추천</p>
+            <p className="mb-1 text-[11px] font-semibold tracking-wide text-ocean-600">AI 추천</p>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-[#0d3080] md:text-xl">오늘 어떻게 놀까?</h2>
               <span className="text-xs text-gray-400">테마 {courses.length}개</span>

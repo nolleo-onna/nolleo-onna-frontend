@@ -81,10 +81,10 @@ export default function AIChatFAB() {
           onClick={handleOpen}
           aria-label="AI 코스 메이커 열기"
           className="flex h-14 w-14 flex-shrink-0 items-center justify-center
-                     rounded-full bg-gradient-to-br from-[#FF6B9D] to-[#ff4d8f]
-                     shadow-[0_6px_20px_rgba(255,77,143,0.40)]
+                     rounded-full bg-gradient-to-br from-[#34a6ff] to-[#0a84ff]
+                     shadow-[0_6px_20px_rgba(10,132,255,0.40)]
                      transition-all duration-200
-                     hover:shadow-[0_8px_26px_rgba(255,77,143,0.52)]
+                     hover:shadow-[0_8px_26px_rgba(10,132,255,0.52)]
                      hover:brightness-105 hover:scale-105 active:scale-95"
         >
           <MessageCircle className="h-6 w-6 text-white" />

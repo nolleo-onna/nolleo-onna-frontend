@@ -101,7 +101,7 @@ function Dropdown({
           onClick={() => onSelect(opt)}
           className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${
             selected === opt
-              ? "text-pink-500 font-semibold bg-pink-50/60"
+              ? "text-ocean-600 font-semibold bg-ocean-50/60"
               : "text-gray-700 hover:bg-gray-50"
           }`}
         >
@@ -243,9 +243,9 @@ export default function SearchBar() {
 
           <button
             onClick={openAIChat}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-pink-50
-                       text-pink-500 text-xs sm:text-[13px] font-semibold
-                       hover:bg-pink-100 active:scale-95 transition-all whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-ocean-50
+                       text-ocean-600 text-xs sm:text-[13px] font-semibold
+                       hover:bg-ocean-100 active:scale-95 transition-all whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
             AI에게 말하기
@@ -326,10 +326,10 @@ export default function SearchBar() {
             <button
               onClick={handleSearch}
               className="w-full flex items-center justify-center gap-2 rounded-2xl py-4
-                         bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white
+                         bg-gradient-to-r from-[#34a6ff] to-[#0a84ff] text-white
                          text-[15px] font-bold
-                         shadow-[0_4px_16px_rgba(255,77,143,0.35)]
-                         hover:shadow-[0_6px_22px_rgba(255,77,143,0.45)]
+                         shadow-[0_4px_16px_rgba(10,132,255,0.35)]
+                         hover:shadow-[0_6px_22px_rgba(10,132,255,0.45)]
                          hover:brightness-105 active:scale-[0.98]
                          transition-all duration-150"
             >

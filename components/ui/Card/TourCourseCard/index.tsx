@@ -38,7 +38,7 @@ export default function TourCourseCard({
         />
         {/* 뱃지 */}
         <div className="absolute top-3 left-3 flex gap-1.5">
-          <span className="rounded-full bg-pink-400 px-2.5 py-0.5 text-xs font-semibold text-white">
+          <span className="rounded-full bg-ocean-500 px-2.5 py-0.5 text-xs font-semibold text-white">
             관광공사
           </span>
           {regionTags.map((tag) => (

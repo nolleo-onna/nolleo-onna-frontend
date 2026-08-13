@@ -24,8 +24,8 @@ export default function RegionModal({ isOpen, onClose, selectedRegion, onSelect 
             onClick={() => onSelect(region)}
             className={`py-2 rounded-full text-sm font-medium transition-colors ${
               selectedRegion === region
-                ? "bg-pink-400 text-white"
-                : "border border-gray-200 text-gray-700 hover:border-pink-400 hover:text-pink-400"
+                ? "bg-ocean-500 text-white"
+                : "border border-gray-200 text-gray-700 hover:border-ocean-500 hover:text-ocean-500"
             }`}
           >
             {region}
@@ -34,7 +34,7 @@ export default function RegionModal({ isOpen, onClose, selectedRegion, onSelect 
       </div>
       <button
         onClick={onClose}
-        className="w-full py-3 rounded-xl bg-pink-400 text-white font-semibold text-sm"
+        className="w-full py-3 rounded-full bg-ocean-500 text-white font-semibold text-sm shadow-sm hover:shadow-md hover:bg-ocean-600 transition-all duration-200 active:scale-95"
       >
         적용하기
       </button>

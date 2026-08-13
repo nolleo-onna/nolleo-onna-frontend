@@ -17,7 +17,7 @@ const INTRO_ITEMS = [
 function IntroMessage() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center shadow-sm">
+      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
 
@@ -35,7 +35,7 @@ function IntroMessage() {
           {INTRO_ITEMS.map(({ Icon, label, desc, required }) => (
             <div
               key={label}
-              className="flex items-center gap-2 bg-gradient-to-br from-[#f6f8ff] to-[#fdf6f9] rounded-xl px-2.5 py-2 border border-gray-100/80"
+              className="flex items-center gap-2 bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] rounded-xl px-2.5 py-2 border border-gray-100/80"
             >
               <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-white shadow-sm flex items-center justify-center">
                 <Icon className="w-3 h-3 text-[#0d3080]" />
@@ -43,7 +43,7 @@ function IntroMessage() {
               <div className="min-w-0">
                 <span className="text-[11px] font-semibold text-gray-700 leading-none">
                   {label}
-                  {required && <span className="text-[#FF6B9D] ml-0.5">*</span>}
+                  {required && <span className="text-[#0a84ff] ml-0.5">*</span>}
                 </span>
                 <p className="text-[10px] text-gray-400 leading-tight truncate">{desc}</p>
               </div>
@@ -77,7 +77,7 @@ function MessageBubble({
   return (
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center shadow-sm">
+        <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-white" />
         </div>
       )}
@@ -87,7 +87,7 @@ function MessageBubble({
           ${isUser
             ? 'bg-gradient-to-br from-[#0d3080] to-[#2456d6] text-white rounded-tr-md shadow-[0_2px_8px_rgba(13,48,128,0.25)]'
             : isCompleted
-              ? 'bg-gradient-to-br from-[#fff0f5] to-[#fff7fa] border border-[#FF6B9D]/20 text-gray-800 rounded-tl-md shadow-[0_2px_12px_rgba(255,107,157,0.12)]'
+              ? 'bg-gradient-to-br from-[#eaf6ff] to-[#f5fbff] border border-[#0a84ff]/20 text-gray-800 rounded-tl-md shadow-[0_2px_12px_rgba(10,132,255,0.12)]'
               : isOffTopic
                 ? 'bg-[#fffbf0] border border-amber-200/50 text-gray-600 rounded-tl-md shadow-sm'
                 : isLimitExceeded
@@ -97,7 +97,7 @@ function MessageBubble({
         `}
       >
         {isCompleted && (
-          <p className="text-[#FF6B9D] font-bold text-[11px] mb-1 flex items-center gap-1">
+          <p className="text-[#0a84ff] font-bold text-[11px] mb-1 flex items-center gap-1">
             <Sparkles className="w-3 h-3" /> 코스 생성 완료!
           </p>
         )}
@@ -113,7 +113,7 @@ function MessageBubble({
 function TypingIndicator() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center shadow-sm">
+      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
       <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-[0_2px_12px_rgba(13,48,128,0.06)] flex items-center gap-1.5">
@@ -123,7 +123,7 @@ function TypingIndicator() {
             className="w-1.5 h-1.5 rounded-full animate-bounce"
             style={{
               animationDelay: `${i * 0.15}s`,
-              background: 'linear-gradient(135deg, #0d3080, #FF6B9D)',
+              background: 'linear-gradient(135deg, #0d3080, #0a84ff)',
             }}
           />
         ))}
@@ -308,7 +308,7 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
               </button>
               <button
                 onClick={sendConfirmation}
-                className="px-4 py-2 rounded-full text-[12px] font-bold bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white shadow-[0_4px_14px_rgba(255,77,143,0.4)] hover:shadow-[0_6px_20px_rgba(255,77,143,0.5)] hover:brightness-105 active:scale-95 transition-all duration-150"
+                className="px-4 py-2 rounded-full text-[12px] font-bold bg-gradient-to-r from-[#34a6ff] to-[#0a84ff] text-white shadow-[0_4px_14px_rgba(10,132,255,0.4)] hover:shadow-[0_6px_20px_rgba(10,132,255,0.5)] hover:brightness-105 active:scale-95 transition-all duration-150"
               >
                 ✨ 네, 이대로 만들어주세요!
               </button>

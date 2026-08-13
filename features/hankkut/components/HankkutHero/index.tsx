@@ -29,7 +29,7 @@ const containerVariants: Variants = {
 
 export default function HankkutHero({ activeCategory }: HankkutHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-50 via-white to-lime-50">
+    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ocean-50 via-white to-lime-50">
       {/* 떠다니는 장식 도형 */}
       <motion.div
         className="relative px-6 py-10 md:px-12 md:py-12"
@@ -39,7 +39,7 @@ export default function HankkutHero({ activeCategory }: HankkutHeroProps) {
       >
         <motion.p
           variants={itemVariants}
-          className="text-sm font-semibold text-pink-500"
+          className="text-sm font-semibold text-ocean-600"
         >
           부산 여행을 더 특별하게 만드는 작은 정보
         </motion.p>

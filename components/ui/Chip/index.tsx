@@ -12,10 +12,10 @@ const chipVariants = cva(
           "border-gray-300 bg-white text-black hover:bg-gray-100",
 
         selected:
-          "bg-pink-500 border-pink-500 text-white hover:bg-pink-600",
+          "bg-ocean-500 border-ocean-500 text-white hover:bg-ocean-600",
 
         outline:
-          "border-pink-500 text-pink-500 bg-white",
+          "border-ocean-500 text-ocean-600 bg-white",
       },
 
       size: {

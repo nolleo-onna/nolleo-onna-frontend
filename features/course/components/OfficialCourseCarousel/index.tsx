@@ -49,7 +49,7 @@ export default function OfficialCourseCarousel({
               onClick={() => onSelectCourse(course.id)}
               className={`group relative h-40 overflow-hidden rounded-2xl text-left transition-all ${
                 isSelected
-                  ? "ring-2 ring-pink-400 ring-offset-2"
+                  ? "ring-2 ring-ocean-500 ring-offset-2"
                   : "ring-0"
               }`}
             >

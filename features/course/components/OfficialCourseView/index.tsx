@@ -49,7 +49,7 @@ export default function OfficialCourseView() {
   return (
     <div className="mx-auto w-full max-w-[1280px] px-5 pt-24 pb-12 md:px-10 lg:px-20">
       <div className="mb-6">
-        <p className="text-sm font-semibold text-pink-500">부산 여행 코스</p>
+        <p className="text-sm font-semibold text-ocean-600">부산 여행 코스</p>
         <h1 className="mt-1 text-2xl font-bold text-navy-900">
           관광공사 추천 코스
         </h1>

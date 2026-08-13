@@ -2,7 +2,7 @@ export default function HeroSection() {
   return (
     <section className="relative flex flex-col items-center justify-center py-16 md:py-24 text-center overflow-hidden">
       {/* 배경 그라디언트 블롭 */}
-      <div className="absolute -top-20 -left-20 w-72 h-72 bg-pink-200 rounded-full blur-3xl opacity-30 pointer-events-none" />
+      <div className="absolute -top-20 -left-20 w-72 h-72 bg-ocean-200 rounded-full blur-3xl opacity-30 pointer-events-none" />
       <div className="absolute -bottom-10 -right-10 w-96 h-96 bg-sky-200 rounded-full blur-3xl opacity-30 pointer-events-none" />
 
       {/* 상단 태그 */}
@@ -10,7 +10,7 @@ export default function HeroSection() {
         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-100 text-lime-600 text-xs font-semibold">
           ✦ AI 맞춤 코스
         </span>
-        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100 text-pink-500 text-xs font-semibold">
+        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-ocean-100 text-ocean-600 text-xs font-semibold">
           🌊 부산 여행
         </span>
       </div>
@@ -19,7 +19,7 @@ export default function HeroSection() {
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy-900 mb-4 leading-tight">
         오늘 부산,{" "}
         <span className="relative inline-block">
-          <span className="text-pink-400">뭐하지?</span>
+          <span className="text-ocean-500">뭐하지?</span>
           <svg
             className="absolute -bottom-1 left-0 w-full"
             viewBox="0 0 200 8"
@@ -28,7 +28,7 @@ export default function HeroSection() {
           >
             <path
               d="M2 6 Q50 2 100 5 Q150 8 198 4"
-              stroke="#f472b6"
+              stroke="#0a84ff"
               strokeWidth="3"
               strokeLinecap="round"
               fill="none"

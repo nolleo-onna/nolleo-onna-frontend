@@ -10,7 +10,7 @@ export default function AuthErrorPage() {
         </p>
         <Link
           href="/login"
-          className="rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-600"
+          className="rounded-full bg-ocean-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-ocean-600 hover:shadow-md transition-all duration-200 active:scale-95"
         >
           로그인으로 돌아가기
         </Link>

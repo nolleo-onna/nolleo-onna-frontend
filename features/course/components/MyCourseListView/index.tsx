@@ -9,7 +9,7 @@ import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-5 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0d3080] to-[#FF6B9D] flex items-center justify-center shadow-lg">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-lg">
         <Compass className="w-8 h-8 text-white" />
       </div>
       <div>
@@ -23,8 +23,8 @@ function EmptyState() {
       <Link
         href="/"
         className="mt-1 inline-flex items-center gap-2 px-6 py-3 rounded-2xl
-                   bg-gradient-to-r from-[#FF6B9D] to-[#ff4d8f] text-white text-sm font-bold
-                   shadow-[0_4px_16px_rgba(255,77,143,0.35)]
+                   bg-gradient-to-r from-[#34a6ff] to-[#0a84ff] text-white text-sm font-bold
+                   shadow-[0_4px_16px_rgba(10,132,255,0.35)]
                    hover:brightness-105 active:scale-95 transition-all"
       >
         <Sparkles className="w-4 h-4" />
@@ -106,7 +106,7 @@ function CourseCard({
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                        bg-gray-50 text-[11px] text-gray-600"
           >
-            <MapPin className="w-2.5 h-2.5 text-pink-400" />
+            <MapPin className="w-2.5 h-2.5 text-ocean-500" />
             {spot}
           </span>
         ))}
@@ -143,7 +143,7 @@ export default function MyCourseListView() {
       {/* 헤더 */}
       <div className="flex items-end justify-between gap-4 mb-8">
         <div>
-          <p className="text-[13px] text-pink-500 font-semibold mb-1.5">MY COURSE</p>
+          <p className="text-[13px] text-ocean-600 font-semibold mb-1.5">MY COURSE</p>
           <h1 className="text-2xl font-bold text-gray-800">내가 만든 코스</h1>
           <p className="text-sm text-gray-400 mt-1.5">
             AI가 만들어준 부산 여행 코스를 확인해보세요
@@ -152,8 +152,8 @@ export default function MyCourseListView() {
         <Link
           href="/"
           className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl
-                     bg-pink-50 text-pink-500 text-[13px] font-semibold
-                     hover:bg-pink-100 active:scale-95 transition-all whitespace-nowrap"
+                     bg-ocean-50 text-ocean-600 text-[13px] font-semibold
+                     hover:bg-ocean-100 active:scale-95 transition-all whitespace-nowrap"
         >
           <Sparkles className="w-3.5 h-3.5" />
           새 코스 만들기

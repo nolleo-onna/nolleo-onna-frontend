@@ -86,7 +86,7 @@ export default function HankkutDetailSidebar({
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-navy-900 group-hover:text-pink-500">
+                    <p className="truncate text-sm font-semibold text-navy-900 group-hover:text-ocean-600">
                       {item.title}
                     </p>
                     <p className="mt-0.5 text-xs text-gray-400">

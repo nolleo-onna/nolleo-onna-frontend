@@ -180,31 +180,31 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               <div className="flex flex-col gap-2">
                 {spotData.addr1 && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-pink-400 mt-0.5 shrink-0" />
+                    <MapPin className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
                     <span>{spotData.addr1} {spotData.addr2}</span>
                   </div>
                 )}
                 {spotData.tel && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-pink-400 shrink-0" />
+                    <Phone className="w-4 h-4 text-ocean-500 shrink-0" />
                     <span>{spotData.tel}</span>
                   </div>
                 )}
                 {spotData.intro?.usetime && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-pink-400 mt-0.5 shrink-0" />
+                    <Clock className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
                     <span>{spotData.intro.usetime}</span>
                   </div>
                 )}
                 {spotData.intro?.restdate && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="text-pink-400 text-xs font-medium shrink-0">휴무</span>
+                    <span className="text-ocean-500 text-xs font-medium shrink-0">휴무</span>
                     <span>{spotData.intro.restdate}</span>
                   </div>
                 )}
                 {spotData.parkingAvailable && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ParkingSquare className="w-4 h-4 text-pink-400 shrink-0" />
+                    <ParkingSquare className="w-4 h-4 text-ocean-500 shrink-0" />
                     <span>주차 가능</span>
                   </div>
                 )}
@@ -244,25 +244,25 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               <div className="flex flex-col gap-2">
                 {foodData.address && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-pink-400 mt-0.5 shrink-0" />
+                    <MapPin className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
                     <span>{foodData.address}</span>
                   </div>
                 )}
                 {foodData.tel && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-pink-400 shrink-0" />
+                    <Phone className="w-4 h-4 text-ocean-500 shrink-0" />
                     <span>{foodData.tel}</span>
                   </div>
                 )}
                 {foodData.businessHoursRaw && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-pink-400 mt-0.5 shrink-0" />
+                    <Clock className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
                     <span>{foodData.businessHoursRaw}</span>
                   </div>
                 )}
                 {foodData.parkingAvailable && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ParkingSquare className="w-4 h-4 text-pink-400 shrink-0" />
+                    <ParkingSquare className="w-4 h-4 text-ocean-500 shrink-0" />
                     <span>주차 가능</span>
                   </div>
                 )}
@@ -284,7 +284,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                         {menu.representative && "⭐ "}{menu.menuName}
                       </span>
                       {menu.price && (
-                        <span className="text-pink-500 font-semibold">
+                        <span className="text-ocean-600 font-semibold">
                           {menu.price.toLocaleString()}원
                         </span>
                       )}

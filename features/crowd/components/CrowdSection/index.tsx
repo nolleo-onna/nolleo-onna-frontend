@@ -15,7 +15,7 @@ export default function CrowdSection() {
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-pink-500">오늘 붐빌 곳</span>
+          <span className="text-xs font-semibold text-ocean-600">오늘 붐빌 곳</span>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">사람 많을 곳 미리 알기</h2>
           <p className="text-xs text-gray-400">관광공사 혼잡도 예측 · 오늘 기준</p>
         </div>

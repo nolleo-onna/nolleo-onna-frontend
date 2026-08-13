@@ -31,7 +31,7 @@ export default function CrowdView() {
       <aside className="w-[360px] shrink-0 flex flex-col border-r border-gray-100 bg-white">
         {/* 헤더 */}
         <div className="px-5 py-4 border-b border-gray-100">
-          <span className="text-xs font-semibold text-pink-500">오늘 붐빌 곳</span>
+          <span className="text-xs font-semibold text-ocean-600">오늘 붐빌 곳</span>
           <h1 className="text-lg font-bold text-gray-900 mt-1">오늘 혼잡도 지도</h1>
         </div>
 
@@ -42,7 +42,7 @@ export default function CrowdView() {
             placeholder="관광지 또는 지역 검색"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-pink-300"
+            className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-ocean-400"
           />
         </div>
 
@@ -79,7 +79,7 @@ export default function CrowdView() {
                   key={`${spot.name}-${index}`}
                   onClick={() => setSelectedId(`${spot.name}-${index}`)}
                   className={`w-full flex items-center justify-between px-5 py-4 border-b border-gray-50 text-left transition-colors ${
-                    isSelected ? "bg-pink-50" : "hover:bg-gray-50"
+                    isSelected ? "bg-ocean-50" : "hover:bg-gray-50"
                   }`}
                 >
                   <div>

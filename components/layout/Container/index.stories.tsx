@@ -38,7 +38,7 @@ export const WithContent: Story = {
       <Container>
         <div className="space-y-4">
           <div className="h-20 rounded-lg bg-navy-500" />
-          <div className="h-40 rounded-lg bg-pink-200" />
+          <div className="h-40 rounded-lg bg-ocean-200" />
           <div className="h-20 rounded-lg bg-lime-200" />
         </div>
       </Container>

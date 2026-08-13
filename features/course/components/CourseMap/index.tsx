@@ -62,7 +62,7 @@ export default function CourseMap({
       content.className = [
         "flex h-8 w-8 items-center justify-center rounded-full",
         "text-sm font-bold text-white shadow-md transition-transform",
-        isSelected ? "bg-pink-500 scale-125" : "bg-navy-900 hover:scale-110",
+        isSelected ? "bg-ocean-500 scale-125" : "bg-navy-900 hover:scale-110",
       ].join(" ");
       content.textContent = String(index + 1);
       content.addEventListener("click", () => onSelectPlace(place));
