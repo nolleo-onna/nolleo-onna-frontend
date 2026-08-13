@@ -38,7 +38,9 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
         p.name.toLowerCase().includes(search.toLowerCase())
       );
     }
-    return list;
+    // 이미지 없는 항목(FOOD는 항상 이미지가 없음)이 먼저 보이면 밋밋해 보여서
+    // 뒤로 밀어낸다. 정렬은 안정적이라 같은 그룹 안의 원래 순서는 유지된다.
+    return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
   }, [allPlaces, freeOnly, search]);
 
   useEffect(() => {
