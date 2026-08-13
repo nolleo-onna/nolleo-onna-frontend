@@ -4,6 +4,7 @@ import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import type { MapPlace } from "@/types/map";
 
 interface SpotListSidebarProps {
@@ -17,14 +18,7 @@ interface SpotListSidebarProps {
   ) => void;
 }
 
-const CATEGORY_LABEL: Record<string, { label: string; emoji: string }> = {
-  VE: { label: "관광·문화", emoji: "🏛️" },
-  HS: { label: "역사·문화유산", emoji: "🏯" },
-  EX: { label: "체험·액티비티", emoji: "🎢" },
-  NA: { label: "자연·해변", emoji: "🌊" },
-  LS: { label: "레저스포츠", emoji: "🏄" },
-  FD: { label: "맛집·카페", emoji: "🍽️" },
-};
+const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
 
 export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSidebarProps) {
   const selectedRef = useRef<HTMLLIElement | null>(null);
@@ -78,7 +72,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
         </div>
         <div className="p-3 space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />
           ))}
         </div>
       </aside>
@@ -131,7 +125,8 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
           <>
             {places.map((place: MapPlace) => {
               const isSelected = place.originalId === selectedId;
-              const category = CATEGORY_LABEL[place.category] ?? { label: place.category, emoji: "📍" };
+              const category =
+                CATEGORY_META[place.category as keyof typeof CATEGORY_META] ?? FALLBACK_CATEGORY;
 
               return (
                 <li
@@ -152,7 +147,10 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                     }
                   `}
                 >
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
+                  <div
+                    className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl"
+                    style={!place.imageUrl ? { background: `${category.color}1A` } : undefined}
+                  >
                     {place.imageUrl ? (
                       <Image
                         src={place.imageUrl}
@@ -161,23 +159,25 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-100 text-2xl">
+                      <div className="flex h-full w-full items-center justify-center text-3xl">
                         {category.emoji}
                       </div>
                     )}
                     {isSelected && (
-                      <div className="absolute inset-0 bg-navy-400/10 rounded-lg" />
+                      <div className="absolute inset-0 bg-navy-400/10 rounded-xl" />
                     )}
                   </div>
 
-                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
                     <p className={`truncate text-sm font-semibold ${isSelected ? "text-navy-600" : "text-gray-900"}`}>
                       {place.name}
                     </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs">{category.emoji}</span>
-                      <span className="text-xs text-gray-500">{category.label}</span>
-                    </div>
+                    <span
+                      className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      style={{ backgroundColor: `${category.color}1A`, color: category.color }}
+                    >
+                      {category.emoji} {category.label}
+                    </span>
                     {place.avgRating > 0 && (
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-yellow-400">★</span>
