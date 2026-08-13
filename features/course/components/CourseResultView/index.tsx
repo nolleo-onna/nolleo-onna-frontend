@@ -60,6 +60,16 @@ export default function CourseResultView() {
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
 
+  if (isError) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-sm text-gray-500">
+          코스를 불러오지 못했어요. 다시 시도해주세요.
+        </p>
+      </div>
+    );
+  }
+
   if (!isLoading && hasTimedOut && (!data || data.length === 0)) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -75,16 +85,6 @@ export default function CourseResultView() {
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-ocean-500" />
         <p className="text-sm text-gray-500">AI가 코스를 생성하고 있어요...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-sm text-gray-500">
-          코스를 불러오지 못했어요. 다시 시도해주세요.
-        </p>
       </div>
     );
   }
