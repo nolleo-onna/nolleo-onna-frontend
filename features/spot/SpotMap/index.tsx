@@ -25,9 +25,9 @@ interface SpotMapProps {
 }
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
-// 클러스터로 묶을 화면 픽셀 반경 — 줌 레벨과 무관하게 "화면상 이만큼 가까우면
-// 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
-const CLUSTER_RADIUS_PX = 44;
+// 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
+// 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
+const CLUSTER_RADIUS_PX = 64;
 
 interface Cluster {
   x: number;
@@ -35,30 +35,41 @@ interface Cluster {
   members: MapMarker[];
 }
 
+// 격자로 나눠서 묶으면 바로 옆 칸에 있는 클러스터끼리도 서로 다닥다닥 붙어
+// 그려진다(칸 경계 문제). 대신 각 마커를 "반경 안에 있는 기존 클러스터 중
+// 가장 가까운 곳"에 그리디하게 합쳐서, 클러스터 중심끼리 최소 반경만큼은
+// 항상 떨어져 있도록 만든다 — 결과적으로 원 개수 자체가 훨씬 줄어든다.
 function clusterMarkers(map: kakao.maps.Map, spots: MapMarker[]): Cluster[] {
   const proj = map.getProjection();
-  const cellSize = CLUSTER_RADIUS_PX * 2;
-  const cells = new Map<string, Cluster>();
+  const radiusSq = CLUSTER_RADIUS_PX * CLUSTER_RADIUS_PX;
+  const clusters: Cluster[] = [];
 
   spots.forEach((spot) => {
     const point = proj.pointFromCoords(new kakao.maps.LatLng(spot.mapY, spot.mapX));
-    const key = `${Math.floor(point.x / cellSize)}_${Math.floor(point.y / cellSize)}`;
 
-    const cell = cells.get(key);
-    if (cell) {
-      cell.members.push(spot);
-      cell.x += point.x;
-      cell.y += point.y;
+    let nearest: Cluster | null = null;
+    let nearestDistSq = radiusSq;
+    for (const cluster of clusters) {
+      const dx = cluster.x - point.x;
+      const dy = cluster.y - point.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq <= nearestDistSq) {
+        nearest = cluster;
+        nearestDistSq = distSq;
+      }
+    }
+
+    if (nearest) {
+      const n = nearest.members.length + 1;
+      nearest.x = (nearest.x * (n - 1) + point.x) / n;
+      nearest.y = (nearest.y * (n - 1) + point.y) / n;
+      nearest.members.push(spot);
     } else {
-      cells.set(key, { x: point.x, y: point.y, members: [spot] });
+      clusters.push({ x: point.x, y: point.y, members: [spot] });
     }
   });
 
-  return Array.from(cells.values()).map((c) => ({
-    ...c,
-    x: c.x / c.members.length,
-    y: c.y / c.members.length,
-  }));
+  return clusters;
 }
 
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
