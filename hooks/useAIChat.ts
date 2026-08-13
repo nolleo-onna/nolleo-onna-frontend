@@ -29,7 +29,7 @@ interface UseAIChatReturn {
   isAwaitingConfirmation: boolean;
   completedPairId: string | null;
   inputError: string | null;
-  sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<void>;
+  sendMessage: (text: string, opts?: { skipGuards?: boolean }) => Promise<boolean>;
   sendConfirmation: () => Promise<void>;
   reset: () => void;
 }
@@ -65,21 +65,21 @@ export function useAIChat(): UseAIChatReturn {
   const sendMessage = useCallback(
     async (text: string, opts?: { skipGuards?: boolean }) => {
       const trimmed = text.trim();
-      if (!trimmed || isLoading) return;
+      if (!trimmed || isLoading) return false;
 
       if (!opts?.skipGuards) {
         if (trimmed.length > MAX_INPUT_LENGTH) {
           setInputError(`메시지는 ${MAX_INPUT_LENGTH}자 이내로 입력해주세요.`);
-          return;
+          return false;
         }
         const now = Date.now();
         if (now - lastSentAtRef.current < COOLDOWN_MS) {
           setInputError('조금 천천히 보내주세요 🙏');
-          return;
+          return false;
         }
         if (trimmed === lastSentTextRef.current && trimmed !== '코스 생성 시작') {
           setInputError('방금 보낸 메시지와 같아요. 다른 내용을 입력해주세요.');
-          return;
+          return false;
         }
       }
 
@@ -132,6 +132,8 @@ export function useAIChat(): UseAIChatReturn {
       } finally {
         setIsLoading(false);
       }
+
+      return true;
     },
     [addMessage, conversationId, isLoading],
   );

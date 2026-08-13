@@ -171,9 +171,9 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
   useEffect(() => {
     if (!isOpen) return;
 
-    if (initialMessage) {
-      setInputValue(initialMessage);
-    }
+    // initialMessage가 없어도 항상 반영해야, 이전에 열었을 때 prefill됐던 텍스트가
+    // "빈 채팅"으로 다시 열 때 그대로 남아있는 걸 막을 수 있다.
+    setInputValue(initialMessage ?? '');
 
     const timer = setTimeout(() => {
       const el = inputRef.current;
@@ -217,9 +217,10 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
   const handleSend = async () => {
     const text = inputValue.trim();
     if (!text || isLoading) return;
-    await sendMessage(text);
-    // 전송 후 textarea 높이 초기화
-    if (inputRef.current) {
+    const sent = await sendMessage(text);
+    // 쿨다운 등으로 실제 전송이 거부된 경우엔 입력한 텍스트가 남아있으니
+    // textarea 높이를 건드리지 않는다 (건드리면 여러 줄 입력이 잘려 보임).
+    if (sent && inputRef.current) {
       inputRef.current.style.height = '22px';
     }
   };
