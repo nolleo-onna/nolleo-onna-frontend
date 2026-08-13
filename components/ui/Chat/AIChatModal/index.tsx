@@ -138,13 +138,16 @@ export interface AIChatModalProps {
   onClose: () => void;
   /** 열릴 때 입력창에 미리 채워줄 메시지 */
   initialMessage?: string;
+  /** true면 "이대로 만들까요?" 확인 단계를 자동으로 통과시킨다 (조건이 이미 확정된 요청용) */
+  autoConfirm?: boolean;
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
-export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProps) {
+export function AIChatModal({ isOpen, onClose, initialMessage, autoConfirm }: AIChatModalProps) {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const autoConfirmedRef = useRef(false);
 
   const {
     messages,
@@ -170,6 +173,10 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
   // 열릴 때 initialMessage prefill + 포커스
   useEffect(() => {
     if (!isOpen) return;
+
+    // 매번 새로 열릴 때마다 자동확인 가드를 리셋 — 이전 대화에서 이미 자동확인했더라도
+    // 다음에 새로 여는 대화에서는 다시 자동확인이 동작해야 한다.
+    autoConfirmedRef.current = false;
 
     // initialMessage가 없어도 항상 반영해야, 이전에 열었을 때 prefill됐던 텍스트가
     // "빈 채팅"으로 다시 열 때 그대로 남아있는 걸 막을 수 있다.
@@ -203,6 +210,13 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
     }, 2000);
     return () => clearTimeout(timer);
   }, [completedPairId, onClose, router]);
+
+  // 조건이 이미 확정된 요청(검색바 등)이면 "이대로 만들까요?" 확인을 자동으로 통과
+  useEffect(() => {
+    if (!autoConfirm || !isAwaitingConfirmation || autoConfirmedRef.current) return;
+    autoConfirmedRef.current = true;
+    sendConfirmation();
+  }, [autoConfirm, isAwaitingConfirmation, sendConfirmation]);
 
   // ESC로 닫기
   useEffect(() => {
@@ -306,8 +320,8 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
 
           {isLoading && <TypingIndicator />}
 
-          {/* 확인 단계 액션 버튼 */}
-          {isAwaitingConfirmation && !isLoading && (
+          {/* 확인 단계 액션 버튼 (자동확인 대상이면 버튼이 뜨는 순간 바로 sendConfirmation이 나가므로 숨김) */}
+          {isAwaitingConfirmation && !isLoading && !autoConfirm && (
             <div className="flex justify-center gap-2 pt-1">
               <button
                 onClick={handleReset}

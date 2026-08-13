@@ -123,6 +123,7 @@ export default function SearchBar() {
   const [selectedBudget, setSelectedBudget] = useState(DEFAULT_SELECTION.selectedBudget);
   const [selectedTime, setSelectedTime] = useState(DEFAULT_SELECTION.selectedTime);
   const [selectedCompanion, setSelectedCompanion] = useState(DEFAULT_SELECTION.selectedCompanion);
+  const [extraRequest, setExtraRequest] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(DEFAULT_SELECTION.hasInteracted);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -195,7 +196,12 @@ export default function SearchBar() {
     const timeLabel = TIME_LABEL[selectedTime] ?? selectedTime;
     const companionLabel = COMPANION_LABEL[selectedCompanion] ?? selectedCompanion;
 
-    openChat(`${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`);
+    const prompt = `${selectedRegion}에서 ${companionLabel} ${timeLabel} ${budgetLabel} 코스 짜줘`;
+    const trimmedExtra = extraRequest.trim();
+
+    // 드롭다운으로 이미 모든 조건을 정한 뒤 누른 버튼이라, 그 자체가 확정 의사표시다.
+    // 챗봇이 "이대로 만들까요?" 되묻는 확인 단계를 한 번 더 거치게 하지 않는다.
+    openChat(trimmedExtra ? `${prompt}. ${trimmedExtra}` : prompt, { autoConfirm: true });
   };
 
   const handleInteract = () => setHasInteracted(true);
@@ -311,6 +317,18 @@ export default function SearchBar() {
                 )}
               </FieldCard>
             </div>
+
+            {/* ── 자유 입력 (드롭다운으로 못 담는 조건 보완) ── */}
+            <input
+              type="text"
+              value={extraRequest}
+              onChange={(e) => setExtraRequest(e.target.value)}
+              placeholder="꼭 가고 싶은 곳이나 피하고 싶은 곳이 있나요? (선택)"
+              maxLength={100}
+              className="w-full rounded-2xl bg-gray-50 px-4 py-3 mb-4 text-sm text-gray-800
+                         placeholder:text-gray-400 outline-none focus:bg-white focus:ring-2 focus:ring-ocean-200
+                         transition-colors"
+            />
 
             {/* ── 검색 버튼 ── */}
             <button
