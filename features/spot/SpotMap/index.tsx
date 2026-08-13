@@ -5,6 +5,18 @@ import { useSpotMarkers } from "../hooks/useSpotMarkers";
 import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
 import type { MapMarker } from "@/types/spot";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+
+const FOOD_COLOR = CATEGORY_META.FD.color;
+const FOOD_EMOJI = CATEGORY_META.FD.emoji;
+
+function markerStyle(spot: MapMarker) {
+  const meta = CATEGORY_META[spot.category as keyof typeof CATEGORY_META];
+  if (meta) return meta;
+  // FOOD 타입은 category 코드가 없거나 다를 수 있어 type으로 한 번 더 폴백
+  if (spot.type === "FOOD") return { color: FOOD_COLOR, emoji: FOOD_EMOJI, label: "음식점" };
+  return { color: "#0d3080", emoji: "📍", label: "기타" };
+}
 
 interface SpotMapProps {
   selectedId: string | null;
@@ -138,20 +150,38 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
 
     spots.forEach((spot: MapMarker) => {
       const isSelected = spot.id === selectedId;
+      const { color, emoji } = markerStyle(spot);
       const content = document.createElement("div");
+
+      // 카테고리별 색상 + 이모지로 클릭 전에도 무슨 장소인지 구분되게 한다.
+      // 선택 상태는 색을 바꾸는 대신 크기와 흰 테두리로 표시해 카테고리 색을 유지한다.
+      const width = isSelected ? 28 : 24;
+      const height = width * 1.2;
+      const emojiSize = isSelected ? 15 : 13;
+      const emojiTop = height * (10 / 24);
 
       content.innerHTML = `
         <div style="
+          position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
           cursor: pointer;
         ">
-          <svg width="${isSelected ? "24" : "20"}" height="${isSelected ? "30" : "24"}" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg">
+          <svg width="${width}" height="${height}" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 14 10 14s10-6.5 10-14C20 4.5 15.5 0 10 0z"
-              fill="${isSelected ? "#0a84ff" : "#0d3080"}"/>
-            <circle cx="10" cy="10" r="4" fill="white"/>
+              fill="${color}" stroke="${isSelected ? "#ffffff" : "none"}" stroke-width="${isSelected ? 1.5 : 0}"/>
+            <circle cx="10" cy="10" r="6" fill="white"/>
           </svg>
+          <span style="
+            position: absolute;
+            top: ${emojiTop}px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: ${emojiSize}px;
+            line-height: 1;
+            pointer-events: none;
+          ">${emoji}</span>
         </div>
       `;
 
