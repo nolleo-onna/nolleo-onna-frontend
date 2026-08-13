@@ -197,9 +197,3 @@ export function getDistance(
     Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
-
-export function formatDistance(meters: number): string {
-  return meters < 1000
-    ? `${Math.round(meters)}m`
-    : `${(meters / 1000).toFixed(1)}km`;
-}

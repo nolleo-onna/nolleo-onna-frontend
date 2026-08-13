@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Wallet, Footprints, ArrowRight, ImageIcon } from "lucide-react";
 import { useSpotDescription } from "@/features/course/hooks/useSpotDescription";
+import { formatDistance } from "@/features/course/utils/format";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
 interface Props {
@@ -113,8 +114,4 @@ export default function CoursePlaceDetail({
       </button>
     </div>
   );
-}
-
-function formatDistance(m: number) {
-  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`;
 }

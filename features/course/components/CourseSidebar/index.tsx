@@ -2,6 +2,7 @@
 
 import { Footprints } from "lucide-react";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
+import { formatDistance, formatCost } from "@/features/course/utils/format";
 
 interface Props {
   course: Course;
@@ -9,15 +10,6 @@ interface Props {
   selectedPlaceId: number | null;
   onSelectDay: (day: number) => void;
   onSelectPlace: (place: CoursePlace) => void;
-}
-
-function formatDistance(m: number) {
-  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`;
-}
-
-function formatCost(won: number) {
-  if (won >= 10000) return `${(won / 10000).toFixed(1)}만`;
-  return `${won.toLocaleString()}원`;
 }
 
 export default function CourseSidebar({
