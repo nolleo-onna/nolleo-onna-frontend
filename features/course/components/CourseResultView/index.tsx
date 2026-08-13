@@ -54,7 +54,6 @@ export default function CourseResultView() {
 
   const { data, isLoading, isError } = useCourseResult(pairId);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
@@ -79,18 +78,13 @@ export default function CourseResultView() {
     );
   }
 
-  const activeCourse = data.find((c) => c.id === selectedCourseId) ?? data[0];
-  const course = toCourse(activeCourse);
+  // 코스 생성은 pairId당 1건만 만들어지므로 여러 개가 와도 첫 번째만 보여준다.
+  const course = toCourse(data[0]);
   const places = course.days[0].places;
   const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
   const selectedPlace = places.find((p) => p.id === resolvedPlaceId) ?? places[0];
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
-
-  const handleSelectCourse = (id: number) => {
-    setSelectedCourseId(id);
-    setSelectedPlaceId(null);
-  };
 
   const handlePlaceClick = () => {
     if (!selectedPlace) return;
@@ -108,25 +102,6 @@ export default function CourseResultView() {
   return (
     <>
       <div className="flex h-screen flex-col pt-16">
-        {/* 코스 선택 탭 (2개 이상일 때만) */}
-        {data.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-gray-100 bg-white px-6 py-3">
-            {data.map((c, idx) => (
-              <button
-                key={c.id}
-                onClick={() => handleSelectCourse(c.id)}
-                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-                  activeCourse.id === c.id
-                    ? "bg-[#0d3080] text-white"
-                    : "border border-gray-200 text-gray-500 hover:border-gray-300"
-                }`}
-              >
-                {c.title || `코스 ${idx + 1}`}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* 사이드바 + 지도 */}
         <div className="flex flex-1 overflow-hidden">
           <CourseSidebar
