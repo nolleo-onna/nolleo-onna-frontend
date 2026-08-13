@@ -5,6 +5,7 @@ import SpotFilterSidebar from "../SpotFilterSidebar";
 import SpotMap from "../SpotMap";
 import SpotListSidebar from "../SpotListSidebar";
 import SpotDetailModal from "../components/SpotDetailModal";
+import SpotStatusBar from "../components/SpotStatusBar";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 
 export default function SpotContainer() {
@@ -46,26 +47,29 @@ export default function SpotContainer() {
   };
 
   return (
-    <main className="flex h-[calc(100vh-64px)] mt-16 w-full overflow-hidden">
-      <SpotFilterSidebar onSelectRegion={handleSelectRegion} />
-      <SpotMap
-        selectedId={selectedId}
-        onSelectMarker={(id) => {
-          setSelectedId(id);
-          setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
-        }}
-        mapInstanceRef={mapRef}
-      />
-      <SpotListSidebar
-        selectedId={selectedId}
-        onSelectSpot={handleSelectSpot}
-      />
-      <SpotDetailModal
-        contentId={modalInfo?.id ?? null}
-        placeType={modalInfo?.placeType ?? null}
-        mapPlaceId={modalInfo?.mapPlaceId ?? null}
-        onClose={() => setModalInfo(null)}
-      />
-    </main>
+    <div className="mt-16 flex h-[calc(100vh-64px)] w-full flex-col overflow-hidden">
+      <SpotStatusBar />
+      <main className="flex flex-1 overflow-hidden">
+        <SpotFilterSidebar onSelectRegion={handleSelectRegion} />
+        <SpotMap
+          selectedId={selectedId}
+          onSelectMarker={(id) => {
+            setSelectedId(id);
+            setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
+          }}
+          mapInstanceRef={mapRef}
+        />
+        <SpotListSidebar
+          selectedId={selectedId}
+          onSelectSpot={handleSelectSpot}
+        />
+        <SpotDetailModal
+          contentId={modalInfo?.id ?? null}
+          placeType={modalInfo?.placeType ?? null}
+          mapPlaceId={modalInfo?.mapPlaceId ?? null}
+          onClose={() => setModalInfo(null)}
+        />
+      </main>
+    </div>
   );
 }
