@@ -2,39 +2,40 @@
 
 import { useRouter } from "next/navigation";
 
-import SpotCard from "@/components/ui/Card/SpotCard";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
 import {
   getTopCongested,
   getLeastCongested,
   type CongestionSpot,
 } from "@/features/home/utils/congestion";
+import type { CrowdLevel } from "@/types/crowd";
 
 type CrowdType = "crowd" | "relaxed";
 
 type Spot = {
   id: number;
-  imageSrc: string;
   name: string;
   location: string;
-  rating: number;
-  reviewCount: string;
-  crowdStatus: "매우혼잡" | "혼잡" | "보통" | "여유";
-  price?: number | null;
+  crowdStatus: CrowdLevel;
+  /** 실데이터일 때만 채워짐 — 있으면 막대바로 집중률(%)을 보여준다 */
+  rate?: number;
 };
 
+// 혼잡도는 사진이 아니라 순위/수치 데이터라 카드+이미지보다 리스트+막대바가 더
+// 잘 맞는다 (실데이터에 이미지가 없는 경우가 많아 카드 형식일 때 빈 이미지가 반복되던 문제도 해결).
 const mockCrowdSpots: Spot[] = [
-  { id: 1, imageSrc: "https://picsum.photos/seed/gwangan/400/300", name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", rating: 4.6, reviewCount: "1.8k", crowdStatus: "매우혼잡", price: null },
-  { id: 2, imageSrc: "https://picsum.photos/seed/haeundae/400/300", name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", rating: 4.8, reviewCount: "2.1k", crowdStatus: "매우혼잡", price: null },
-  { id: 3, imageSrc: "https://picsum.photos/seed/jeonpo/400/300", name: "전포 카페거리", location: "부산진구 · 오후 붐빔", rating: 4.5, reviewCount: "980", crowdStatus: "혼잡", price: null },
-  { id: 4, imageSrc: "https://picsum.photos/seed/seomyeon/400/300", name: "서면 먹자골목", location: "부산진구 · 저녁 피크", rating: 4.3, reviewCount: "760", crowdStatus: "혼잡", price: null },
+  { id: 1, name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", crowdStatus: "매우혼잡" },
+  { id: 2, name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", crowdStatus: "매우혼잡" },
+  { id: 3, name: "전포 카페거리", location: "부산진구 · 오후 붐빔", crowdStatus: "혼잡" },
+  { id: 4, name: "서면 먹자골목", location: "부산진구 · 저녁 피크", crowdStatus: "혼잡" },
 ];
 
 const mockRelaxedSpots: Spot[] = [
-  { id: 1, imageSrc: "https://picsum.photos/seed/huinnyeoul/400/300", name: "흰여울문화마을", location: "영도구 · 종일 한산", rating: 4.7, reviewCount: "540", crowdStatus: "여유", price: null },
-  { id: 2, imageSrc: "https://picsum.photos/seed/taejongdae/400/300", name: "태종대", location: "영도구 · 오전 추천", rating: 4.8, reviewCount: "1.2k", crowdStatus: "여유", price: null },
-  { id: 3, imageSrc: "https://picsum.photos/seed/museum/400/300", name: "부산시립미술관", location: "해운대구 · 항소 수준", rating: 4.2, reviewCount: "320", crowdStatus: "보통", price: 0 },
-  { id: 4, imageSrc: "https://picsum.photos/seed/forest/400/300", name: "아홉산 숲", location: "기장군 · 종일 한산", rating: 4.6, reviewCount: "280", crowdStatus: "여유", price: null },
+  { id: 1, name: "흰여울문화마을", location: "영도구 · 종일 한산", crowdStatus: "여유" },
+  { id: 2, name: "태종대", location: "영도구 · 오전 추천", crowdStatus: "여유" },
+  { id: 3, name: "부산시립미술관", location: "해운대구 · 한산한 수준", crowdStatus: "보통" },
+  { id: 4, name: "아홉산 숲", location: "기장군 · 종일 한산", crowdStatus: "여유" },
 ];
 
 type Props = {
@@ -42,22 +43,55 @@ type Props = {
   spots?: Spot[];
 };
 
-// 백엔드가 이미지를 주지 않을 때 사용할 기본 이미지
-const DEFAULT_SPOT_IMAGE = "/images/default-spot.svg";
-
-// 혼잡도 데이터를 카드(Spot) 형태로 변환.
-// overlay 카드는 이미지/이름/위치/혼잡도만 표시하므로 rating/reviewCount/price는 표시에 쓰이지 않는다.
 function toSpots(list: CongestionSpot[]): Spot[] {
   return list.map((s, index) => ({
     id: index + 1,
-    imageSrc: s.imageUrl ?? DEFAULT_SPOT_IMAGE,
     name: s.name,
-    location: s.district ? `${s.district} · 집중률 ${s.rate}%` : `집중률 ${s.rate}%`,
-    rating: 0,
-    reviewCount: "",
+    location: s.district ?? "",
     crowdStatus: s.level,
-    price: null,
+    rate: s.rate,
   }));
+}
+
+function CrowdRow({ spot, rank }: { spot: Spot; rank?: number }) {
+  const router = useRouter();
+  const style = CROWD_STYLE[spot.crowdStatus];
+
+  return (
+    <button
+      onClick={() => router.push("/crowd")}
+      className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 text-left transition-all hover:border-gray-200 hover:shadow-sm active:scale-[0.99]"
+    >
+      {rank !== undefined && (
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[11px] font-bold text-white">
+          {rank}
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <p className="truncate text-sm font-semibold text-gray-900">{spot.name}</p>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${style.bg} ${style.text}`}>
+            {style.label}
+          </span>
+        </div>
+        {spot.rate !== undefined ? (
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className={`h-full rounded-full ${style.bg}`}
+                style={{ width: `${Math.min(Math.max(spot.rate, 4), 100)}%` }}
+              />
+            </div>
+            <span className="shrink-0 text-[11px] tabular-nums text-gray-400">
+              {Math.round(spot.rate)}%
+            </span>
+          </div>
+        ) : (
+          <p className="truncate text-[11px] text-gray-400">{spot.location}</p>
+        )}
+      </div>
+    </button>
+  );
 }
 
 export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
@@ -100,28 +134,10 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
         )}
       </div>
 
-      {/* 카드 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 리스트 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {data.map((spot, index) => (
-          <SpotCard
-            key={spot.id}
-            variant="overlay"
-            imageSrc={spot.imageSrc}
-            name={spot.name}
-            location={spot.location}
-            rating={spot.rating}
-            reviewCount={spot.reviewCount}
-            crowdStatus={spot.crowdStatus}
-            price={spot.price}
-            onClick={() => router.push("/crowd")}
-            topLeftSlot={
-              isCrowd ? (
-                <span className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-900 text-white text-xs font-bold">
-                  {index + 1}
-                </span>
-              ) : undefined
-            }
-          />
+          <CrowdRow key={spot.id} spot={spot} rank={isCrowd ? index + 1 : undefined} />
         ))}
       </div>
     </section>
