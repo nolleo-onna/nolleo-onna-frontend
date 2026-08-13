@@ -1,7 +1,7 @@
 // components/ui/Chat/AIChatModal/index.tsx
 'use client';
 
-import { useEffect, useRef, KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Send, RotateCcw, Sparkles, MapPin, Wallet, Users, Palette } from 'lucide-react';
 import { useAIChat, MAX_INPUT_LENGTH } from '@/hooks/useAIChat';
@@ -159,6 +159,14 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
     reset,
   } = useAIChat();
 
+  // 코스 생성 완료 후 자동 리다이렉트 전에 수동으로 닫으면, completedPairId가 남아있는 채로
+  // 다음에 다시 열렸을 때 입력창/전송 버튼이 이유 없이 비활성화된 상태가 된다.
+  // 대화가 이미 완료된 상태라 다음 오픈은 새 대화로 시작하는 게 자연스러워 reset한다.
+  const handleClose = useCallback(() => {
+    if (completedPairId) reset();
+    onClose();
+  }, [completedPairId, reset, onClose]);
+
   // 열릴 때 initialMessage prefill + 포커스
   useEffect(() => {
     if (!isOpen) return;
@@ -200,11 +208,11 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   const handleSend = async () => {
     const text = inputValue.trim();
@@ -238,7 +246,7 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
       {/* 오버레이 */}
       <div
         className="fixed inset-0 bg-[#0d3080]/20 backdrop-blur-[3px] z-40 animate-fade-in"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* 모달 */}
@@ -273,7 +281,7 @@ export function AIChatModal({ isOpen, onClose, initialMessage }: AIChatModalProp
               </button>
             )}
             <button
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="닫기"
               className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             >
