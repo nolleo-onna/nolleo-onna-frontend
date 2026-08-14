@@ -73,7 +73,7 @@ export default function SpotContainer() {
 
         {/* 필터 사이드바: lg 미만에서는 슬라이드오버로 전환 */}
         <div
-          className={`fixed top-16 bottom-0 left-0 z-40 w-[280px] transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 ${
+          className={`fixed top-16 bottom-0 left-0 z-40 flex w-[280px] transition-transform duration-300 lg:static lg:z-auto lg:h-full lg:translate-x-0 ${
             isFilterOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -99,7 +99,7 @@ export default function SpotContainer() {
 
         {/* 리스트 사이드바: lg 미만에서는 슬라이드오버로 전환 */}
         <div
-          className={`fixed top-16 bottom-0 right-0 z-40 transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 ${
+          className={`fixed top-16 bottom-0 right-0 z-40 flex transition-transform duration-300 lg:static lg:z-auto lg:h-full lg:translate-x-0 ${
             isListOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
