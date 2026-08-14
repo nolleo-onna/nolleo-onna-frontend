@@ -53,7 +53,7 @@ export default function SpotContainer() {
     const coords = DISTRICT_COORDS[region];
     if (!coords) return;
     mapRef.current.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
-    mapRef.current.setLevel(5);
+    mapRef.current.setLevel(4);
   };
 
   return (

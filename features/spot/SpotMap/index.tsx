@@ -31,7 +31,7 @@ interface SpotMapProps {
 const DEFAULT_CENTER = { lat: 35.1796, lng: 129.0756 };
 const DEFAULT_LEVEL = 8;
 // 구를 선택했을 때(필터, 구 단위 원 클릭 등) 확대해 들어가는 레벨.
-const DISTRICT_ZOOM_LEVEL = 5;
+const DISTRICT_ZOOM_LEVEL = 4;
 // 이 레벨 이상(=많이 줌아웃돼 여러 구가 한 화면에 들어옴)에서는 개별 스팟
 // 마커 대신 구 단위 원만 보여준다. 부산 전체가 한눈에 들어올 때 마커 수백
 // 개가 흩어져 보이는 걸 막고, 어느 구를 볼지부터 고르게 한다.
