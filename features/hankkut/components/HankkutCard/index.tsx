@@ -36,6 +36,7 @@ export default function HankkutCard({
           src={hankkut.imageUrl}
           alt={hankkut.title}
           fill
+          sizes="(max-width: 744px) 100vw, (max-width: 1280px) 50vw, 33vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

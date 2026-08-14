@@ -190,7 +190,7 @@ export default function MyPageContent() {
             {MOCK_LIKED_SPOTS.map((spot) => (
               <div key={spot.id} className="shrink-0 w-28 rounded-xl overflow-hidden border border-gray-100 cursor-pointer hover:shadow-md transition-shadow">
                 <div className="relative h-20">
-                  <Image src={spot.imageUrl} alt={spot.name} fill className="object-cover" />
+                  <Image src={spot.imageUrl} alt={spot.name} fill sizes="112px" className="object-cover" />
                   <button className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/80 flex items-center justify-center">
                     <Heart className="w-3 h-3 fill-pink-400 text-pink-400" />
                   </button>

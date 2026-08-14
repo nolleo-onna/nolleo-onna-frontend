@@ -25,6 +25,7 @@ export default function HankkutDetailHeader({
           alt={hankkut.title}
           fill
           priority
+          sizes="(max-width: 1280px) 100vw, 1200px"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />

@@ -158,6 +158,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                         src={place.imageUrl}
                         alt={place.name}
                         fill
+                        sizes="72px"
                         className="object-cover"
                       />
                     ) : (

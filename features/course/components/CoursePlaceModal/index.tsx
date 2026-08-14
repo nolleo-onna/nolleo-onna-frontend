@@ -51,6 +51,7 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
             src={place.imageUrl}
             alt={place.name}
             fill
+            sizes="(max-width: 448px) 100vw, 448px"
             className="object-cover"
           />
           <button

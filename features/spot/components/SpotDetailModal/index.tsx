@@ -166,6 +166,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                   src={spotData.firstImage}
                   alt={spotData.title}
                   fill
+                  sizes="(max-width: 512px) 100vw, 512px"
                   className="object-cover rounded-t-2xl"
                 />
               ) : (
