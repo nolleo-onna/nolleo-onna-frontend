@@ -123,7 +123,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20">
           <div className="relative flex items-center justify-between h-16">
             <Link href="/" className="flex items-center shrink-0">
-              <Image src="/logo/logo.png" alt="놀러온나 로고" width={150} height={45} priority />
+              <Image src="/logo/logo.svg" alt="놀러온나 로고" width={150} height={48} priority />
             </Link>
 
             <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">

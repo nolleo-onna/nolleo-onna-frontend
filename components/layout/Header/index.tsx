@@ -124,10 +124,10 @@ export default function Header() {
             {/* 로고 */}
             <Link href="/" className="flex items-center shrink-0">
               <Image
-                src="/logo/logo.png"
+                src="/logo/logo.svg"
                 alt="놀러온나 로고"
                 width={150}
-                height={45}
+                height={48}
                 priority
               />
             </Link>
