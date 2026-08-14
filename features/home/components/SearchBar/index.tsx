@@ -211,7 +211,7 @@ export default function SearchBar() {
       <div
         id="search-bar"
         onClick={handleInteract}
-        className={`w-full max-w-3xl mx-auto rounded-[20px] border border-gray-100 bg-white
+        className={`w-full max-w-3xl mx-auto rounded-3xl border border-gray-100 bg-white
                     shadow-[0_4px_24px_rgba(13,48,128,0.06)] p-5 ${
                       !hasInteracted ? "animate-wiggle" : ""
                     }`}
