@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
@@ -23,7 +24,10 @@ const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
 export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSidebarProps) {
   const selectedRef = useRef<HTMLLIElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  // 한끗 상세 등 다른 페이지에서 "?keyword=자갈치시장" 형태로 넘어오면
+  // 그 검색어로 바로 필터링된 채 시작한다.
+  const [search, setSearch] = useState(() => searchParams.get("keyword") ?? "");
   const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
 
   const allPlaces = useMemo(() => {
