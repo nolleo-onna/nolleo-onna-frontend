@@ -39,11 +39,9 @@ export default function ThemeCourseCard({ course, onClick }: Props) {
         className="object-cover transition-transform duration-500 group-hover:scale-105"
       />
 
-      {/* 테마 컬러 톤 오버레이 (사진 위에 브랜드 컬러감을 입힘) */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient} opacity-55 mix-blend-multiply`} />
-
-      {/* 하단 그라데이션 오버레이 (텍스트 가독성용) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      {/* 하단 그라데이션 오버레이 (텍스트 가독성용) — 사진 본연의 밝은 톤을 살리기 위해
+          컬러 틴트 없이 바닥 쪽만 살짝 어둡게 처리한다. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
       {/* 상단 배지 + 아이콘 */}
       <div className="absolute left-4 right-4 top-4 flex items-start justify-between">
