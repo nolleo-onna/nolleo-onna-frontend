@@ -1,15 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
-import CourseMap from "@/features/course/components/CourseMap";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceModal from "@/features/course/components/CoursePlaceModal";
+import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import {
   type CoursePlace,
   MOCK_COURSE,
 } from "@/features/course/data/mockCourse";
+
+const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 export default function CourseView() {
   const [selectedDay, setSelectedDay] = useState(1);
