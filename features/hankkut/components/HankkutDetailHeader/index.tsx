@@ -1,7 +1,7 @@
-import { Bookmark } from "lucide-react";
 import Image from "next/image";
 
 import BackButton from "@/features/hankkut/components/HankkutDetailHeader/BackButton";
+import SaveButton from "@/features/hankkut/components/HankkutDetailHeader/SaveButton";
 import type { HankkutDetail } from "@/features/hankkut/data/hankkutDetail";
 
 const CATEGORY_BADGE_STYLES: Record<HankkutDetail["category"], string> = {
@@ -34,13 +34,7 @@ export default function HankkutDetailHeader({
       {/* 상단 버튼 */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5">
         <BackButton />
-        <button
-          type="button"
-          aria-label="저장하기"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-navy-900 transition-colors hover:bg-white"
-        >
-          <Bookmark className="h-5 w-5" />
-        </button>
+        <SaveButton id={hankkut.id} />
       </div>
 
       {/* 하단 정보 오버레이 */}
