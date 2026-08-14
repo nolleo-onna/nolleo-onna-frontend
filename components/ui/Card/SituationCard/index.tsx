@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import CardBase from "@/components/ui/Card/CardBase";
 
 interface SituationCardProps {
@@ -57,10 +59,12 @@ export function SituationCardOverlay({
             className={`group relative aspect-video w-full cursor-pointer overflow-hidden rounded-2xl ${className ?? ""}`}
         >
             {/* 배경 이미지 */}
-            <img
+            <Image
                 src={imageSrc}
                 alt={title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 744px) 100vw, (max-width: 1280px) 50vw, 33vw"
             />
 
             {/* 어두운 오버레이 */}

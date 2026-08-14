@@ -2,12 +2,13 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
-import CourseMap from "@/features/course/components/CourseMap";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
+import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
 import type {
@@ -15,6 +16,11 @@ import type {
   CourseResponse,
 } from "@/features/course/hooks/useCourseResult";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
+
+const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 function toPlace(item: CourseItemResponse): CoursePlace {
   return {

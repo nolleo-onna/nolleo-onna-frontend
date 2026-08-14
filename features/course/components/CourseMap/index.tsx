@@ -21,12 +21,11 @@ export default function CourseMap({
   const polylineRef = useRef<kakao.maps.Polyline | null>(null);
   const [mapReady, setMapReady] = useState(false);  // ← 초기화 완료 신호
 
-  // 지도 초기화 (SDK 로드 폴링)
+  // 지도 초기화 (SDK 로드 이벤트 대기)
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!window.kakao?.maps || !containerRef.current) return;
-      clearInterval(interval);
+    if (!containerRef.current) return;
 
+    const initMap = () => {
       window.kakao.maps.load(() => {
         if (!containerRef.current) return;
         mapRef.current = new window.kakao.maps.Map(containerRef.current, {
@@ -35,9 +34,39 @@ export default function CourseMap({
         });
         setMapReady(true);  // ← 지도 준비 완료 → 마커 effect 트리거
       });
-    }, 100);
+    };
 
-    return () => clearInterval(interval);
+    if (window.kakao?.maps) {
+      initMap();
+      return;
+    }
+
+    // 지도 컴포넌트가 dynamic import로 지연 마운트되면 이 시점에 카카오 SDK
+    // <script> 태그가 아직 DOM에 삽입되기 전일 수 있다 — 태그가 나타날 때까지
+    // 짧게 재확인한 뒤 load 이벤트를 붙인다.
+    let attachedScript: HTMLScriptElement | null = null;
+    let pollId: ReturnType<typeof setInterval> | null = null;
+
+    const tryAttach = () => {
+      const script = document.querySelector(
+        'script[src*="dapi.kakao.com"]'
+      ) as HTMLScriptElement | null;
+      if (!script) return false;
+      attachedScript = script;
+      script.addEventListener("load", initMap);
+      return true;
+    };
+
+    if (!tryAttach()) {
+      pollId = setInterval(() => {
+        if (tryAttach() && pollId) clearInterval(pollId);
+      }, 100);
+    }
+
+    return () => {
+      if (pollId) clearInterval(pollId);
+      attachedScript?.removeEventListener("load", initMap);
+    };
   }, []);
 
   // 마커 + 폴리라인 갱신 — mapReady 포함으로 초기 렌더 시에도 실행

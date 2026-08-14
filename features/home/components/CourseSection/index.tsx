@@ -57,7 +57,7 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
   useEffect(() => {
     const updateVisible = () => {
       if (window.innerWidth >= 1280) setVisibleCount(VISIBLE_COUNT_DESKTOP);
-      else if (window.innerWidth >= 768) setVisibleCount(VISIBLE_COUNT_TABLET);
+      else if (window.innerWidth >= 744) setVisibleCount(VISIBLE_COUNT_TABLET);
       else setVisibleCount(VISIBLE_COUNT_MOBILE);
       setMounted(true);
     };

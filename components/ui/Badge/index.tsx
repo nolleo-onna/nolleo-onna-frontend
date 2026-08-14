@@ -23,7 +23,7 @@ const badgeVariants = cva(
           "bg-slate-100 text-slate-700 border-slate-200",
 
         official:
-          "bg-sky-50 text-sky-600 border-sky-100",
+          "bg-ocean-50 text-ocean-600 border-ocean-100",
 
         hot:
           "bg-pink-50 text-pink-600 border-pink-100",
@@ -35,7 +35,7 @@ const badgeVariants = cva(
           "bg-emerald-50 text-emerald-600 border-emerald-100",
 
         ai:
-          "bg-violet-50 text-violet-600 border-violet-100",
+          "bg-navy-50 text-navy-600 border-navy-100",
 
         free:
           "bg-gray-50 text-gray-600 border-gray-200",

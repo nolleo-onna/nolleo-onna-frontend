@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
 import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
-import CrowdMap from "@/features/crowd/components/CrowdMap";
+import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import type { CrowdLevel } from "@/types/crowd";
+
+const CrowdMap = dynamic(() => import("@/features/crowd/components/CrowdMap"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 const FILTER_OPTIONS: { label: string; value: CrowdLevel | "전체" }[] = [
   { label: "전체", value: "전체" },
@@ -20,12 +27,17 @@ export default function CrowdView() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [isListOpen, setIsListOpen] = useState(false);
 
-  const filtered = (data ?? []).filter((spot) => {
-    const matchFilter = filter === "전체" || getCrowdLevel(spot.rate) === filter;
-    const matchSearch = spot.name.includes(search) || spot.district.includes(search);
-    return matchFilter && matchSearch;
-  });
+  const filtered = useMemo(
+    () =>
+      (data ?? []).filter((spot) => {
+        const matchFilter = filter === "전체" || getCrowdLevel(spot.rate) === filter;
+        const matchSearch = spot.name.includes(search) || spot.district.includes(search);
+        return matchFilter && matchSearch;
+      }),
+    [data, filter, search]
+  );
 
   // 지도의 구 마커를 클릭하면 그 구로 목록을 좁혀서 보여준다.
   const handleSelectDistrict = useCallback((district: string) => {
@@ -35,9 +47,30 @@ export default function CrowdView() {
   }, []);
 
   return (
-    <div className="flex h-screen pt-16">
-      {/* 사이드바 */}
-      <aside className="w-[360px] shrink-0 flex flex-col border-r border-gray-100 bg-white">
+    <div className="relative flex h-screen pt-16">
+      {/* 모바일 목록 열림 시 배경 딤 처리 */}
+      {isListOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+          onClick={() => setIsListOpen(false)}
+        />
+      )}
+
+      {/* 사이드바: lg 미만에서는 슬라이드오버로 전환 */}
+      <aside
+        className={`fixed top-16 bottom-0 left-0 z-40 w-[360px] shrink-0 flex flex-col border-r border-gray-100 bg-white transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 ${
+          isListOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsListOpen(false)}
+          aria-label="목록 닫기"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md lg:hidden"
+        >
+          <X className="h-4 w-4 text-gray-600" />
+        </button>
+
         {/* 헤더 */}
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-xs font-semibold text-ocean-600">오늘 붐빌 곳</span>
@@ -95,7 +128,10 @@ export default function CrowdView() {
               return (
                 <button
                   key={`${spot.name}-${index}`}
-                  onClick={() => setSelectedId(`${spot.name}-${index}`)}
+                  onClick={() => {
+                    setSelectedId(`${spot.name}-${index}`);
+                    setIsListOpen(false);
+                  }}
                   className={`w-full flex items-center justify-between px-5 py-4 border-b border-gray-50 text-left transition-colors ${
                     isSelected ? "bg-ocean-50" : "hover:bg-gray-50"
                   }`}
@@ -120,6 +156,18 @@ export default function CrowdView() {
       </aside>
 
       <CrowdMap selectedDistrict={selectedDistrict} onSelectDistrict={handleSelectDistrict} />
+
+      {/* 모바일 전용 목록 토글 버튼 */}
+      <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setIsListOpen(true)}
+          className="flex items-center gap-1.5 rounded-full bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg"
+        >
+          <List className="h-4 w-4" />
+          목록
+        </button>
+      </div>
     </div>
   );
 }

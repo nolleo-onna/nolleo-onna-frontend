@@ -247,7 +247,7 @@ export function AIChatModal({
 
       {/* 모달 */}
       <div
-        className="fixed z-50 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[440px] max-w-[calc(100vw-32px)] h-[600px] max-h-[calc(100vh-48px)] flex flex-col rounded-[20px] overflow-hidden shadow-[0_24px_64px_rgba(13,48,128,0.25)] animate-slide-up"
+        className="fixed z-50 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[440px] max-w-[calc(100vw-32px)] h-[600px] max-h-[calc(100vh-48px)] flex flex-col rounded-3xl overflow-hidden shadow-[0_24px_64px_rgba(13,48,128,0.25)] animate-slide-up"
         style={{ background: '#F7F8FC' }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"

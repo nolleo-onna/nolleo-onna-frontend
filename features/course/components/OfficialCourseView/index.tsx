@@ -2,12 +2,18 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
-import CourseMap from "@/features/course/components/CourseMap";
 import CourseSidebar from "@/features/course/components/CourseSidebar";
 import OfficialCourseCarousel from "@/features/course/components/OfficialCourseCarousel";
+import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import type { CoursePlace } from "@/features/course/data/mockCourse";
 import { MOCK_OFFICIAL_COURSES } from "@/features/course/data/mockOfficialCourse";
+
+const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+});
 
 export default function OfficialCourseView() {
   const searchParams = useSearchParams();

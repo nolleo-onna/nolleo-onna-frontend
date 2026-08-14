@@ -96,14 +96,32 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       return;
     }
 
-    const script = document.querySelector(
-      'script[src*="dapi.kakao.com"]'
-    ) as HTMLScriptElement | null;
+    // 지도 컴포넌트가 dynamic import로 지연 마운트되면 이 시점에 카카오 SDK
+    // <script> 태그가 아직 DOM에 삽입되기 전일 수 있다 — 태그가 나타날 때까지
+    // 짧게 재확인한 뒤 load 이벤트를 붙인다.
+    let attachedScript: HTMLScriptElement | null = null;
+    let pollId: ReturnType<typeof setInterval> | null = null;
 
-    if (script) {
+    const tryAttach = () => {
+      const script = document.querySelector(
+        'script[src*="dapi.kakao.com"]'
+      ) as HTMLScriptElement | null;
+      if (!script) return false;
+      attachedScript = script;
       script.addEventListener("load", initMap);
-      return () => script.removeEventListener("load", initMap);
+      return true;
+    };
+
+    if (!tryAttach()) {
+      pollId = setInterval(() => {
+        if (tryAttach() && pollId) clearInterval(pollId);
+      }, 100);
     }
+
+    return () => {
+      if (pollId) clearInterval(pollId);
+      attachedScript?.removeEventListener("load", initMap);
+    };
   }, [mapInstanceRef]);
 
   // 클러스터 배지: 여러 카테고리가 섞여있을 수 있어 카테고리색 대신 브랜드 그라디언트로,

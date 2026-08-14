@@ -28,7 +28,7 @@ export default function Dropdown({
   return (
     <Listbox value={selected} onChange={setSelected}>
       <div className="relative inline-block">
-        <ListboxButton className="flex items-center gap-1 text-sm font-medium text-gray-700 outline-none focus:outline-none">
+        <ListboxButton className="flex items-center gap-1 rounded-md text-sm font-medium text-gray-700 outline-none focus-visible:ring-2 focus-visible:ring-ocean-400 focus-visible:ring-offset-2">
           <span>{selected?.label ?? placeholder}</span>
           <ChevronDownIcon className="size-3.5" />
         </ListboxButton>

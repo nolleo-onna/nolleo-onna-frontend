@@ -38,8 +38,13 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
       />
 
       {/* 모달 */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50
-                      w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50
+                      w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label={place.name}
+      >
         {/* 이미지 */}
         <div className="relative h-52">
           <Image

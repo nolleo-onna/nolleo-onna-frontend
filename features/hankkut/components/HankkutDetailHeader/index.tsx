@@ -1,9 +1,7 @@
-"use client";
-
-import { ArrowLeft, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 
+import BackButton from "@/features/hankkut/components/HankkutDetailHeader/BackButton";
 import type { HankkutDetail } from "@/features/hankkut/data/hankkutDetail";
 
 const CATEGORY_BADGE_STYLES: Record<HankkutDetail["category"], string> = {
@@ -19,8 +17,6 @@ interface HankkutDetailHeaderProps {
 export default function HankkutDetailHeader({
   hankkut,
 }: HankkutDetailHeaderProps) {
-  const router = useRouter();
-
   return (
     <section className="relative overflow-hidden rounded-3xl">
       <div className="relative aspect-[16/7] w-full">
@@ -36,14 +32,7 @@ export default function HankkutDetailHeader({
 
       {/* 상단 버튼 */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          aria-label="뒤로 가기"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-navy-900 transition-colors hover:bg-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <BackButton />
         <button
           type="button"
           aria-label="저장하기"

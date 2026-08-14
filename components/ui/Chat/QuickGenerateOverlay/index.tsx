@@ -20,7 +20,7 @@ export default function QuickGenerateOverlay({ isOpen, onClose }: QuickGenerateO
       />
       <div
         className="fixed left-1/2 top-1/2 z-50 flex w-[320px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2
-                   flex-col items-center gap-4 rounded-[20px] bg-white px-8 py-10
+                   flex-col items-center gap-4 rounded-3xl bg-white px-8 py-10
                    shadow-[0_24px_64px_rgba(13,48,128,0.25)] animate-slide-up"
         onClick={(e) => e.stopPropagation()}
         role="dialog"

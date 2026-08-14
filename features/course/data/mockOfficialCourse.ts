@@ -13,7 +13,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
   {
     id: 101,
     title: "A코스 · 부산 바다 일주",
-    coverImageUrl: "https://picsum.photos/seed/busan-sea/600/400",
+    coverImageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg",
     rating: 4.8,
     reviewCount: "2.1k",
     location: "해운대",
@@ -32,7 +32,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.0306,
             rating: 4.4,
             reviewCount: 4218,
-            imageUrl: "https://picsum.photos/seed/jagalchi/240/240",
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/46/3049246_image2_1.JPG",
           },
           {
             id: 1002,
@@ -43,7 +43,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.2233,
             rating: 4.5,
             reviewCount: 3812,
-            imageUrl: "https://picsum.photos/seed/yonggungsa/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/35/3499335_image2_1.jpg",
           },
           {
             id: 1003,
@@ -54,7 +54,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.1186,
             rating: 4.6,
             reviewCount: 5231,
-            imageUrl: "https://picsum.photos/seed/gwangalli/240/240",
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg",
           },
           {
             id: 1004,
@@ -65,7 +65,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.1604,
             rating: 4.7,
             reviewCount: 8412,
-            imageUrl: "https://picsum.photos/seed/haeundae/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/34/3090534_image2_1.JPG",
           },
           {
             id: 1005,
@@ -76,7 +76,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.1606,
             rating: 4.2,
             reviewCount: 2103,
-            imageUrl: "https://picsum.photos/seed/aquarium/240/240",
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/09/3020609_image2_1.jpg",
           },
         ],
       },
@@ -85,7 +85,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
   {
     id: 102,
     title: "B코스 · 원도심 감성",
-    coverImageUrl: "https://picsum.photos/seed/busan-oldtown/600/400",
+    coverImageUrl: "https://tong.visitkorea.or.kr/cms/resource/91/3365491_image2_1.jpg",
     rating: 4.9,
     reviewCount: "3.5k",
     location: "중구",
@@ -104,7 +104,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.0107,
             rating: 4.6,
             reviewCount: 6523,
-            imageUrl: "https://picsum.photos/seed/gamcheon/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/91/3365491_image2_1.jpg",
           },
           {
             id: 2002,
@@ -115,7 +115,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.0277,
             rating: 4.3,
             reviewCount: 2891,
-            imageUrl: "https://picsum.photos/seed/biff/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/19/3493419_image2_1.jpg",
           },
           {
             id: 2003,
@@ -126,7 +126,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.0455,
             rating: 4.5,
             reviewCount: 3647,
-            imageUrl: "https://picsum.photos/seed/huinnyeoul/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/74/3495874_image2_1.jpg",
           },
         ],
       },
@@ -135,7 +135,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
   {
     id: 103,
     title: "C코스 · 자연 힐링",
-    coverImageUrl: "https://picsum.photos/seed/busan-nature/600/400",
+    coverImageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg",
     rating: 4.7,
     reviewCount: "1.8k",
     location: "영도",
@@ -154,7 +154,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.0873,
             rating: 4.5,
             reviewCount: 4012,
-            imageUrl: "https://picsum.photos/seed/taejongdae/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg",
           },
           {
             id: 3002,
@@ -165,7 +165,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.1235,
             rating: 4.3,
             reviewCount: 2587,
-            imageUrl: "https://picsum.photos/seed/oryukdo/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/69/3492369_image2_1.jpg",
           },
           {
             id: 3003,
@@ -176,7 +176,7 @@ export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
             lng: 129.1217,
             rating: 4.6,
             reviewCount: 1894,
-            imageUrl: "https://picsum.photos/seed/igidae/240/240",
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/02/3496802_image2_1.jpg",
           },
         ],
       },

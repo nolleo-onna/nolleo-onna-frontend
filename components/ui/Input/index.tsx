@@ -9,10 +9,10 @@ const inputVariants = cva(
     variants: {
       variant: {
         default:
-          "border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
+          "border-gray-300 focus:border-ocean-500 focus:ring-4 focus:ring-ocean-100",
 
         error:
-          "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100",
+          "border-error focus:border-error focus:ring-4 focus:ring-red-100",
 
         disabled:
           "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400",
