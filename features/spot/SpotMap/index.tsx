@@ -150,13 +150,9 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         background: linear-gradient(140deg, #34a6ff, #0a84ff);
         border: 3px solid #ffffff;
         box-shadow: 0 6px 16px rgba(10,132,255,0.38), 0 1px 2px rgba(0,0,0,0.12);
-        color: #ffffff;
-        font-weight: 700;
-        font-size: ${count >= 100 ? 13 : 14}px;
-        letter-spacing: -0.01em;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      ">${count}</button>
+      "></button>
     `;
 
     const el = content.firstElementChild as HTMLElement;
