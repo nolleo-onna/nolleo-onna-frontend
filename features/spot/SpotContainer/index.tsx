@@ -90,9 +90,9 @@ export default function SpotContainer() {
 
         <SpotMap
           selectedId={selectedId}
-          onSelectMarker={(id) => {
+          onSelectMarker={(id, placeType) => {
             setSelectedId(id);
-            setModalInfo({ id, placeType: "SPOT", mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
+            setModalInfo({ id, placeType, mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
           }}
           mapInstanceRef={mapRef}
         />

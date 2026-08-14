@@ -21,7 +21,7 @@ function markerStyle(spot: MapMarker) {
 
 interface SpotMapProps {
   selectedId: string | null;
-  onSelectMarker: (id: string) => void;
+  onSelectMarker: (id: string, placeType: "SPOT" | "FOOD") => void;
   mapInstanceRef: React.RefObject<kakao.maps.Map | null>;
 }
 
@@ -210,7 +210,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const el = content.firstElementChild as HTMLElement;
     el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.12)"; });
     el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
-    el.addEventListener("click", () => onSelectMarker(spot.id));
+    el.addEventListener("click", () => onSelectMarker(spot.id, spot.type));
 
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
