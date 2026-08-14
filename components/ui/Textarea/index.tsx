@@ -20,10 +20,10 @@ const textareaVariants = cva(
     variants: {
       variant: {
         default:
-          "border-gray-300 focus:border-blue-500",
+          "border-gray-300 focus:border-ocean-500",
 
         error:
-          "border-red-500 focus:border-red-500",
+          "border-error focus:border-error",
 
         disabled:
           "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400",
