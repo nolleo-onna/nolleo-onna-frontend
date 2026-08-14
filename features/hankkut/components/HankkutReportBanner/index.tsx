@@ -10,11 +10,12 @@ export default function HankkutReportBanner() {
             제보해 주시면 다음 여행자가 좋아요.
           </p>
         </div>
-        <div
-          className="shrink-0 rounded-full bg-navy-900 px-6 py-3 text-sm font-bold text-lime-300 transition-opacity hover:opacity-80"
+        <button
+          type="button"
+          className="shrink-0 rounded-full bg-navy-900 px-6 py-3 text-sm font-bold text-lime-300 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ocean-400 focus-visible:ring-offset-2"
         >
           제보하러 가기 →
-        </div>
+        </button>
       </div>
     </section>
   );
