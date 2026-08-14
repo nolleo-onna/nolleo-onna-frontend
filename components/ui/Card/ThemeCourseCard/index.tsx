@@ -26,7 +26,7 @@ export default function ThemeCourseCard({ course, onClick }: Props) {
       className={`group relative h-[240px] w-full overflow-hidden rounded-2xl
                   bg-gradient-to-br ${course.gradient}
                   text-left transition-all duration-300
-                  hover:shadow-[0_12px_32px_rgba(13,48,128,0.22)]
+                  hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(13,48,128,0.22)]
                   active:scale-[0.98]`}
       aria-label={`${course.title} 코스 AI로 생성하기`}
     >
