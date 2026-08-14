@@ -31,10 +31,10 @@ export default function LoginForm() {
     >
       <div className="flex flex-col items-center text-center">
         <Image
-          src="/logo/logo.svg"
+          src="/logo/logo.png"
           alt="놀러온나 로고"
           width={132}
-          height={42}
+          height={40}
           className="mb-6"
           priority
         />
