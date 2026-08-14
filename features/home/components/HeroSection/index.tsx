@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { type Variants, motion } from "motion/react";
+
+const WavesBackground = dynamic(() => import("./WavesBackground"), { ssr: false });
 
 const containerVariants: Variants = {
   hidden: {},
@@ -63,35 +66,13 @@ export default function HeroSection() {
   const typedText = useTypewriter(TYPING_PHRASES);
 
   return (
-    <section className="relative flex flex-col items-center justify-center py-16 md:py-24 text-center overflow-hidden">
-      {/* 배경 메시 그라디언트 — 코너에 뜬 블롭 2개 대신 여러 개를 겹쳐 하나로 이어진
-          색 번짐을 만들고, 하단은 마스크로 페이지 배경(gray-50)에 자연스럽게 스며들게 한다. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          maskImage: "linear-gradient(to bottom, black 55%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, black 55%, transparent 100%)",
-        }}
-      >
-        <motion.div
-          className="absolute -top-24 -left-16 w-80 h-80 rounded-full bg-ocean-200 blur-3xl opacity-40 pointer-events-none"
-          animate={{ x: [0, 24, 0], y: [0, 16, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-6 right-[-4rem] w-72 h-72 rounded-full bg-lime-200 blur-3xl opacity-30 pointer-events-none"
-          animate={{ x: [0, -18, 0], y: [0, 20, 0] }}
-          transition={{ duration: 17, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -bottom-10 left-1/3 w-96 h-96 rounded-full bg-sky-200 blur-3xl opacity-30 pointer-events-none"
-          animate={{ x: [0, 20, 0], y: [0, -14, 0] }}
-          transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+    <section className="relative flex flex-col items-center justify-center py-20 md:py-28 text-center overflow-hidden rounded-b-[48px] bg-gradient-to-b from-navy-800 via-navy-700 to-ocean-800 md:rounded-b-[64px]">
+      {/* 파도 애니메이션 배경(WebGL). 접속 환경이 애니메이션을 원치 않으면
+          섹션 자체의 그라데이션만 정적으로 보인다. */}
+      <WavesBackground />
 
       <motion.div
-        className="flex flex-col items-center"
+        className="relative z-10 flex flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -101,7 +82,7 @@ export default function HeroSection() {
           <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-100 text-lime-600 text-xs font-semibold">
             ✦ AI 맞춤 코스
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-ocean-100 text-ocean-600 text-xs font-semibold">
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-ocean-700 text-xs font-semibold">
             🌊 부산 여행
           </span>
         </motion.div>
@@ -109,10 +90,10 @@ export default function HeroSection() {
         {/* 메인 타이틀 */}
         <motion.h1
           variants={itemVariants}
-          className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy-900 mb-4 leading-tight"
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
         >
           오늘 부산,{" "}
-          <span className="relative inline-block text-ocean-500">
+          <span className="relative inline-block text-lime-300">
             {typedText}
             <span className="animate-pulse">|</span>
           </span>
@@ -121,11 +102,11 @@ export default function HeroSection() {
         {/* 서브 카피 */}
         <motion.p
           variants={itemVariants}
-          className="text-sm md:text-base text-gray-400 leading-relaxed mb-8"
+          className="text-sm md:text-base text-white/70 leading-relaxed mb-8"
         >
           예산·동행·분위기를 말하면 AI가 코스를 짜드려요.
           <br />
-          <span className="text-navy-500 font-medium">혼잡도 예측까지 반영해서 사람 많은 곳은 피해요.</span>
+          <span className="text-white font-medium">혼잡도 예측까지 반영해서 사람 많은 곳은 피해요.</span>
         </motion.p>
 
         {/* 키워드 태그 */}
@@ -133,7 +114,7 @@ export default function HeroSection() {
           {["🏖️ 해운대", "🌉 광안리", "☕ 카페 투어", "🍜 먹방 코스", "🌙 야경 투어", "🌿 자연 힐링"].map((tag) => (
             <span
               key={tag}
-              className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600 shadow-sm"
+              className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs text-gray-700 shadow-sm"
             >
               {tag}
             </span>
