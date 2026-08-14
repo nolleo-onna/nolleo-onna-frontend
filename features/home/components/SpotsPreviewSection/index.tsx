@@ -24,18 +24,20 @@ type Spot = {
 
 // 혼잡도는 사진이 아니라 순위/수치 데이터라 카드+이미지보다 리스트+막대바가 더
 // 잘 맞는다 (실데이터에 이미지가 없는 경우가 많아 카드 형식일 때 빈 이미지가 반복되던 문제도 해결).
+// 백엔드 혼잡도 API가 관광지별(attractions) 데이터를 아직 안 채워줄 때 쓰는
+// 대체 데이터 — rate를 함께 채워서 실데이터와 동일하게 막대바 UI로 보이게 한다.
 const mockCrowdSpots: Spot[] = [
-  { id: 1, name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", crowdStatus: "매우혼잡" },
-  { id: 2, name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", crowdStatus: "매우혼잡" },
-  { id: 3, name: "전포 카페거리", location: "부산진구 · 오후 붐빔", crowdStatus: "혼잡" },
-  { id: 4, name: "서면 먹자골목", location: "부산진구 · 저녁 피크", crowdStatus: "혼잡" },
+  { id: 1, name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", crowdStatus: "매우혼잡", rate: 92 },
+  { id: 2, name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", crowdStatus: "매우혼잡", rate: 87 },
+  { id: 3, name: "전포 카페거리", location: "부산진구 · 오후 붐빔", crowdStatus: "혼잡", rate: 63 },
+  { id: 4, name: "서면 먹자골목", location: "부산진구 · 저녁 피크", crowdStatus: "혼잡", rate: 58 },
 ];
 
 const mockRelaxedSpots: Spot[] = [
-  { id: 1, name: "흰여울문화마을", location: "영도구 · 종일 한산", crowdStatus: "여유" },
-  { id: 2, name: "태종대", location: "영도구 · 오전 추천", crowdStatus: "여유" },
-  { id: 3, name: "부산시립미술관", location: "해운대구 · 한산한 수준", crowdStatus: "보통" },
-  { id: 4, name: "아홉산 숲", location: "기장군 · 종일 한산", crowdStatus: "여유" },
+  { id: 1, name: "흰여울문화마을", location: "영도구 · 종일 한산", crowdStatus: "여유", rate: 12 },
+  { id: 2, name: "태종대", location: "영도구 · 오전 추천", crowdStatus: "여유", rate: 18 },
+  { id: 3, name: "부산시립미술관", location: "해운대구 · 한산한 수준", crowdStatus: "보통", rate: 38 },
+  { id: 4, name: "아홉산 숲", location: "기장군 · 종일 한산", crowdStatus: "여유", rate: 8 },
 ];
 
 type Props = {
@@ -81,18 +83,21 @@ function CrowdRow({ spot, rank }: { spot: Spot; rank?: number }) {
           <div className="flex items-center gap-2">
             {/* 메터: 채워진 부분은 상태색, 트랙은 같은 색의 옅은 톤(같은 색 계열 전체로 상태가 읽히게) */}
             <div
-              className="h-1.5 flex-1 overflow-hidden rounded-full"
+              className="h-2 flex-1 overflow-hidden rounded-full"
               style={{ backgroundColor: `${style.bg}1f` }}
             >
               <div
-                className="h-full rounded-full"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${Math.min(Math.max(spot.rate, 4), 100)}%`,
                   backgroundColor: style.bg,
                 }}
               />
             </div>
-            <span className="shrink-0 text-[11px] tabular-nums text-gray-400">
+            <span
+              className="shrink-0 text-[11px] font-bold tabular-nums"
+              style={{ color: style.bg }}
+            >
               {Math.round(spot.rate)}%
             </span>
           </div>
