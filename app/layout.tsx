@@ -6,7 +6,7 @@ import "@/styles/globals.css";
 import "@/styles/font.css";
 
 export const metadata: Metadata = {
-  title: "놀러왔나",
+  title: "놀러온나",
   description: "부산 여행 추천 서비스",
 };
 

@@ -5,7 +5,7 @@ export default function Footer() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* 로고 + 설명 */}
           <div className="flex flex-col gap-1">
-            <span className="text-lg font-bold text-navy-900">놀러왔나</span>
+            <span className="text-lg font-bold text-navy-900">놀러온나</span>
             <p className="text-sm text-gray-500">부산 여행자를 위한 예산 맞춤형 여행 플래너</p>
           </div>
 
@@ -25,7 +25,7 @@ export default function Footer() {
 
         {/* 카피라이트 */}
         <p className="mt-6 text-xs text-gray-500">
-          © 2025 놀러왔나. All rights reserved.
+          © 2025 놀러온나. All rights reserved.
         </p>
       </div>
     </footer>
