@@ -137,8 +137,16 @@ function groupByDistrict(spots: MapMarker[]): Map<string, number> {
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  // 클러스터를 클릭하면 안에 있는 장소들을 고를 수 있는 작은 목록 팝업을
+  // 띄운다 — 다른 곳을 클릭하거나 지도가 다시 그려지면 닫는다.
+  const popupOverlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
+
+  const closeClusterPopup = () => {
+    popupOverlayRef.current?.setMap(null);
+    popupOverlayRef.current = null;
+  };
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -224,6 +232,92 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
 
   // 클러스터도 대표 카테고리(가장 많이 섞인 것)의 색/이모지를 보여줘서
   // 뭉쳐 있어도 "여기 뭐가 있는지" 감이 오게 한다. 크기 차이로 밀도를 전달한다.
+  // 클러스터 클릭 시 안에 있는 장소들을 골라 모달을 열 수 있는 작은 목록
+  // 팝업을 띄운다. 클러스터는 여러 장소가 뭉친 것이라 "그 장소"가 하나로
+  // 정해지지 않으므로, 확대 대신 바로 고를 수 있게 한다.
+  const renderClusterPopup = (map: kakao.maps.Map, cluster: Cluster) => {
+    closeClusterPopup();
+
+    const proj = map.getProjection();
+    const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
+
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = `
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(13,48,128,0.28), 0 2px 6px rgba(0,0,0,0.1);
+      padding: 6px;
+      width: 220px;
+      max-height: 260px;
+      overflow-y: auto;
+    `;
+    wrapper.addEventListener("click", (e) => e.stopPropagation());
+
+    const visibleMembers = cluster.members.slice(0, 8);
+    visibleMembers.forEach((member) => {
+      const { emoji } = markerStyle(member);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.style.cssText = `
+        all: unset;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        box-sizing: border-box;
+        font-size: 13px;
+        color: #191919;
+      `;
+      row.innerHTML = `
+        <span style="font-size: 16px; flex-shrink: 0;">${emoji}</span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${member.title}</span>
+      `;
+      row.addEventListener("pointerenter", () => { row.style.background = "#f6f7f9"; });
+      row.addEventListener("pointerleave", () => { row.style.background = "transparent"; });
+      row.addEventListener("click", () => {
+        onSelectMarker(member.id, member.type);
+        closeClusterPopup();
+      });
+      wrapper.appendChild(row);
+    });
+
+    const hiddenCount = cluster.members.length - visibleMembers.length;
+    if (hiddenCount > 0) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.style.cssText = `
+        all: unset;
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        box-sizing: border-box;
+        font-size: 12px;
+        color: #0066d6;
+      `;
+      more.textContent = `+${hiddenCount}개 더 보려면 확대하기`;
+      more.addEventListener("click", () => {
+        map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
+        closeClusterPopup();
+      });
+      wrapper.appendChild(more);
+    }
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position,
+      content: wrapper,
+      yAnchor: 1.1,
+      zIndex: 50,
+    });
+    overlay.setMap(map);
+    popupOverlayRef.current = overlay;
+  };
+
   const renderCluster = (map: kakao.maps.Map, cluster: Cluster) => {
     const proj = map.getProjection();
     const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
@@ -251,7 +345,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       el.style.transform = "scale(1)";
     });
     el.addEventListener("click", () => {
-      map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
+      renderClusterPopup(map, cluster);
     });
 
     const overlay = new kakao.maps.CustomOverlay({
@@ -363,6 +457,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const render = () => {
       overlaysRef.current.forEach((o) => o.setMap(null));
       overlaysRef.current = [];
+      closeClusterPopup();
 
       if (map.getLevel() >= DISTRICT_VIEW_MIN_LEVEL) {
         const counts = groupByDistrict(markers);
@@ -388,7 +483,12 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     // 구 단위 뷰 ↔ 마커 뷰 전환 여부도 다시 판단해야 한다.
     // (팬은 오버레이가 좌표에 붙어있어 카카오맵이 알아서 따라가므로 재계산 불필요)
     kakao.maps.event.addListener(map, "zoom_changed", render);
-    return () => kakao.maps.event.removeListener(map, "zoom_changed", render);
+    // 지도의 빈 곳을 클릭하면 열려있던 클러스터 목록 팝업을 닫는다.
+    kakao.maps.event.addListener(map, "click", closeClusterPopup);
+    return () => {
+      kakao.maps.event.removeListener(map, "zoom_changed", render);
+      kakao.maps.event.removeListener(map, "click", closeClusterPopup);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers, selectedId, mapInstanceRef]);
 
