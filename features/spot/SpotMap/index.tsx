@@ -56,7 +56,9 @@ const DEFAULT_LEVEL = 8;
 const DISTRICT_ZOOM_LEVEL = 5;
 // 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
 // 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
-const CLUSTER_RADIUS_PX = 64;
+// 마커 자체가 작아진 만큼 반경도 줄여서, 뭉치기보다 개별 장소 핀이 더 많이
+// 그대로 보이게 한다.
+const CLUSTER_RADIUS_PX = 36;
 // 이 레벨 이상(=많이 줌아웃돼 여러 구가 한 화면에 들어옴)에서는 개별 스팟
 // 마커/클러스터 대신 구 단위 원만 보여준다. 부산 전체가 한눈에 들어올 때
 // 클러스터 수십 개가 흩어져 보이는 걸 막고, 어느 구를 볼지부터 고르게 한다.
@@ -184,46 +186,69 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     };
   }, [mapInstanceRef]);
 
+  // 실제 지도 마커처럼 작은 물방울 핀 모양(위는 원, 아래는 뾰족한 꼬리)을
+  // 만든다. 꼬리 끝이 실제 좌표를 가리키도록 wrapper 아래쪽에 여유 공간을
+  // 두고, CustomOverlay의 yAnchor를 1(바닥 기준)로 맞춰서 쓴다.
+  const pinMarkup = (color: string, emoji: string, size: number, borderPx: number) => {
+    const tailPx = Math.round(size * 0.35);
+    return `
+      <div style="position: relative; width: ${size}px; height: ${size + tailPx}px;">
+        <div style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50% 50% 50% 0;
+          background: ${color};
+          border: ${borderPx}px solid #ffffff;
+          box-shadow: 0 3px 8px rgba(13,48,128,0.3), 0 1px 2px rgba(0,0,0,0.14);
+          transform: rotate(-45deg);
+        "></div>
+        <div style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: ${size}px;
+          height: ${size}px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: ${Math.round(size * 0.5)}px;
+          line-height: 1;
+          pointer-events: none;
+        ">${emoji}</div>
+      </div>
+    `;
+  };
+
   // 클러스터도 대표 카테고리(가장 많이 섞인 것)의 색/이모지를 보여줘서
-  // 뭉쳐 있어도 "여기 뭐가 있는지" 감이 오게 한다. 크기 차이로 밀도를,
-  // 흰 테두리+그림자로 "낱개 마커보다 더 있다"는 느낌을 유지한다.
+  // 뭉쳐 있어도 "여기 뭐가 있는지" 감이 오게 한다. 크기 차이로 밀도를 전달한다.
   const renderCluster = (map: kakao.maps.Map, cluster: Cluster) => {
     const proj = map.getProjection();
     const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
     const count = cluster.members.length;
     const { color, emoji, label } = dominantStyle(cluster.members);
     // 숫자 없이 크기만으로 밀도를 전달해야 해서, 작은 클러스터와 큰 클러스터의
-    // 크기 차이를 뚜렷하게 벌린다.
-    const size = Math.round(Math.min(34 + Math.sqrt(count) * 8, 76));
+    // 크기 차이를 뚜렷하게 벌린다. 전체적으로 이전보다 훨씬 작게 유지한다.
+    const size = Math.round(Math.min(22 + Math.sqrt(count) * 4, 40));
 
     const content = document.createElement("div");
     content.innerHTML = `
       <button type="button" aria-label="${label} 등 ${count}개 스팟 확대해서 보기" style="
         all: unset;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 9999px;
-        background: ${color};
-        border: 4px solid #ffffff;
-        box-shadow: 0 6px 16px rgba(13,48,128,0.32), 0 1px 2px rgba(0,0,0,0.14);
-        font-size: ${Math.round(size * 0.42)}px;
-        line-height: 1;
+        display: block;
         cursor: pointer;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      ">${emoji}</button>
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      ">${pinMarkup(color, emoji, size, 3)}</button>
     `;
 
     const el = content.firstElementChild as HTMLElement;
     el.addEventListener("pointerenter", () => {
-      el.style.transform = "scale(1.08)";
-      el.style.boxShadow = "0 8px 20px rgba(13,48,128,0.4), 0 1px 2px rgba(0,0,0,0.12)";
+      el.style.transform = "scale(1.15)";
     });
     el.addEventListener("pointerleave", () => {
       el.style.transform = "scale(1)";
-      el.style.boxShadow = "0 6px 16px rgba(13,48,128,0.32), 0 1px 2px rgba(0,0,0,0.14)";
     });
     el.addEventListener("click", () => {
       map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
@@ -232,7 +257,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const overlay = new kakao.maps.CustomOverlay({
       position,
       content,
-      yAnchor: 0.5,
+      yAnchor: 1,
       zIndex: 2,
     });
     overlay.setMap(map);
@@ -304,37 +329,27 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   const renderSingle = (map: kakao.maps.Map, spot: MapMarker) => {
     const isSelected = spot.id === selectedId;
     const { color, emoji } = markerStyle(spot);
-    const size = isSelected ? 40 : 32;
+    const size = isSelected ? 28 : 22;
 
     const content = document.createElement("div");
     content.innerHTML = `
       <button type="button" aria-label="${spot.title}" style="
         all: unset;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 9999px;
-        background: ${color};
-        border: ${isSelected ? "3px" : "2.5px"} solid #ffffff;
-        box-shadow: 0 3px 10px rgba(13,48,128,0.28), 0 1px 2px rgba(0,0,0,0.14);
+        display: block;
         cursor: pointer;
-        font-size: ${isSelected ? "17px" : "14px"};
-        line-height: 1;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      ">${emoji}</button>
+      ">${pinMarkup(color, emoji, size, isSelected ? 3 : 2)}</button>
     `;
 
     const el = content.firstElementChild as HTMLElement;
-    el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.12)"; });
+    el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.15)"; });
     el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
     el.addEventListener("click", () => onSelectMarker(spot.id, spot.type));
 
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
       content,
-      yAnchor: 0.5,
+      yAnchor: 1,
       zIndex: isSelected ? 3 : 1,
     });
     overlay.setMap(map);
