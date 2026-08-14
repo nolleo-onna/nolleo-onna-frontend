@@ -325,11 +325,11 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const { color, emoji, label } = dominantStyle(cluster.members);
     // 숫자 없이 크기만으로 밀도를 전달해야 해서, 작은 클러스터와 큰 클러스터의
     // 크기 차이를 뚜렷하게 벌린다. 전체적으로 이전보다 훨씬 작게 유지한다.
-    const size = Math.round(Math.min(22 + Math.sqrt(count) * 4, 40));
+    const size = Math.round(Math.min(30 + Math.sqrt(count) * 4, 46));
 
     const content = document.createElement("div");
     content.innerHTML = `
-      <button type="button" aria-label="${label} 등 ${count}개 스팟 확대해서 보기" style="
+      <button type="button" aria-label="${label} 등 ${count}개 스팟 목록 보기" style="
         all: unset;
         display: block;
         cursor: pointer;
@@ -423,7 +423,9 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   const renderSingle = (map: kakao.maps.Map, spot: MapMarker) => {
     const isSelected = spot.id === selectedId;
     const { color, emoji } = markerStyle(spot);
-    const size = isSelected ? 28 : 22;
+    // 너무 작으면 정확히 클릭하기 어려워서(빗나가면 지도 자체를 클릭한 걸로
+    // 인식돼 기본 확대 동작만 일어남) 최소 크기를 30px 이상으로 유지한다.
+    const size = isSelected ? 34 : 30;
 
     const content = document.createElement("div");
     content.innerHTML = `
