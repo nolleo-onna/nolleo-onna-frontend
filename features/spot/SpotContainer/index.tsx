@@ -128,7 +128,7 @@ export default function SpotContainer() {
         />
 
         {/* 모바일 전용 필터/목록 토글 버튼 */}
-        <div className="fixed bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2 lg:hidden">
+        <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2 lg:hidden">
           <button
             type="button"
             onClick={() => {
