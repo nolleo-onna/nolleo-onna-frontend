@@ -25,7 +25,7 @@ interface SpotMapProps {
   mapInstanceRef: React.RefObject<kakao.maps.Map | null>;
 }
 
-// 전체 부산을 다 보여주면 클러스터 숫자만 잔뜩 보여서 정신없다 — 가장 널리
+// 전체 부산을 다 보여주면 클러스터가 잔뜩 보여서 정신없다 — 가장 널리
 // 찾는 해운대구를 기본 화면으로 보여주고, 필터에서 "전체"를 고르면 그때
 // 전체 지도로 줌아웃한다.
 const DEFAULT_CENTER = DISTRICT_COORDS["해운대구"];
@@ -33,6 +33,10 @@ const DEFAULT_LEVEL = 5;
 // 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
 // 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
 const CLUSTER_RADIUS_PX = 64;
+// 이 레벨 이상(=많이 줌아웃돼 여러 구가 한 화면에 들어옴)에서는 개별 스팟
+// 마커/클러스터 대신 구 단위 원만 보여준다. 부산 전체가 한눈에 들어올 때
+// 클러스터 수십 개가 흩어져 보이는 걸 막고, 어느 구를 볼지부터 고르게 한다.
+const DISTRICT_VIEW_MIN_LEVEL = 7;
 
 interface Cluster {
   x: number;
@@ -75,6 +79,33 @@ function clusterMarkers(map: kakao.maps.Map, spots: MapMarker[]): Cluster[] {
   });
 
   return clusters;
+}
+
+// 마커에는 구 정보가 없어서(위경도만 있음), 가장 가까운 구 중심좌표로
+// 대략 묶는다 — 행정구역 경계까지 정확할 필요 없이 "대충 어느 구"만 맞으면
+// 되는 개요용 집계라 이 정도 근사로 충분하다.
+function nearestDistrict(spot: MapMarker): string {
+  let best = "";
+  let bestDistSq = Infinity;
+  for (const [district, coords] of Object.entries(DISTRICT_COORDS)) {
+    const dy = coords.lat - spot.mapY;
+    const dx = coords.lng - spot.mapX;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq;
+      best = district;
+    }
+  }
+  return best;
+}
+
+function groupByDistrict(spots: MapMarker[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  spots.forEach((spot) => {
+    const district = nearestDistrict(spot);
+    counts.set(district, (counts.get(district) ?? 0) + 1);
+  });
+  return counts;
 }
 
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
@@ -135,7 +166,9 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const proj = map.getProjection();
     const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
     const count = cluster.members.length;
-    const size = Math.round(Math.min(34 + Math.sqrt(count) * 6, 60));
+    // 숫자 없이 크기만으로 밀도를 전달해야 해서, 작은 클러스터와 큰 클러스터의
+    // 크기 차이를 이전보다 더 뚜렷하게 벌린다.
+    const size = Math.round(Math.min(30 + Math.sqrt(count) * 8, 72));
 
     const content = document.createElement("div");
     content.innerHTML = `
@@ -170,6 +203,67 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
 
     const overlay = new kakao.maps.CustomOverlay({
       position,
+      content,
+      yAnchor: 0.5,
+      zIndex: 2,
+    });
+    overlay.setMap(map);
+    overlaysRef.current.push(overlay);
+  };
+
+  // 구 단위 원: 많이 줌아웃됐을 때(DISTRICT_VIEW_MIN_LEVEL 이상) 개별 마커 대신
+  // 보여준다. 스팟 개수 없이 구 이름과 상대적 크기만으로 "어디에 많은지"를 전달한다.
+  const renderDistrictCircle = (
+    map: kakao.maps.Map,
+    district: string,
+    count: number,
+    maxCount: number
+  ) => {
+    const coords = DISTRICT_COORDS[district];
+    if (!coords) return;
+
+    const ratio = count / maxCount;
+    const size = Math.round(44 + ratio * 28);
+    const shortName = district.replace("구", "").replace("군", "");
+
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <button type="button" aria-label="${district} 확대해서 보기" style="
+        all: unset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 9999px;
+        background: linear-gradient(140deg, #34a6ff, #0a84ff);
+        border: 3px solid #ffffff;
+        box-shadow: 0 6px 16px rgba(10,132,255,0.35), 0 1px 2px rgba(0,0,0,0.12);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      ">${shortName}</button>
+    `;
+
+    const el = content.firstElementChild as HTMLElement;
+    el.addEventListener("pointerenter", () => {
+      el.style.transform = "scale(1.08)";
+      el.style.boxShadow = "0 8px 20px rgba(10,132,255,0.46), 0 1px 2px rgba(0,0,0,0.12)";
+    });
+    el.addEventListener("pointerleave", () => {
+      el.style.transform = "scale(1)";
+      el.style.boxShadow = "0 6px 16px rgba(10,132,255,0.35), 0 1px 2px rgba(0,0,0,0.12)";
+    });
+    el.addEventListener("click", () => {
+      map.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
+      map.setLevel(DEFAULT_LEVEL);
+    });
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(coords.lat, coords.lng),
       content,
       yAnchor: 0.5,
       zIndex: 2,
@@ -226,6 +320,15 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       overlaysRef.current.forEach((o) => o.setMap(null));
       overlaysRef.current = [];
 
+      if (map.getLevel() >= DISTRICT_VIEW_MIN_LEVEL) {
+        const counts = groupByDistrict(markers);
+        const maxCount = Math.max(1, ...counts.values());
+        counts.forEach((count, district) => {
+          renderDistrictCircle(map, district, count, maxCount);
+        });
+        return;
+      }
+
       clusterMarkers(map, markers).forEach((cluster) => {
         if (cluster.members.length === 1) {
           renderSingle(map, cluster.members[0]);
@@ -237,7 +340,8 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
 
     render();
 
-    // 줌이 바뀌면 화면 픽셀 밀도가 달라져 클러스터 묶음이 다시 계산돼야 한다.
+    // 줌이 바뀌면 화면 픽셀 밀도가 달라져 클러스터 묶음이 다시 계산돼야 하고,
+    // 구 단위 뷰 ↔ 마커 뷰 전환 여부도 다시 판단해야 한다.
     // (팬은 오버레이가 좌표에 붙어있어 카카오맵이 알아서 따라가므로 재계산 불필요)
     kakao.maps.event.addListener(map, "zoom_changed", render);
     return () => kakao.maps.event.removeListener(map, "zoom_changed", render);
