@@ -236,17 +236,28 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
           </>
         ) : placeType === "FOOD" && foodData ? (
           <>
-            <div className="relative h-56 bg-gray-100 flex items-center justify-center">
-              <span className="text-4xl">🍽️</span>
+            {/* 음식점은 백엔드에서 이미지를 내려주지 않아, 빈 이미지 칸 대신
+                이름/카테고리를 바로 보여주는 헤더로 그 공간을 채운다. */}
+            <div className="relative flex items-center gap-3 rounded-t-2xl bg-gradient-to-br from-amber-50 to-orange-50 px-5 pt-5 pb-4">
               <button
                 onClick={onClose}
-                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition"
+                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition"
               >
                 <X className="w-4 h-4" />
               </button>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                🍽️
+              </div>
+              <div className="flex min-w-0 flex-col gap-1">
+                <h2 className="truncate text-xl font-bold text-gray-900 pr-8">{foodData.name}</h2>
+                {foodData.normalizedCategory && (
+                  <span className="w-fit rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    {foodData.normalizedCategory}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="p-5 flex flex-col gap-4">
-              <h2 className="text-xl font-bold text-gray-900">{foodData.name}</h2>
               <div className="flex flex-col gap-2">
                 {foodData.address && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
