@@ -9,8 +9,8 @@ import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-28 gap-6 text-center">
-      <div className="w-20 h-20 rounded-[26px] bg-gray-50 border border-gray-100 flex items-center justify-center">
-        <Compass className="w-9 h-9 text-gray-300" strokeWidth={1.5} />
+      <div className="w-20 h-20 rounded-[26px] bg-gradient-to-br from-ocean-50 to-lime-50 flex items-center justify-center">
+        <Compass className="w-9 h-9 text-ocean-500" strokeWidth={1.5} />
       </div>
       <div>
         <p className="text-[19px] font-semibold text-gray-900 tracking-tight">아직 만든 코스가 없어요</p>
@@ -78,7 +78,7 @@ function CourseCard({
     <button
       onClick={onClick}
       className="group text-left rounded-[28px] border border-gray-100 bg-white p-6
-                 hover:border-gray-200 hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)]
+                 hover:border-ocean-200 hover:shadow-[0_20px_40px_-16px_rgba(10,132,255,0.18)]
                  hover:-translate-y-1 active:translate-y-0 active:shadow-none
                  transition-all duration-300 ease-out"
       aria-label={`${title} 코스 상세 보기`}
@@ -106,9 +106,9 @@ function CourseCard({
           <span
             key={`${pairId}-${spot}`}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                       border border-gray-100 text-[11px] text-gray-500"
+                       bg-ocean-50 text-[11px] text-ocean-700"
           >
-            <MapPin className="w-2.5 h-2.5 text-gray-300" />
+            <MapPin className="w-2.5 h-2.5 text-ocean-500" />
             {spot}
           </span>
         ))}
@@ -122,7 +122,7 @@ function CourseCard({
       {/* 예상 비용 */}
       <div className="flex items-center pt-4 border-t border-gray-50">
         <span className="text-[12px] text-gray-400">예상 비용</span>
-        <span className="ml-auto text-[15px] font-semibold text-gray-900 tracking-tight">
+        <span className="ml-auto text-[15px] font-bold text-navy-600 tracking-tight">
           {totalCost > 0 ? `${totalCost.toLocaleString()}원` : "무료"}
         </span>
       </div>
@@ -141,27 +141,33 @@ export default function MyCourseListView() {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20 pt-28 pb-20">
-      {/* 헤더 */}
-      <div className="flex items-end justify-between gap-4 mb-12">
-        <div>
-          <p className="text-[13px] text-gray-400 font-medium mb-2 tracking-wide">My Course</p>
-          <h1 className="text-[32px] md:text-[38px] font-bold text-gray-900 tracking-tight leading-tight">
-            내가 만든 코스
-          </h1>
-          <p className="text-[15px] text-gray-400 mt-2">
-            AI가 만들어준 부산 여행 코스를 확인해보세요
-          </p>
+      {/* 헤더 배너 */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ocean-50 via-white to-lime-50 mb-10">
+        <div className="relative flex flex-col gap-6 px-6 py-10 md:flex-row md:items-end md:justify-between md:px-12 md:py-12">
+          <div>
+            <p className="text-sm font-semibold text-ocean-600">AI가 만들어준 나만의 부산 여행</p>
+            <h1 className="mt-2 text-4xl font-bold text-navy-900 md:text-5xl">
+              내가 만든{" "}
+              <span className="relative inline-block">
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-1 -z-10 h-4 rounded-sm bg-lime-300"
+                />
+                코스
+              </span>
+            </h1>
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 self-start rounded-full bg-navy-900 px-5 py-3
+                       text-[14px] font-semibold text-lime-300 whitespace-nowrap
+                       transition-all hover:-translate-y-0.5 hover:brightness-110"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            새 코스 만들기
+          </Link>
         </div>
-        <Link
-          href="/"
-          className="hidden sm:inline-flex items-center gap-1.5 px-5 py-3 rounded-full
-                     bg-gray-900 text-white text-[14px] font-semibold
-                     hover:bg-gray-800 active:opacity-80 transition-all duration-200 whitespace-nowrap"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          새 코스 만들기
-        </Link>
-      </div>
+      </section>
 
       {/* 본문 */}
       {isLoading ? (
