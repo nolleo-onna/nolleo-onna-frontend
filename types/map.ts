@@ -11,6 +11,7 @@ export interface MapPlace {
   minPrice: number | null;
   free: boolean;
   avgRating: number;
+  reviewCount: number;
 }
 
 export interface MapPlacePage {
