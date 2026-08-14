@@ -31,7 +31,7 @@ export default function SocialLoginButton({ provider }: SocialLoginButtonProps) 
     <a
       href={OAUTH_URLS[provider]}
       className={cn(
-        "flex h-12 w-full items-center justify-center rounded-full text-base font-semibold transition-all duration-200 ease-out active:scale-95",
+        "flex h-12 w-full items-center justify-center rounded-full text-base font-semibold shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-95 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ocean-400 focus-visible:ring-offset-2",
         className,
       )}
     >
