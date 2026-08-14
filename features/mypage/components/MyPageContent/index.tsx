@@ -64,7 +64,7 @@ export default function MyPageContent() {
         </div>
         <div>
           <p className="text-xl font-bold text-navy-900">로그인이 필요해요</p>
-          <p className="mt-1 text-sm text-gray-400">로그인하고 나만의 부산 여행을 시작해보세요</p>
+          <p className="mt-1 text-sm text-gray-500">로그인하고 나만의 부산 여행을 시작해보세요</p>
         </div>
         <button
           onClick={() => router.push("/login")}
@@ -113,7 +113,7 @@ export default function MyPageContent() {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-sm text-gray-400">{user.email}</p>
+            <p className="mt-0.5 text-sm text-gray-500">{user.email}</p>
 
             {/* 통계 */}
             <div className="mt-5 grid grid-cols-3 divide-x divide-gray-100">
@@ -121,7 +121,7 @@ export default function MyPageContent() {
                 <div key={label} className="flex flex-col items-center gap-1 px-2">
                   <Icon className="w-3.5 h-3.5 text-navy-400" />
                   <span className="text-lg font-bold text-navy-900">{value}</span>
-                  <span className="text-[11px] text-gray-400">{label}</span>
+                  <span className="text-[11px] text-gray-500">{label}</span>
                 </div>
               ))}
             </div>
@@ -135,7 +135,7 @@ export default function MyPageContent() {
               <Route className="w-4 h-4 text-navy-400" />
               <h2 className="text-sm font-bold text-navy-900">최근 생성한 코스</h2>
             </div>
-            <button className="text-xs text-gray-400 flex items-center gap-0.5 hover:text-gray-600">
+            <button className="text-xs text-gray-500 flex items-center gap-0.5 hover:text-gray-600">
               전체보기 <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -148,15 +148,15 @@ export default function MyPageContent() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-navy-900 truncate">{course.title}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                    <span className="flex items-center gap-0.5 text-xs text-gray-500">
                       <MapPin className="w-3 h-3" />{course.region}
                     </span>
                     <span className="text-gray-200">·</span>
-                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                    <span className="flex items-center gap-0.5 text-xs text-gray-500">
                       <Clock className="w-3 h-3" />{course.duration}
                     </span>
                     <span className="text-gray-200">·</span>
-                    <span className="text-xs text-gray-400">{course.createdAt}</span>
+                    <span className="text-xs text-gray-500">{course.createdAt}</span>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
@@ -172,7 +172,7 @@ export default function MyPageContent() {
               <Heart className="w-4 h-4 text-pink-400" />
               <h2 className="text-sm font-bold text-navy-900">찜한 스팟</h2>
             </div>
-            <button className="text-xs text-gray-400 flex items-center gap-0.5 hover:text-gray-600">
+            <button className="text-xs text-gray-500 flex items-center gap-0.5 hover:text-gray-600">
               전체보기 <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -187,7 +187,7 @@ export default function MyPageContent() {
                 </div>
                 <div className="p-2">
                   <p className="text-xs font-semibold text-navy-900 truncate">{spot.name}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{spot.category}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{spot.category}</p>
                 </div>
               </div>
             ))}

@@ -24,7 +24,7 @@ export default function Footer() {
         </div>
 
         {/* 카피라이트 */}
-        <p className="mt-6 text-xs text-gray-400">
+        <p className="mt-6 text-xs text-gray-500">
           © 2025 놀러왔나. All rights reserved.
         </p>
       </div>
