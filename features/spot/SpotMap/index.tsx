@@ -19,28 +19,6 @@ function markerStyle(spot: MapMarker) {
   return { color: "#0d3080", emoji: "📍", label: "기타" };
 }
 
-// 클러스터 안에 가장 많이 섞여있는 카테고리의 색/이모지를 대표로 보여준다.
-// 파란 빈 원만 있으면 "여기 뭐가 있는지" 전혀 안 보여서, 뭉쳐있어도 최소한
-// 어떤 종류의 장소가 많은지는 한눈에 알 수 있게 한다.
-function dominantStyle(members: MapMarker[]) {
-  const counts = new Map<string, number>();
-  members.forEach((m) => {
-    const label = markerStyle(m).label;
-    counts.set(label, (counts.get(label) ?? 0) + 1);
-  });
-
-  let bestLabel = "";
-  let bestCount = 0;
-  counts.forEach((count, label) => {
-    if (count > bestCount) {
-      bestCount = count;
-      bestLabel = label;
-    }
-  });
-
-  return markerStyle(members.find((m) => markerStyle(m).label === bestLabel) ?? members[0]);
-}
-
 interface SpotMapProps {
   selectedId: string | null;
   onSelectMarker: (id: string, placeType: "SPOT" | "FOOD") => void;
@@ -54,58 +32,10 @@ const DEFAULT_CENTER = { lat: 35.1796, lng: 129.0756 };
 const DEFAULT_LEVEL = 8;
 // 구를 선택했을 때(필터, 구 단위 원 클릭 등) 확대해 들어가는 레벨.
 const DISTRICT_ZOOM_LEVEL = 5;
-// 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
-// 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
-// 마커 자체가 작아진 만큼 반경도 줄여서, 뭉치기보다 개별 장소 핀이 더 많이
-// 그대로 보이게 한다.
-const CLUSTER_RADIUS_PX = 36;
 // 이 레벨 이상(=많이 줌아웃돼 여러 구가 한 화면에 들어옴)에서는 개별 스팟
-// 마커/클러스터 대신 구 단위 원만 보여준다. 부산 전체가 한눈에 들어올 때
-// 클러스터 수십 개가 흩어져 보이는 걸 막고, 어느 구를 볼지부터 고르게 한다.
+// 마커 대신 구 단위 원만 보여준다. 부산 전체가 한눈에 들어올 때 마커 수백
+// 개가 흩어져 보이는 걸 막고, 어느 구를 볼지부터 고르게 한다.
 const DISTRICT_VIEW_MIN_LEVEL = 7;
-
-interface Cluster {
-  x: number;
-  y: number;
-  members: MapMarker[];
-}
-
-// 격자로 나눠서 묶으면 바로 옆 칸에 있는 클러스터끼리도 서로 다닥다닥 붙어
-// 그려진다(칸 경계 문제). 대신 각 마커를 "반경 안에 있는 기존 클러스터 중
-// 가장 가까운 곳"에 그리디하게 합쳐서, 클러스터 중심끼리 최소 반경만큼은
-// 항상 떨어져 있도록 만든다 — 결과적으로 원 개수 자체가 훨씬 줄어든다.
-function clusterMarkers(map: kakao.maps.Map, spots: MapMarker[]): Cluster[] {
-  const proj = map.getProjection();
-  const radiusSq = CLUSTER_RADIUS_PX * CLUSTER_RADIUS_PX;
-  const clusters: Cluster[] = [];
-
-  spots.forEach((spot) => {
-    const point = proj.pointFromCoords(new kakao.maps.LatLng(spot.mapY, spot.mapX));
-
-    let nearest: Cluster | null = null;
-    let nearestDistSq = radiusSq;
-    for (const cluster of clusters) {
-      const dx = cluster.x - point.x;
-      const dy = cluster.y - point.y;
-      const distSq = dx * dx + dy * dy;
-      if (distSq <= nearestDistSq) {
-        nearest = cluster;
-        nearestDistSq = distSq;
-      }
-    }
-
-    if (nearest) {
-      const n = nearest.members.length + 1;
-      nearest.x = (nearest.x * (n - 1) + point.x) / n;
-      nearest.y = (nearest.y * (n - 1) + point.y) / n;
-      nearest.members.push(spot);
-    } else {
-      clusters.push({ x: point.x, y: point.y, members: [spot] });
-    }
-  });
-
-  return clusters;
-}
 
 // 마커에는 구 정보가 없어서(위경도만 있음), 가장 가까운 구 중심좌표로
 // 대략 묶는다 — 행정구역 경계까지 정확할 필요 없이 "대충 어느 구"만 맞으면
@@ -137,16 +67,8 @@ function groupByDistrict(spots: MapMarker[]): Map<string, number> {
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
-  // 클러스터를 클릭하면 안에 있는 장소들을 고를 수 있는 작은 목록 팝업을
-  // 띄운다 — 다른 곳을 클릭하거나 지도가 다시 그려지면 닫는다.
-  const popupOverlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
-
-  const closeClusterPopup = () => {
-    popupOverlayRef.current?.setMap(null);
-    popupOverlayRef.current = null;
-  };
 
   // 지금 뭘 보고 있는지(구 이름/장소 이름) 지도 위에 잠깐 떠서 알려주는 라벨.
   // 아이콘만 있는 마커라 클릭 결과가 바로 안 보일 수 있어 추가한다.
@@ -240,148 +162,16 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     `;
   };
 
-  // 클러스터도 대표 카테고리(가장 많이 섞인 것)의 색/이모지를 보여줘서
-  // 뭉쳐 있어도 "여기 뭐가 있는지" 감이 오게 한다. 크기 차이로 밀도를 전달한다.
-  // 클러스터 클릭 시 안에 있는 장소들을 골라 모달을 열 수 있는 작은 목록
-  // 팝업을 띄운다. 클러스터는 여러 장소가 뭉친 것이라 "그 장소"가 하나로
-  // 정해지지 않으므로, 확대 대신 바로 고를 수 있게 한다.
-  const renderClusterPopup = (map: kakao.maps.Map, cluster: Cluster) => {
-    closeClusterPopup();
-
-    const proj = map.getProjection();
-    const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
-
-    const wrapper = document.createElement("div");
-    wrapper.style.cssText = `
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 12px 28px rgba(13,48,128,0.28), 0 2px 6px rgba(0,0,0,0.1);
-      padding: 6px;
-      width: 220px;
-      max-height: 260px;
-      overflow-y: auto;
-    `;
-    wrapper.addEventListener("click", (e) => e.stopPropagation());
-
-    const visibleMembers = cluster.members.slice(0, 8);
-    visibleMembers.forEach((member) => {
-      const { emoji } = markerStyle(member);
-      const row = document.createElement("button");
-      row.type = "button";
-      row.style.cssText = `
-        all: unset;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        padding: 8px 10px;
-        border-radius: 10px;
-        cursor: pointer;
-        box-sizing: border-box;
-        font-size: 13px;
-        color: #191919;
-      `;
-      row.innerHTML = `
-        <span style="font-size: 16px; flex-shrink: 0;">${emoji}</span>
-        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${member.title}</span>
-      `;
-      row.addEventListener("pointerenter", () => { row.style.background = "#f6f7f9"; });
-      row.addEventListener("pointerleave", () => { row.style.background = "transparent"; });
-      row.addEventListener("click", () => {
-        showStatus(`${nearestDistrict(member).replace("구", "").replace("군", "")} ${member.title}`);
-        onSelectMarker(member.id, member.type);
-        closeClusterPopup();
-      });
-      wrapper.appendChild(row);
-    });
-
-    const hiddenCount = cluster.members.length - visibleMembers.length;
-    if (hiddenCount > 0) {
-      const more = document.createElement("button");
-      more.type = "button";
-      more.style.cssText = `
-        all: unset;
-        display: block;
-        width: 100%;
-        text-align: center;
-        padding: 8px;
-        border-radius: 10px;
-        cursor: pointer;
-        box-sizing: border-box;
-        font-size: 12px;
-        color: #0066d6;
-      `;
-      more.textContent = `+${hiddenCount}개 더 보려면 확대하기`;
-      more.addEventListener("click", () => {
-        map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
-        closeClusterPopup();
-      });
-      wrapper.appendChild(more);
-    }
-
-    const overlay = new kakao.maps.CustomOverlay({
-      position,
-      content: wrapper,
-      yAnchor: 1.1,
-      zIndex: 50,
-    });
-    overlay.setMap(map);
-    popupOverlayRef.current = overlay;
-  };
-
-  const renderCluster = (map: kakao.maps.Map, cluster: Cluster) => {
-    const proj = map.getProjection();
-    const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
-    const count = cluster.members.length;
-    const { color, emoji, label } = dominantStyle(cluster.members);
-    // 숫자 없이 크기만으로 밀도를 전달해야 해서, 작은 클러스터와 큰 클러스터의
-    // 크기 차이를 뚜렷하게 벌린다. 전체적으로 이전보다 훨씬 작게 유지한다.
-    const size = Math.round(Math.min(30 + Math.sqrt(count) * 4, 46));
-
-    const content = document.createElement("div");
-    content.innerHTML = `
-      <button type="button" aria-label="${label} 등 ${count}개 스팟 목록 보기" style="
-        all: unset;
-        display: block;
-        cursor: pointer;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      ">${pinMarkup(color, emoji, size, 3)}</button>
-    `;
-
-    const el = content.firstElementChild as HTMLElement;
-    el.addEventListener("pointerenter", () => {
-      el.style.transform = "scale(1.15)";
-    });
-    el.addEventListener("pointerleave", () => {
-      el.style.transform = "scale(1)";
-    });
-    el.addEventListener("click", () => {
-      renderClusterPopup(map, cluster);
-    });
-
-    const overlay = new kakao.maps.CustomOverlay({
-      position,
-      content,
-      yAnchor: 1,
-      zIndex: 2,
-    });
-    overlay.setMap(map);
-    overlaysRef.current.push(overlay);
-  };
-
   // 구 단위 원: 많이 줌아웃됐을 때(DISTRICT_VIEW_MIN_LEVEL 이상) 개별 마커 대신
-  // 보여준다. 스팟 개수 없이 구 이름과 상대적 크기만으로 "어디에 많은지"를 전달한다.
-  const renderDistrictCircle = (
-    map: kakao.maps.Map,
-    district: string,
-    count: number,
-    maxCount: number
-  ) => {
+  // 보여준다. 구마다 크기가 다르면 스팟 개수 차이로 오해하기 쉬워서, 개수와
+  // 무관하게 전부 같은 크기로 통일한다.
+  const DISTRICT_CIRCLE_SIZE = 56;
+
+  const renderDistrictCircle = (map: kakao.maps.Map, district: string) => {
     const coords = DISTRICT_COORDS[district];
     if (!coords) return;
 
-    const ratio = count / maxCount;
-    const size = Math.round(48 + ratio * 28);
+    const size = DISTRICT_CIRCLE_SIZE;
 
     const content = document.createElement("div");
     content.innerHTML = `
@@ -474,37 +264,27 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const render = () => {
       overlaysRef.current.forEach((o) => o.setMap(null));
       overlaysRef.current = [];
-      closeClusterPopup();
 
       if (map.getLevel() >= DISTRICT_VIEW_MIN_LEVEL) {
         const counts = groupByDistrict(markers);
-        const maxCount = Math.max(1, ...counts.values());
-        counts.forEach((count, district) => {
-          renderDistrictCircle(map, district, count, maxCount);
+        counts.forEach((_count, district) => {
+          renderDistrictCircle(map, district);
         });
         return;
       }
 
-      clusterMarkers(map, markers).forEach((cluster) => {
-        if (cluster.members.length === 1) {
-          renderSingle(map, cluster.members[0]);
-        } else {
-          renderCluster(map, cluster);
-        }
-      });
+      // 클러스터로 묶지 않고 장소마다 각자의 마커/모달로 바로 연결한다 —
+      // 같은 지역에 여러 곳이 몰려 있어도 목록 팝업 없이 하나하나 클릭할 수 있게.
+      markers.forEach((spot) => renderSingle(map, spot));
     };
 
     render();
 
-    // 줌이 바뀌면 화면 픽셀 밀도가 달라져 클러스터 묶음이 다시 계산돼야 하고,
-    // 구 단위 뷰 ↔ 마커 뷰 전환 여부도 다시 판단해야 한다.
+    // 줌이 바뀌면 구 단위 뷰 ↔ 마커 뷰 전환 여부를 다시 판단해야 한다.
     // (팬은 오버레이가 좌표에 붙어있어 카카오맵이 알아서 따라가므로 재계산 불필요)
     kakao.maps.event.addListener(map, "zoom_changed", render);
-    // 지도의 빈 곳을 클릭하면 열려있던 클러스터 목록 팝업을 닫는다.
-    kakao.maps.event.addListener(map, "click", closeClusterPopup);
     return () => {
       kakao.maps.event.removeListener(map, "zoom_changed", render);
-      kakao.maps.event.removeListener(map, "click", closeClusterPopup);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers, selectedId, mapInstanceRef]);
