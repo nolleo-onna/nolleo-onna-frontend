@@ -26,7 +26,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "광안대교를 배경으로 펼쳐지는 화려한 불꽃쇼, 명당 자리를 알려드립니다.",
     date: "2026.06.11",
     region: "광안리",
-    imageUrl: "https://picsum.photos/seed/fireworks/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg",
     views: 3241,
   },
   {
@@ -36,7 +36,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "동백섬부터 미포까지, 돈 없이도 충분히 낭만적인 해운대 밤 산책 코스.",
     date: "2026.06.10",
     region: "해운대",
-    imageUrl: "https://picsum.photos/seed/nightview/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/89/3575989_image2_1.jpg",
     views: 2876,
   },
   {
@@ -46,7 +46,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "온라인 사전 예약부터 카드사 제휴까지, 아는 사람만 아는 할인 루트 총정리.",
     date: "2026.06.09",
     region: "부산 전체",
-    imageUrl: "https://picsum.photos/seed/citytour/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/40/3494840_image2_1.jpg",
     views: 1954,
   },
   {
@@ -56,7 +56,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "돗자리 하나면 끝. 편의점 위치부터 노을 명당까지 한 번에 정리했어요.",
     date: "2026.06.08",
     region: "광안리",
-    imageUrl: "https://picsum.photos/seed/picnic/640/420",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/66/3498366_image2_1.jpg",
     views: 2410,
   },
   {
@@ -66,7 +66,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "헌책과 빈티지 소품이 가득한 골목 플리마켓. 주말 한정 운영 정보.",
     date: "2026.06.11",
     region: "원도심",
-    imageUrl: "https://picsum.photos/seed/fleamarket/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/30/3476830_image2_1.jpg",
     views: 1632,
   },
   {
@@ -76,7 +76,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "흰여울문화마을 근처 카페 중 멤버십 할인 되는 곳만 모았습니다.",
     date: "2026.06.07",
     region: "영도",
-    imageUrl: "https://picsum.photos/seed/coffee/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/16/2836416_image2_1.jpg",
     views: 1287,
   },
   {
@@ -86,7 +86,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "을숙도에 숨은 미술관, 6월 무료 전시 라인업과 가는 법.",
     date: "2026.06.06",
     region: "사하",
-    imageUrl: "https://picsum.photos/seed/museum/640/420",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/95/3506195_image2_1.jpg",
     views: 987,
   },
   {
@@ -96,7 +96,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "전포사잇길에서 열리는 로컬 뮤지션 버스킹. 늦지 않게 도착하세요.",
     date: "2026.06.11",
     region: "서면",
-    imageUrl: "https://picsum.photos/seed/busking/640/420",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/60/3496960_image2_1.jpg",
     views: 1456,
   },
   {
@@ -106,7 +106,7 @@ export const MOCK_HANKKUT_LIST: Hankkut[] = [
     summary: "마감 직전 타임세일부터 흥정 팁까지, 현지인이 알려주는 자갈치 공략법.",
     date: "2026.06.05",
     region: "원도심",
-    imageUrl: "https://picsum.photos/seed/fishmarket/640/420",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/46/3049246_image2_1.JPG",
     views: 3102,
   },
 ];
