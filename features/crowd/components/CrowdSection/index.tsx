@@ -43,7 +43,7 @@ export default function CrowdSection() {
               <div
                 key={`${spot.name}-${i}`}
                 onClick={() => router.push("/crowd")}
-                className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group bg-gray-200"
+                className="relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer group bg-gray-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 {/* 순위 */}
                 <span className="absolute top-3 left-3 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 text-white text-xs font-bold">
