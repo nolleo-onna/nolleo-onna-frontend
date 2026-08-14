@@ -25,11 +25,13 @@ interface SpotMapProps {
   mapInstanceRef: React.RefObject<kakao.maps.Map | null>;
 }
 
-// 전체 부산을 다 보여주면 클러스터가 잔뜩 보여서 정신없다 — 가장 널리
-// 찾는 해운대구를 기본 화면으로 보여주고, 필터에서 "전체"를 고르면 그때
-// 전체 지도로 줌아웃한다.
-const DEFAULT_CENTER = DISTRICT_COORDS["해운대구"];
-const DEFAULT_LEVEL = 5;
+// 기본 화면은 특정 구로 확대하지 않고 부산 전체를 구 단위 원으로 보여준다
+// (DISTRICT_VIEW_MIN_LEVEL 이상이라 구 단위 뷰로 시작함). 구 하나를 고르면
+// 그 구 레벨(아래 DEFAULT_ZOOM_LEVEL)로 확대된다.
+const DEFAULT_CENTER = { lat: 35.1796, lng: 129.0756 };
+const DEFAULT_LEVEL = 8;
+// 구를 선택했을 때(필터, 구 단위 원 클릭 등) 확대해 들어가는 레벨.
+const DISTRICT_ZOOM_LEVEL = 5;
 // 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
 // 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
 const CLUSTER_RADIUS_PX = 64;
@@ -223,8 +225,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     if (!coords) return;
 
     const ratio = count / maxCount;
-    const size = Math.round(44 + ratio * 28);
-    const shortName = district.replace("구", "").replace("군", "");
+    const size = Math.round(48 + ratio * 28);
 
     const content = document.createElement("div");
     content.innerHTML = `
@@ -241,11 +242,13 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         box-shadow: 0 6px 16px rgba(10,132,255,0.35), 0 1px 2px rgba(0,0,0,0.12);
         color: #ffffff;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
         cursor: pointer;
         user-select: none;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      ">${shortName}</button>
+      ">${district}</button>
     `;
 
     const el = content.firstElementChild as HTMLElement;
@@ -259,7 +262,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     });
     el.addEventListener("click", () => {
       map.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
-      map.setLevel(DEFAULT_LEVEL);
+      map.setLevel(DISTRICT_ZOOM_LEVEL);
     });
 
     const overlay = new kakao.maps.CustomOverlay({
