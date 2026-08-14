@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import Chip from "@/components/ui/Chip";
 
 const PRESETS = [
-  { label: "제한 없음", value: 0 },
+  { label: "제한없음", value: 0 },
   { label: "3만원", value: 30000 },
   { label: "5만원", value: 50000 },
   { label: "10만원", value: 100000 },
@@ -90,7 +90,7 @@ export default function BudgetFilter() {
             key={value}
             size="sm"
             onClick={() => handlePreset(value)}
-            className={`w-full justify-center ${
+            className={`w-full justify-center px-1 text-xs ${
               budget === value
                 ? "border-navy-200 bg-navy-50 text-navy-400"
                 : ""
