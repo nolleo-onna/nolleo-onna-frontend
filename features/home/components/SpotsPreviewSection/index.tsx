@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -73,47 +73,43 @@ function CrowdCard({ spot, rank }: { spot: Spot; rank?: number }) {
   return (
     <button
       onClick={() => router.push("/crowd")}
-      className="group relative aspect-[4/5] w-[45%] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-200 text-left transition-transform duration-200 hover:-translate-y-1 sm:w-[31%] lg:w-[23%]"
+      className="group relative aspect-[3/4] w-[calc((100%-12px)/2)] shrink-0 snap-start overflow-hidden rounded-3xl bg-gray-200 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[calc((100%-24px)/3)] lg:w-[calc((100%-36px)/4)]"
     >
       {spot.imageUrl && (
         <Image
           src={spot.imageUrl}
           alt={spot.name}
           fill
-          sizes="(max-width: 744px) 45vw, (max-width: 1280px) 31vw, 23vw"
+          sizes="(max-width: 744px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       )}
 
       {/* 하단 그라데이션 (텍스트 가독성용) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
 
       {/* 순위 배지 */}
       {rank !== undefined && (
-        <span className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[11px] font-bold text-white">
+        <span className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-[11px] font-bold text-white backdrop-blur-sm">
           {rank}
         </span>
       )}
 
-      {/* 혼잡도 배지 */}
+      {/* 혼잡도 + 집중률 배지 */}
       <span
-        className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-bold"
-        style={{ backgroundColor: style.bg, color: style.text }}
+        className="absolute right-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold backdrop-blur-sm"
+        style={{ backgroundColor: `${style.bg}e6`, color: style.text }}
       >
         {style.label}
+        {spot.rate !== undefined && (
+          <span className="tabular-nums opacity-80">{Math.round(spot.rate)}%</span>
+        )}
       </span>
 
       {/* 하단 텍스트 */}
-      <div className="absolute inset-x-0 bottom-0 p-3">
-        <p className="truncate text-sm font-bold text-white">{spot.name}</p>
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <p className="truncate text-[11px] text-white/70">{spot.location}</p>
-          {spot.rate !== undefined && (
-            <span className="shrink-0 text-[11px] font-bold tabular-nums text-white">
-              {Math.round(spot.rate)}%
-            </span>
-          )}
-        </div>
+      <div className="absolute inset-x-0 bottom-0 p-4">
+        <p className="truncate text-[15px] font-bold text-white">{spot.name}</p>
+        <p className="mt-0.5 truncate text-[11px] text-white/70">{spot.location}</p>
       </div>
     </button>
   );
@@ -139,10 +135,60 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
     const el = scrollRef.current;
     if (!el) return;
     const cardWidth = el.firstElementChild instanceof HTMLElement
-      ? el.firstElementChild.offsetWidth + 12
+      ? el.firstElementChild.getBoundingClientRect().width + 12
       : el.clientWidth / 4;
-    el.scrollBy({ left: direction * cardWidth * 2, behavior: "smooth" });
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const next = el.scrollLeft + direction * cardWidth;
+
+    // 끝에 닿으면 처음으로, 처음에서 뒤로 가면 끝으로 — 계속 순환되게 한다.
+    if (next >= maxScroll - 1) {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (next <= 0) {
+      el.scrollTo({ left: maxScroll, behavior: "smooth" });
+    } else {
+      el.scrollTo({ left: next, behavior: "smooth" });
+    }
   };
+
+  // 3초마다 카드 한 칸씩 자동으로 넘어간다. 마우스가 올라와 있거나 직접
+  // 스크롤/드래그 중이면 멈추고, 손을 뗀 뒤 잠깐 지나면 다시 시작한다.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    let isHovering = false;
+    let interactionCooldownUntil = 0;
+
+    const handleMouseEnter = () => {
+      isHovering = true;
+    };
+    const handleMouseLeave = () => {
+      isHovering = false;
+    };
+    const handleInteraction = () => {
+      interactionCooldownUntil = Date.now() + 3000;
+    };
+
+    const intervalId = setInterval(() => {
+      if (!isHovering && Date.now() > interactionCooldownUntil) {
+        scrollByCard(1);
+      }
+    }, 3000);
+
+    el.addEventListener("mouseenter", handleMouseEnter);
+    el.addEventListener("mouseleave", handleMouseLeave);
+    el.addEventListener("pointerdown", handleInteraction);
+    el.addEventListener("wheel", handleInteraction, { passive: true });
+
+    return () => {
+      clearInterval(intervalId);
+      el.removeEventListener("mouseenter", handleMouseEnter);
+      el.removeEventListener("mouseleave", handleMouseLeave);
+      el.removeEventListener("pointerdown", handleInteraction);
+      el.removeEventListener("wheel", handleInteraction);
+    };
+  }, [data]);
 
   return (
     <section className="py-6 md:py-10">
