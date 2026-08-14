@@ -6,6 +6,7 @@ import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
 import type { MapMarker } from "@/types/spot";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 
 const FOOD_COLOR = CATEGORY_META.FD.color;
 const FOOD_EMOJI = CATEGORY_META.FD.emoji;
@@ -24,7 +25,11 @@ interface SpotMapProps {
   mapInstanceRef: React.RefObject<kakao.maps.Map | null>;
 }
 
-const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
+// 전체 부산을 다 보여주면 클러스터 숫자만 잔뜩 보여서 정신없다 — 가장 널리
+// 찾는 해운대구를 기본 화면으로 보여주고, 필터에서 "전체"를 고르면 그때
+// 전체 지도로 줌아웃한다.
+const DEFAULT_CENTER = DISTRICT_COORDS["해운대구"];
+const DEFAULT_LEVEL = 5;
 // 클러스터 중심 사이 최소 화면 픽셀 간격. 줌 레벨과 무관하게 "화면상 이만큼
 // 가까우면 겹친다"는 기준이 고정이라 어느 줌에서나 자연스럽게 뭉치고 풀린다.
 const CLUSTER_RADIUS_PX = 64;
@@ -84,8 +89,8 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const initMap = () => {
       kakao.maps.load(() => {
         const map = new kakao.maps.Map(mapRef.current!, {
-          center: new kakao.maps.LatLng(BUSAN_CENTER.lat, BUSAN_CENTER.lng),
-          level: 8,
+          center: new kakao.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
+          level: DEFAULT_LEVEL,
         });
         (mapInstanceRef as React.MutableRefObject<kakao.maps.Map | null>).current = map;
       });
