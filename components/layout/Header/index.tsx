@@ -49,15 +49,15 @@ function UserChip({
         className={`
           flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200
           ${open
-            ? 'bg-[#0d3080] border-[#0d3080] text-white shadow-md'
-            : 'bg-white border-gray-200 text-gray-700 hover:border-[#0d3080]/40 hover:shadow-sm'
+            ? 'bg-navy-600 border-navy-600 text-white shadow-md'
+            : 'bg-white border-gray-200 text-gray-700 hover:border-navy-600/40 hover:shadow-sm'
           }
         `}
       >
         {/* 이니셜 아바타 */}
         <div
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 transition-colors
-            ${open ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-[#0d3080] to-[#0a84ff] text-white'}
+            ${open ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-navy-600 to-ocean-500 text-white'}
           `}
         >
           {initial}
@@ -74,7 +74,7 @@ function UserChip({
           {/* 유저 정보 헤더 */}
           <div className="px-4 py-3 bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] border-b border-gray-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-600 to-ocean-500 flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
                 {initial}
               </div>
               <div>
@@ -89,7 +89,7 @@ function UserChip({
             <Link
               href="/mypage"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-[#f6f8ff] hover:text-[#0d3080] transition-colors"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-[#f6f8ff] hover:text-navy-600 transition-colors"
             >
               <User className="w-3.5 h-3.5" />
               마이페이지
@@ -227,7 +227,7 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-2"
                     >
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center text-white text-[12px] font-bold">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-navy-600 to-ocean-500 flex items-center justify-center text-white text-[12px] font-bold">
                         {user?.nickname?.charAt(0)}
                       </div>
                       <span className="text-[13px] font-semibold text-gray-700">
