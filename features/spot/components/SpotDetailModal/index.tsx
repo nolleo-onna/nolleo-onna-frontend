@@ -148,7 +148,12 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-xl">
+      <div
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="장소 상세 정보"
+      >
         {isPending ? (
           <div className="flex items-center justify-center h-60">
             <span className="text-sm text-gray-400">불러오는 중...</span>
