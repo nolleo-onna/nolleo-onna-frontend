@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { type Variants, motion } from "motion/react";
+import Container from "@/components/layout/Container";
+import SearchBar from "@/features/home/components/SearchBar";
 
 const WavesBackground = dynamic(() => import("./WavesBackground"), { ssr: false });
 
@@ -66,13 +68,13 @@ export default function HeroSection() {
   const typedText = useTypewriter(TYPING_PHRASES);
 
   return (
-    <section className="relative flex flex-col items-center justify-center pt-20 pb-24 md:pt-28 md:pb-32 text-center overflow-hidden rounded-b-[48px] bg-gradient-to-b from-navy-800 via-navy-700 to-ocean-800 md:rounded-b-[64px]">
+    <section className="relative flex flex-col items-center justify-center pt-20 pb-20 md:pt-28 md:pb-28 text-center overflow-hidden rounded-b-[48px] bg-gradient-to-b from-navy-800 via-navy-700 to-ocean-800 md:rounded-b-[64px]">
       {/* 파도 애니메이션 배경(WebGL). 접속 환경이 애니메이션을 원치 않으면
           섹션 자체의 그라데이션만 정적으로 보인다. */}
       <WavesBackground />
 
       <motion.div
-        className="relative z-10 flex flex-col items-center"
+        className="relative z-10 flex w-full flex-col items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -119,6 +121,13 @@ export default function HeroSection() {
               {tag}
             </span>
           ))}
+        </motion.div>
+
+        {/* 검색 카드: 위 키워드 태그와 이어지는 흐름으로 같은 파도 섹션 안에 둔다 */}
+        <motion.div variants={itemVariants} className="w-full mt-8">
+          <Container>
+            <SearchBar />
+          </Container>
         </motion.div>
       </motion.div>
     </section>

@@ -1,5 +1,4 @@
 import HeroSection from "@/features/home/components/HeroSection";
-import SearchBar from "@/features/home/components/SearchBar";
 import CourseCarousel from "@/features/home/components/CourseSection";
 import WeatherSection from "@/features/home/components/WeatherSection";
 import SpotsPreviewSection from "@/features/home/components/SpotsPreviewSection";
@@ -17,9 +16,6 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <Container>
-          <div id="search-bar" className="relative z-10 -mt-16 md:-mt-24">
-            <SearchBar />
-          </div>
           <CourseCarousel />
           <WeatherSection />
           <SpotsPreviewSection type="crowd" />
