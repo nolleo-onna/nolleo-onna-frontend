@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSpotMarkers } from "../hooks/useSpotMarkers";
 import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
 import type { MapMarker } from "@/types/spot";
@@ -148,6 +148,16 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     popupOverlayRef.current = null;
   };
 
+  // 지금 뭘 보고 있는지(구 이름/장소 이름) 지도 위에 잠깐 떠서 알려주는 라벨.
+  // 아이콘만 있는 마커라 클릭 결과가 바로 안 보일 수 있어 추가한다.
+  const [statusLabel, setStatusLabel] = useState<string | null>(null);
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showStatus = useCallback((text: string) => {
+    setStatusLabel(text);
+    if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+    statusTimeoutRef.current = setTimeout(() => setStatusLabel(null), 2200);
+  }, []);
+
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -278,6 +288,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       row.addEventListener("pointerenter", () => { row.style.background = "#f6f7f9"; });
       row.addEventListener("pointerleave", () => { row.style.background = "transparent"; });
       row.addEventListener("click", () => {
+        showStatus(`${nearestDistrict(member).replace("구", "").replace("군", "")} ${member.title}`);
         onSelectMarker(member.id, member.type);
         closeClusterPopup();
       });
@@ -406,6 +417,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       el.style.boxShadow = "0 6px 16px rgba(10,132,255,0.35), 0 1px 2px rgba(0,0,0,0.12)";
     });
     el.addEventListener("click", () => {
+      showStatus(`${district.replace("구", "").replace("군", "")}에서 찾는 중...`);
       map.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
       map.setLevel(DISTRICT_ZOOM_LEVEL);
     });
@@ -440,7 +452,10 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const el = content.firstElementChild as HTMLElement;
     el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.15)"; });
     el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
-    el.addEventListener("click", () => onSelectMarker(spot.id, spot.type));
+    el.addEventListener("click", () => {
+      showStatus(`${nearestDistrict(spot).replace("구", "").replace("군", "")} ${spot.title}`);
+      onSelectMarker(spot.id, spot.type);
+    });
 
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(spot.mapY, spot.mapX),
@@ -502,6 +517,19 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         </div>
       )}
       <div ref={mapRef} className="h-full w-full" />
+
+      {/* 지금 뭘 보고 있는지 잠깐 알려주는 라벨 */}
+      <div
+        className={`pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 transition-all duration-300 ${
+          statusLabel ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+        }`}
+      >
+        {statusLabel && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-navy-900 shadow-[0_4px_16px_rgba(13,48,128,0.2)] backdrop-blur-sm">
+            {statusLabel}
+          </span>
+        )}
+      </div>
     </section>
   );
 }
