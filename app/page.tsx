@@ -17,7 +17,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <Container>
-          <div id="search-bar">
+          <div id="search-bar" className="relative z-10 -mt-16 md:-mt-24">
             <SearchBar />
           </div>
           <CourseCarousel />
