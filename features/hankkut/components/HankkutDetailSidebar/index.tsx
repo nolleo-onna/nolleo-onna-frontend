@@ -1,7 +1,9 @@
-import { Clock, FolderPlus, MapPin, Share2, Ticket } from "lucide-react";
+import { Clock, MapPin, Ticket } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import SaveToggleButton from "@/features/hankkut/components/HankkutDetailSidebar/SaveToggleButton";
+import ShareButton from "@/features/hankkut/components/HankkutDetailSidebar/ShareButton";
 import type { HankkutDetail } from "@/features/hankkut/data/hankkutDetail";
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
 
@@ -18,30 +20,25 @@ export default function HankkutDetailSidebar({
     <aside className="space-y-5">
       {/* 액션 버튼 */}
       <section className="rounded-2xl border border-gray-100 p-5">
-        <h2 className="text-sm font-bold text-navy-900">코스에 추가</h2>
+        <h2 className="text-sm font-bold text-navy-900">이 한끗 저장하기</h2>
         <div className="mt-3 space-y-2">
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-navy-900 px-4 py-3 text-sm font-bold text-lime-300 transition-opacity hover:opacity-90"
-          >
-            <FolderPlus className="h-4 w-4" />내 코스에 담기
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300"
-          >
-            <Share2 className="h-4 w-4" />
-            공유하기
-          </button>
+          <SaveToggleButton id={hankkut.id} />
+          <ShareButton title={hankkut.title} />
         </div>
       </section>
 
       {/* 위치 / 운영 정보 */}
       <section className="rounded-2xl border border-gray-100 p-5">
         <h2 className="text-sm font-bold text-navy-900">위치</h2>
-        <div className="mt-3 flex aspect-[4/3] items-center justify-center rounded-xl bg-gray-50">
-          <MapPin className="h-8 w-8 text-gray-300" />
-        </div>
+        <a
+          href={`https://map.kakao.com/?q=${encodeURIComponent(hankkut.address)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-xl bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 hover:text-navy-900"
+        >
+          <MapPin className="h-8 w-8" />
+          <span className="text-xs font-semibold">카카오맵에서 보기</span>
+        </a>
         <ul className="mt-4 space-y-3 text-sm">
           <li className="flex items-start gap-2">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
