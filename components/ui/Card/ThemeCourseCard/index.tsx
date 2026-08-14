@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Sun, Heart, CloudRain, Moon, UtensilsCrossed, Trees, Sparkles } from "lucide-react";
 import type { ThemeCourse } from "@/features/home/data/themeCourses";
 
@@ -23,15 +24,26 @@ export default function ThemeCourseCard({ course, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`group relative h-[240px] w-full overflow-hidden rounded-2xl
-                  bg-gradient-to-br ${course.gradient}
+      className={`group relative h-[240px] w-full overflow-hidden rounded-2xl bg-gray-200
                   text-left transition-all duration-300
                   hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(13,48,128,0.22)]
                   active:scale-[0.98]`}
       aria-label={`${course.title} 코스 AI로 생성하기`}
     >
-      {/* 하단 그라데이션 오버레이 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+      {/* 배경 사진 */}
+      <Image
+        src={course.imageUrl}
+        alt={course.title}
+        fill
+        sizes="(max-width: 744px) 45vw, (max-width: 1280px) 30vw, 320px"
+        className="object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+
+      {/* 테마 컬러 톤 오버레이 (사진 위에 브랜드 컬러감을 입힘) */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${course.gradient} opacity-55 mix-blend-multiply`} />
+
+      {/* 하단 그라데이션 오버레이 (텍스트 가독성용) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
       {/* 상단 배지 + 아이콘 */}
       <div className="absolute left-4 right-4 top-4 flex items-start justify-between">

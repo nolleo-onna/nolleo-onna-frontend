@@ -8,8 +8,10 @@ export interface ThemeCourse {
   prompt: string;
   /** lucide-react 아이콘 이름 */
   icon: "Sun" | "Heart" | "CloudRain" | "Moon" | "UtensilsCrossed" | "Trees";
-  /** 카드 배경 그라데이션 */
+  /** 카드 배경 그라데이션 — 배경 사진 위에 테마 컬러 톤을 입히는 용도 */
   gradient: string;
+  /** 카드 배경 사진 (실제 부산 명소 사진) */
+  imageUrl: string;
 }
 
 export const THEME_COURSES: ThemeCourse[] = [
@@ -21,6 +23,7 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "혼자 조용히 쉴 수 있는 부산 바다 코스 짜줘. 한적한 해변이랑 분위기 좋은 카페 위주로!",
     icon: "Sun",
     gradient: "from-[#4FA8DE] to-[#185FA5]",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/22/3495922_image2_1.jpg",
   },
   {
     id: 2,
@@ -30,6 +33,7 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "연인과 5만원 이하로 즐길 수 있는 부산 감성 데이트 코스 짜줘",
     icon: "Heart",
     gradient: "from-[#ED93B1] to-[#993556]",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/37/3492437_image2_1.jpg",
   },
   {
     id: 3,
@@ -39,6 +43,7 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "비 오는 날 부산에서 실내 위주로 즐길 수 있는 코스 짜줘. 박물관이나 카페 같은 곳으로!",
     icon: "CloudRain",
     gradient: "from-[#7F91A8] to-[#3D4E63]",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/62/2712662_image2_1.jpg",
   },
   {
     id: 4,
@@ -48,6 +53,7 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "광안리랑 해운대 야경 볼 수 있는 부산 저녁 코스 짜줘",
     icon: "Moon",
     gradient: "from-[#7F77DD] to-[#3C3489]",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/89/3575989_image2_1.jpg",
   },
   {
     id: 5,
@@ -57,6 +63,7 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "국제시장이랑 자갈치 쪽으로 부산 먹방 코스 짜줘. 로컬 맛집 위주로!",
     icon: "UtensilsCrossed",
     gradient: "from-[#F0997B] to-[#993C1D]",
+    imageUrl: "http://tong.visitkorea.or.kr/cms/resource/30/3476830_image2_1.jpg",
   },
   {
     id: 6,
@@ -66,5 +73,6 @@ export const THEME_COURSES: ThemeCourse[] = [
     prompt: "태종대랑 이기대 같은 부산 자연 경관 위주로 산책 코스 짜줘",
     icon: "Trees",
     gradient: "from-[#97C459] to-[#3B6D11]",
+    imageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg",
   },
 ];
