@@ -1,6 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
@@ -18,26 +21,33 @@ type Spot = {
   name: string;
   location: string;
   crowdStatus: CrowdLevel;
-  /** 실데이터일 때만 채워짐 — 있으면 막대바로 집중률(%)을 보여준다 */
+  /** 실데이터일 때만 채워짐 — 있으면 카드에 집중률(%) 배지를 보여준다 */
   rate?: number;
+  imageUrl?: string;
 };
 
-// 혼잡도는 사진이 아니라 순위/수치 데이터라 카드+이미지보다 리스트+막대바가 더
-// 잘 맞는다 (실데이터에 이미지가 없는 경우가 많아 카드 형식일 때 빈 이미지가 반복되던 문제도 해결).
 // 백엔드 혼잡도 API가 관광지별(attractions) 데이터를 아직 안 채워줄 때 쓰는
-// 대체 데이터 — rate를 함께 채워서 실데이터와 동일하게 막대바 UI로 보이게 한다.
+// 대체 데이터 — rate/imageUrl을 함께 채워서 실데이터와 동일한 카드 UI로 보이게 한다.
 const mockCrowdSpots: Spot[] = [
-  { id: 1, name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", crowdStatus: "매우혼잡", rate: 92 },
-  { id: 2, name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", crowdStatus: "매우혼잡", rate: 87 },
-  { id: 3, name: "전포 카페거리", location: "부산진구 · 오후 붐빔", crowdStatus: "혼잡", rate: 63 },
-  { id: 4, name: "서면 먹자골목", location: "부산진구 · 저녁 피크", crowdStatus: "혼잡", rate: 58 },
+  { id: 1, name: "광안리 해수욕장", location: "해운대구 · 14-17시 피크", crowdStatus: "매우혼잡", rate: 92, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg" },
+  { id: 2, name: "해운대 해수욕장", location: "해운대구 · 13-18시 피크", crowdStatus: "매우혼잡", rate: 87, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/34/3090534_image2_1.JPG" },
+  { id: 3, name: "전포 카페거리", location: "부산진구 · 오후 붐빔", crowdStatus: "혼잡", rate: 63, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/60/3496960_image2_1.jpg" },
+  { id: 4, name: "서면 먹자골목", location: "부산진구 · 저녁 피크", crowdStatus: "혼잡", rate: 58, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/12/3014312_image2_1.JPG" },
+  { id: 5, name: "광안리해변 테마거리", location: "수영구 · 저녁 붐빔", crowdStatus: "혼잡", rate: 54, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/42/3071042_image2_1.JPG" },
+  { id: 6, name: "해운대 동백섬", location: "해운대구 · 오후 붐빔", crowdStatus: "보통", rate: 45, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/47/3350847_image2_1.jpg" },
+  { id: 7, name: "서면1번가", location: "부산진구 · 저녁 피크", crowdStatus: "보통", rate: 41, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/33/3496933_image2_1.jpg" },
+  { id: 8, name: "미포항", location: "해운대구 · 오후 한산", crowdStatus: "보통", rate: 35, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/22/3336622_image2_1.jpg" },
 ];
 
 const mockRelaxedSpots: Spot[] = [
-  { id: 1, name: "흰여울문화마을", location: "영도구 · 종일 한산", crowdStatus: "여유", rate: 12 },
-  { id: 2, name: "태종대", location: "영도구 · 오전 추천", crowdStatus: "여유", rate: 18 },
-  { id: 3, name: "부산시립미술관", location: "해운대구 · 한산한 수준", crowdStatus: "보통", rate: 38 },
-  { id: 4, name: "아홉산 숲", location: "기장군 · 종일 한산", crowdStatus: "여유", rate: 8 },
+  { id: 1, name: "흰여울문화마을", location: "영도구 · 종일 한산", crowdStatus: "여유", rate: 12, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/74/3495874_image2_1.jpg" },
+  { id: 2, name: "태종대", location: "영도구 · 오전 추천", crowdStatus: "여유", rate: 18, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg" },
+  { id: 3, name: "부산시립미술관", location: "해운대구 · 한산한 수준", crowdStatus: "보통", rate: 38, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/62/2712662_image2_1.jpg" },
+  { id: 4, name: "아홉산 숲", location: "기장군 · 종일 한산", crowdStatus: "여유", rate: 8, imageUrl: "http://tong.visitkorea.or.kr/cms/resource/91/3309791_image2_1.jpg" },
+  { id: 5, name: "민락수변공원", location: "수영구 · 오전 한산", crowdStatus: "여유", rate: 15, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/66/3498366_image2_1.jpg" },
+  { id: 6, name: "부산현대미술관", location: "사하구 · 종일 한산", crowdStatus: "여유", rate: 10, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/95/3506195_image2_1.jpg" },
+  { id: 7, name: "오륙도", location: "남구 · 종일 한산", crowdStatus: "여유", rate: 22, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/20/3496820_image2_1.jpg" },
+  { id: 8, name: "이기대", location: "남구 · 오전 추천", crowdStatus: "여유", rate: 20, imageUrl: "https://tong.visitkorea.or.kr/cms/resource/02/3496802_image2_1.jpg" },
 ];
 
 type Props = {
@@ -52,58 +62,58 @@ function toSpots(list: CongestionSpot[]): Spot[] {
     location: s.district ?? "",
     crowdStatus: s.level,
     rate: s.rate,
+    imageUrl: s.imageUrl,
   }));
 }
 
-function CrowdRow({ spot, rank }: { spot: Spot; rank?: number }) {
+function CrowdCard({ spot, rank }: { spot: Spot; rank?: number }) {
   const router = useRouter();
   const style = CROWD_STYLE[spot.crowdStatus];
 
   return (
     <button
       onClick={() => router.push("/crowd")}
-      className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 text-left transition-all hover:border-gray-200 hover:shadow-sm active:scale-[0.99]"
+      className="group relative aspect-[4/5] w-[45%] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-200 text-left transition-transform duration-200 hover:-translate-y-1 sm:w-[31%] lg:w-[23%]"
     >
+      {spot.imageUrl && (
+        <Image
+          src={spot.imageUrl}
+          alt={spot.name}
+          fill
+          sizes="(max-width: 744px) 45vw, (max-width: 1280px) 31vw, 23vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      )}
+
+      {/* 하단 그라데이션 (텍스트 가독성용) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+      {/* 순위 배지 */}
       {rank !== undefined && (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[11px] font-bold text-white">
+        <span className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[11px] font-bold text-white">
           {rank}
         </span>
       )}
-      <div className="min-w-0 flex-1">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold text-gray-900">{spot.name}</p>
-          <span
-            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
-            style={{ backgroundColor: style.bg, color: style.text }}
-          >
-            {style.label}
-          </span>
-        </div>
-        {spot.rate !== undefined ? (
-          <div className="flex items-center gap-2">
-            {/* 메터: 채워진 부분은 상태색, 트랙은 같은 색의 옅은 톤(같은 색 계열 전체로 상태가 읽히게) */}
-            <div
-              className="h-2 flex-1 overflow-hidden rounded-full"
-              style={{ backgroundColor: `${style.bg}1f` }}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(Math.max(spot.rate, 4), 100)}%`,
-                  backgroundColor: style.bg,
-                }}
-              />
-            </div>
-            <span
-              className="shrink-0 text-[11px] font-bold tabular-nums"
-              style={{ color: style.bg }}
-            >
+
+      {/* 혼잡도 배지 */}
+      <span
+        className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-bold"
+        style={{ backgroundColor: style.bg, color: style.text }}
+      >
+        {style.label}
+      </span>
+
+      {/* 하단 텍스트 */}
+      <div className="absolute inset-x-0 bottom-0 p-3">
+        <p className="truncate text-sm font-bold text-white">{spot.name}</p>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="truncate text-[11px] text-white/70">{spot.location}</p>
+          {spot.rate !== undefined && (
+            <span className="shrink-0 text-[11px] font-bold tabular-nums text-white">
               {Math.round(spot.rate)}%
             </span>
-          </div>
-        ) : (
-          <p className="truncate text-[11px] text-gray-400">{spot.location}</p>
-        )}
+          )}
+        </div>
       </div>
     </button>
   );
@@ -112,17 +122,27 @@ function CrowdRow({ spot, rank }: { spot: Spot; rank?: number }) {
 export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
   const router = useRouter();
   const isCrowd = type === "crowd";
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 혼잡도 실데이터: 붐빌 곳=집중률 상위 4, 여유로운 곳=하위 4 (prop > 실데이터 > mock)
+  // 혼잡도 실데이터: 붐빌 곳=집중률 상위 8, 여유로운 곳=하위 8 (prop > 실데이터 > mock)
   // congestion은 구 목록이라 캐시가 비어도(attractions: []) length가 0이 아니므로,
   // 실제로 뽑아낸 관광지 목록이 비었는지로 다시 판단해야 mock으로 제대로 대체된다.
   const { data: congestion } = useCongestion();
   const congestionSpots = congestion?.length
-    ? (isCrowd ? getTopCongested(congestion, 4) : getLeastCongested(congestion, 4))
+    ? (isCrowd ? getTopCongested(congestion, 8) : getLeastCongested(congestion, 8))
     : [];
   const realSpots = congestionSpots.length ? toSpots(congestionSpots) : undefined;
 
   const data = spots ?? realSpots ?? (isCrowd ? mockCrowdSpots : mockRelaxedSpots);
+
+  const scrollByCard = (direction: 1 | -1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild instanceof HTMLElement
+      ? el.firstElementChild.offsetWidth + 12
+      : el.clientWidth / 4;
+    el.scrollBy({ left: direction * cardWidth * 2, behavior: "smooth" });
+  };
 
   return (
     <section className="py-6 md:py-10">
@@ -139,20 +159,39 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
             {isCrowd ? "관광공사 혼잡도 예측 · 오늘 기준" : "사람 많은 곳이 부담스럽다면"}
           </p>
         </div>
-        {isCrowd && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => router.push("/crowd")}
-            className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5"
+            onClick={() => scrollByCard(-1)}
+            aria-label="이전"
+            className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
           >
-            전체보기
+            <ChevronLeft className="h-4 w-4" />
           </button>
-        )}
+          <button
+            onClick={() => scrollByCard(1)}
+            aria-label="다음"
+            className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          {isCrowd && (
+            <button
+              onClick={() => router.push("/crowd")}
+              className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5"
+            >
+              전체보기
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* 리스트 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+      {/* 카드 슬라이드 */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
+      >
         {data.map((spot, index) => (
-          <CrowdRow key={spot.id} spot={spot} rank={isCrowd ? index + 1 : undefined} />
+          <CrowdCard key={spot.id} spot={spot} rank={isCrowd ? index + 1 : undefined} />
         ))}
       </div>
     </section>
