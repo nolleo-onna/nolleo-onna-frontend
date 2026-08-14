@@ -1,4 +1,25 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { type Variants, motion } from "motion/react";
+
 import SpotCard from "@/components/ui/Card/SpotCard";
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
 
 type Spot = {
   id: number;
@@ -23,6 +44,8 @@ type Props = {
 };
 
 export default function PopularSpotsSection({ spots = mockSpots }: Props) {
+  const router = useRouter();
+
   return (
     <section className="py-6 md:py-10">
       {/* 헤더 */}
@@ -31,26 +54,36 @@ export default function PopularSpotsSection({ spots = mockSpots }: Props) {
           <span className="text-xs font-semibold text-gray-400">부산 스팟</span>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">인기 부산 스팟</h2>
         </div>
-        <button className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5">
+        <button
+          onClick={() => router.push("/spot")}
+          className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
+        >
           전체보기
         </button>
       </div>
 
       {/* 카드 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+      >
         {spots.map((spot) => (
-          <SpotCard
-            key={spot.id}
-            imageSrc={spot.imageSrc}
-            name={spot.name}
-            location={spot.location}
-            rating={spot.rating}
-            reviewCount={spot.reviewCount}
-            price={spot.price}
-            crowdStatus={spot.crowdStatus}
-          />
+          <motion.div key={spot.id} variants={itemVariants}>
+            <SpotCard
+              imageSrc={spot.imageSrc}
+              name={spot.name}
+              location={spot.location}
+              rating={spot.rating}
+              reviewCount={spot.reviewCount}
+              price={spot.price}
+              crowdStatus={spot.crowdStatus}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
