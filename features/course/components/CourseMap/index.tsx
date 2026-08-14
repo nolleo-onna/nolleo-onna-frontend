@@ -21,12 +21,11 @@ export default function CourseMap({
   const polylineRef = useRef<kakao.maps.Polyline | null>(null);
   const [mapReady, setMapReady] = useState(false);  // ← 초기화 완료 신호
 
-  // 지도 초기화 (SDK 로드 폴링)
+  // 지도 초기화 (SDK 로드 이벤트 대기)
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!window.kakao?.maps || !containerRef.current) return;
-      clearInterval(interval);
+    if (!containerRef.current) return;
 
+    const initMap = () => {
       window.kakao.maps.load(() => {
         if (!containerRef.current) return;
         mapRef.current = new window.kakao.maps.Map(containerRef.current, {
@@ -35,9 +34,21 @@ export default function CourseMap({
         });
         setMapReady(true);  // ← 지도 준비 완료 → 마커 effect 트리거
       });
-    }, 100);
+    };
 
-    return () => clearInterval(interval);
+    if (window.kakao?.maps) {
+      initMap();
+      return;
+    }
+
+    const script = document.querySelector(
+      'script[src*="dapi.kakao.com"]'
+    ) as HTMLScriptElement | null;
+
+    if (script) {
+      script.addEventListener("load", initMap);
+      return () => script.removeEventListener("load", initMap);
+    }
   }, []);
 
   // 마커 + 폴리라인 갱신 — mapReady 포함으로 초기 렌더 시에도 실행
