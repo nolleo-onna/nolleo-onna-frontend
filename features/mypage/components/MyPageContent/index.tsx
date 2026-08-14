@@ -2,48 +2,36 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { MapPin, Heart, Route, LogOut, ChevronRight, Clock } from "lucide-react";
+import { MapPin, Heart, Route, LogOut, ChevronRight, Wallet } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 
 function toHttps(url?: string) {
   return url?.replace(/^http:\/\//, "https://");
 }
 
-const MOCK_RECENT_COURSES = [
-  {
-    id: 1,
-    type: "🎨",
-    title: "광안리 감성 반나절 코스",
-    duration: "3시간",
-    region: "수영구",
-    createdAt: "2일 전",
-  },
-  {
-    id: 2,
-    type: "🍜",
-    title: "해운대 맛집 투어 코스",
-    duration: "4시간",
-    region: "해운대구",
-    createdAt: "5일 전",
-  },
-];
-
+// 찜한 스팟은 아직 백엔드 API가 없어 목데이터로 유지
 const MOCK_LIKED_SPOTS = [
   { id: 1, name: "광안리해수욕장", category: "자연·해변", imageUrl: "https://picsum.photos/seed/gwangalli/120/120" },
   { id: 2, name: "감천문화마을", category: "관광·문화", imageUrl: "https://picsum.photos/seed/gamcheon/120/120" },
   { id: 3, name: "해리단길", category: "맛집·카페", imageUrl: "https://picsum.photos/seed/haeridan/120/120" },
 ];
 
-const STATS = [
-  { label: "생성한 코스", value: "12", icon: Route },
-  { label: "찜한 스팟", value: "38", icon: Heart },
-  { label: "방문한 지역", value: "7", icon: MapPin },
-];
+const RECENT_COURSES_LIMIT = 3;
 
 export default function MyPageContent() {
   const router = useRouter();
   const { user, isLoading, isLoggedIn, logout, isLoggingOut } = useAuth();
+  const { data: courses, isLoading: isCoursesLoading } = useMyCourses({
+    enabled: isLoggedIn,
+  });
+
+  const stats = [
+    { label: "생성한 코스", value: courses ? String(courses.length) : "-", icon: Route },
+    { label: "찜한 스팟", value: "38", icon: Heart },
+    { label: "방문한 지역", value: "7", icon: MapPin },
+  ];
 
   if (isLoading) {
     return (
@@ -117,7 +105,7 @@ export default function MyPageContent() {
 
             {/* 통계 */}
             <div className="mt-5 grid grid-cols-3 divide-x divide-gray-100">
-              {STATS.map(({ label, value, icon: Icon }) => (
+              {stats.map(({ label, value, icon: Icon }) => (
                 <div key={label} className="flex flex-col items-center gap-1 px-2">
                   <Icon className="w-3.5 h-3.5 text-navy-400" />
                   <span className="text-lg font-bold text-navy-900">{value}</span>
@@ -135,34 +123,56 @@ export default function MyPageContent() {
               <Route className="w-4 h-4 text-navy-400" />
               <h2 className="text-sm font-bold text-navy-900">최근 생성한 코스</h2>
             </div>
-            <button className="text-xs text-gray-500 flex items-center gap-0.5 hover:text-gray-600">
+            <button
+              onClick={() => router.push("/course")}
+              className="text-xs text-gray-500 flex items-center gap-0.5 hover:text-gray-600"
+            >
               전체보기 <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="divide-y divide-gray-50">
-            {MOCK_RECENT_COURSES.map((course) => (
-              <div key={course.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors cursor-pointer">
-                <div className="w-9 h-9 rounded-xl bg-navy-50 flex items-center justify-center shrink-0 text-base">
-                  {course.type}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-navy-900 truncate">{course.title}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="flex items-center gap-0.5 text-xs text-gray-500">
-                      <MapPin className="w-3 h-3" />{course.region}
-                    </span>
-                    <span className="text-gray-200">·</span>
-                    <span className="flex items-center gap-0.5 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />{course.duration}
-                    </span>
-                    <span className="text-gray-200">·</span>
-                    <span className="text-xs text-gray-500">{course.createdAt}</span>
+          {isCoursesLoading ? (
+            <div className="divide-y divide-gray-50">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-4 w-2/3 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-3 w-1/3 rounded bg-gray-50 animate-pulse" />
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : !courses || courses.length === 0 ? (
+            <p className="px-5 pb-5 text-sm text-gray-400">아직 만든 코스가 없어요</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {courses.slice(0, RECENT_COURSES_LIMIT).map((course) => (
+                <div
+                  key={course.id}
+                  onClick={() => router.push(`/course/result?pairId=${course.pairId}`)}
+                  className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-navy-50 flex items-center justify-center shrink-0">
+                    <Route className="w-4 h-4 text-navy-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-navy-900 truncate">{course.title}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="flex items-center gap-0.5 text-xs text-gray-500">
+                        <MapPin className="w-3 h-3" />{course.spotTitles?.length ?? 0}곳
+                      </span>
+                      <span className="text-gray-200">·</span>
+                      <span className="flex items-center gap-0.5 text-xs text-gray-500">
+                        <Wallet className="w-3 h-3" />
+                        {course.totalCost > 0 ? `${course.totalCost.toLocaleString()}원` : "무료"}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* 찜한 스팟 */}
