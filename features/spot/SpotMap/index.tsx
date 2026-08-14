@@ -19,6 +19,28 @@ function markerStyle(spot: MapMarker) {
   return { color: "#0d3080", emoji: "📍", label: "기타" };
 }
 
+// 클러스터 안에 가장 많이 섞여있는 카테고리의 색/이모지를 대표로 보여준다.
+// 파란 빈 원만 있으면 "여기 뭐가 있는지" 전혀 안 보여서, 뭉쳐있어도 최소한
+// 어떤 종류의 장소가 많은지는 한눈에 알 수 있게 한다.
+function dominantStyle(members: MapMarker[]) {
+  const counts = new Map<string, number>();
+  members.forEach((m) => {
+    const label = markerStyle(m).label;
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  });
+
+  let bestLabel = "";
+  let bestCount = 0;
+  counts.forEach((count, label) => {
+    if (count > bestCount) {
+      bestCount = count;
+      bestLabel = label;
+    }
+  });
+
+  return markerStyle(members.find((m) => markerStyle(m).label === bestLabel) ?? members[0]);
+}
+
 interface SpotMapProps {
   selectedId: string | null;
   onSelectMarker: (id: string, placeType: "SPOT" | "FOOD") => void;
@@ -162,19 +184,21 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     };
   }, [mapInstanceRef]);
 
-  // 클러스터 배지: 여러 카테고리가 섞여있을 수 있어 카테고리색 대신 브랜드 그라디언트로,
-  // "여기 더 있다"는 느낌을 명확히 구분한다.
+  // 클러스터도 대표 카테고리(가장 많이 섞인 것)의 색/이모지를 보여줘서
+  // 뭉쳐 있어도 "여기 뭐가 있는지" 감이 오게 한다. 크기 차이로 밀도를,
+  // 흰 테두리+그림자로 "낱개 마커보다 더 있다"는 느낌을 유지한다.
   const renderCluster = (map: kakao.maps.Map, cluster: Cluster) => {
     const proj = map.getProjection();
     const position = proj.coordsFromPoint(new kakao.maps.Point(cluster.x, cluster.y));
     const count = cluster.members.length;
+    const { color, emoji, label } = dominantStyle(cluster.members);
     // 숫자 없이 크기만으로 밀도를 전달해야 해서, 작은 클러스터와 큰 클러스터의
-    // 크기 차이를 이전보다 더 뚜렷하게 벌린다.
-    const size = Math.round(Math.min(30 + Math.sqrt(count) * 8, 72));
+    // 크기 차이를 뚜렷하게 벌린다.
+    const size = Math.round(Math.min(34 + Math.sqrt(count) * 8, 76));
 
     const content = document.createElement("div");
     content.innerHTML = `
-      <button type="button" aria-label="${count}개 스팟 확대해서 보기" style="
+      <button type="button" aria-label="${label} 등 ${count}개 스팟 확대해서 보기" style="
         all: unset;
         display: flex;
         align-items: center;
@@ -182,22 +206,24 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
         width: ${size}px;
         height: ${size}px;
         border-radius: 9999px;
-        background: linear-gradient(140deg, #34a6ff, #0a84ff);
-        border: 3px solid #ffffff;
-        box-shadow: 0 6px 16px rgba(10,132,255,0.38), 0 1px 2px rgba(0,0,0,0.12);
+        background: ${color};
+        border: 4px solid #ffffff;
+        box-shadow: 0 6px 16px rgba(13,48,128,0.32), 0 1px 2px rgba(0,0,0,0.14);
+        font-size: ${Math.round(size * 0.42)}px;
+        line-height: 1;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      "></button>
+      ">${emoji}</button>
     `;
 
     const el = content.firstElementChild as HTMLElement;
     el.addEventListener("pointerenter", () => {
       el.style.transform = "scale(1.08)";
-      el.style.boxShadow = "0 8px 20px rgba(10,132,255,0.46), 0 1px 2px rgba(0,0,0,0.12)";
+      el.style.boxShadow = "0 8px 20px rgba(13,48,128,0.4), 0 1px 2px rgba(0,0,0,0.12)";
     });
     el.addEventListener("pointerleave", () => {
       el.style.transform = "scale(1)";
-      el.style.boxShadow = "0 6px 16px rgba(10,132,255,0.38), 0 1px 2px rgba(0,0,0,0.12)";
+      el.style.boxShadow = "0 6px 16px rgba(13,48,128,0.32), 0 1px 2px rgba(0,0,0,0.14)";
     });
     el.addEventListener("click", () => {
       map.setLevel(Math.max(map.getLevel() - 2, 1), { anchor: position });
