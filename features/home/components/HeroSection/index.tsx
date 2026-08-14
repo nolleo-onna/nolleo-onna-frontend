@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { type Variants, motion } from "motion/react";
 
 const containerVariants: Variants = {
@@ -18,7 +19,49 @@ const itemVariants: Variants = {
   },
 };
 
+const TYPING_PHRASES = ["뭐하지?", "어디갈까?", "뭐먹을까?"];
+
+// 타이핑 → 잠깐 멈춤 → 지우기 → 다음 문구, 순환 반복하는 타자기 효과.
+function useTypewriter(
+  phrases: string[],
+  { typingSpeed = 90, deletingSpeed = 45, pauseDuration = 1400 } = {}
+) {
+  const [text, setText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[phraseIndex % phrases.length];
+
+    if (!isDeleting && text === current) {
+      const timeout = setTimeout(() => setIsDeleting(true), pauseDuration);
+      return () => clearTimeout(timeout);
+    }
+
+    if (isDeleting && text === "") {
+      const timeout = setTimeout(() => {
+        setIsDeleting(false);
+        setPhraseIndex((i) => i + 1);
+      }, typingSpeed);
+      return () => clearTimeout(timeout);
+    }
+
+    const nextText = isDeleting
+      ? current.slice(0, text.length - 1)
+      : current.slice(0, text.length + 1);
+    const timeout = setTimeout(
+      () => setText(nextText),
+      isDeleting ? deletingSpeed : typingSpeed
+    );
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, phraseIndex, phrases, typingSpeed, deletingSpeed, pauseDuration]);
+
+  return text;
+}
+
 export default function HeroSection() {
+  const typedText = useTypewriter(TYPING_PHRASES);
+
   return (
     <section className="relative flex flex-col items-center justify-center py-16 md:py-24 text-center overflow-hidden">
       {/* 배경 메시 그라디언트 — 코너에 뜬 블롭 2개 대신 여러 개를 겹쳐 하나로 이어진
@@ -69,23 +112,9 @@ export default function HeroSection() {
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy-900 mb-4 leading-tight"
         >
           오늘 부산,{" "}
-          <span className="relative inline-block">
-            <span className="text-ocean-500">뭐하지?</span>
-            <svg
-              className="absolute -bottom-1 left-0 w-full"
-              viewBox="0 0 200 8"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2 6 Q50 2 100 5 Q150 8 198 4"
-                stroke="#0a84ff"
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                opacity="0.5"
-              />
-            </svg>
+          <span className="relative inline-block text-ocean-500">
+            {typedText}
+            <span className="animate-pulse">|</span>
           </span>
         </motion.h1>
 
@@ -94,9 +123,9 @@ export default function HeroSection() {
           variants={itemVariants}
           className="text-sm md:text-base text-gray-400 leading-relaxed mb-8"
         >
-          예산·날씨·동행마지 반영한 AI 맞춤 코스.
+          예산·동행·분위기를 말하면 AI가 코스를 짜드려요.
           <br />
-          <span className="text-navy-500 font-medium">관광공사 코스 대비 평균 70% 절약.</span>
+          <span className="text-navy-500 font-medium">혼잡도 예측까지 반영해서 사람 많은 곳은 피해요.</span>
         </motion.p>
 
         {/* 키워드 태그 */}
