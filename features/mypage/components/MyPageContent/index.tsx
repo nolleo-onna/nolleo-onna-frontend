@@ -396,7 +396,6 @@ export default function MyPageContent() {
 
   const totalSpots =
     courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
-  const totalCost = courses?.reduce((acc, c) => acc + c.totalCost, 0) ?? 0;
 
   const stats = [
     {
@@ -410,13 +409,9 @@ export default function MyPageContent() {
       icon: MapPin,
     },
     {
-      label: "코스 총 예산",
-      value: courses
-        ? totalCost > 0
-          ? `${Math.round(totalCost / 10000).toLocaleString()}만원`
-          : "0원"
-        : "-",
-      icon: Wallet,
+      label: "저장한 한끗",
+      value: String(savedHankkut.length),
+      icon: Bookmark,
     },
   ];
 
