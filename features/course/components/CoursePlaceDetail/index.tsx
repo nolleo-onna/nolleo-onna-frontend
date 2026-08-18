@@ -31,17 +31,17 @@ export default function CoursePlaceDetail({
   const overview = detail?.overview?.trim();
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-10">
+    <div className="absolute bottom-2 left-2 right-2 z-10 lg:bottom-4 lg:left-4 lg:right-4">
       <button
         onClick={onPlaceClick}
-        className="w-full text-left rounded-2xl border border-gray-100 bg-white p-4
+        className="w-full text-left rounded-2xl border border-gray-100 bg-white p-3 lg:p-4
                    shadow-[0_8px_32px_rgba(13,48,128,0.12)]
                    hover:shadow-[0_10px_36px_rgba(13,48,128,0.16)]
                    active:scale-[0.995] transition-all duration-200"
       >
-        <div className="flex gap-4">
+        <div className="flex gap-3 lg:gap-4">
           {/* 썸네일 */}
-          <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-50">
+          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-gray-50 lg:h-24 lg:w-24">
             {place.imageUrl ? (
               <Image
                 src={place.imageUrl}
@@ -70,28 +70,30 @@ export default function CoursePlaceDetail({
             </div>
 
             {/* 이름 */}
-            <p className="mb-1.5 truncate text-[17px] font-bold text-gray-800">
+            <p className="mb-1 truncate text-[15px] font-bold text-gray-800 lg:mb-1.5 lg:text-[17px]">
               {place.name}
             </p>
 
             {/* 설명글 */}
-            {isLoading ? (
-              <div className="mb-2.5 space-y-1.5">
-                <div className="h-3 w-full animate-shimmer rounded" />
-                <div className="h-3 w-4/5 animate-shimmer rounded" />
-              </div>
-            ) : overview ? (
-              <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
-                {overview}
-              </p>
-            ) : (
-              <p className="mb-2.5 text-[13px] text-gray-300">
-                상세 설명이 준비 중이에요
-              </p>
-            )}
+            <div className="hidden lg:block">
+              {isLoading ? (
+                <div className="mb-2.5 space-y-1.5">
+                  <div className="h-3 w-full animate-shimmer rounded" />
+                  <div className="h-3 w-4/5 animate-shimmer rounded" />
+                </div>
+              ) : overview ? (
+                <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
+                  {overview}
+                </p>
+              ) : (
+                <p className="mb-2.5 text-[13px] text-gray-300">
+                  상세 설명이 준비 중이에요
+                </p>
+              )}
+            </div>
 
             {/* 메타 정보 */}
-            <div className="flex items-center gap-4 border-t border-gray-50 pt-2.5">
+            <div className="flex items-center gap-3 border-t border-gray-50 pt-2 lg:gap-4 lg:pt-2.5">
               {place.expectedCost !== undefined && place.expectedCost > 0 && (
                 <span className="flex items-center gap-1 text-[12px] text-gray-500">
                   <Wallet className="h-3.5 w-3.5 text-green-600" />

@@ -257,12 +257,12 @@ export default function CourseSidebar({
             </div>
           )}
         </div>
-        <h1 className="mb-4 text-[19px] font-bold leading-snug text-gray-800">
+        <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
           {course.title}
         </h1>
 
         {/* 요약 통계 */}
-        <div className="mb-5 grid grid-cols-3 gap-2">
+        <div className={`mb-4 grid-cols-3 gap-2 lg:mb-5 lg:grid ${isEditing ? "hidden" : "grid"}`}>
           <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
             <p className="mb-0.5 text-[10px] text-gray-400">장소</p>
             <p className="text-[15px] font-bold text-gray-800">{places.length}곳</p>
@@ -283,12 +283,18 @@ export default function CourseSidebar({
 
         {/* 예산 게이지 */}
         {budget !== undefined && (
-          <CourseBudgetGauge budget={budget} totalCost={totalCost} />
+          <div className={isEditing ? "hidden lg:block" : ""}>
+            <CourseBudgetGauge budget={budget} totalCost={totalCost} />
+          </div>
         )}
 
         {/* 코스 설명 */}
         {course.days[0]?.title && (
-          <div className="mb-5 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3">
+          <div
+            className={`mb-4 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3 lg:mb-5 ${
+              isEditing ? "hidden lg:block" : ""
+            }`}
+          >
             <p className="text-[12px] leading-relaxed text-gray-600">
               {course.days[0].title}
             </p>
