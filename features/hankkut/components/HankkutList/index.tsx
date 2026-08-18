@@ -1,4 +1,7 @@
+"use client";
+
 import { MapPinned } from "lucide-react";
+import { type Variants, motion } from "motion/react";
 
 import HankkutCard from "@/features/hankkut/components/HankkutCard";
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
@@ -6,6 +9,22 @@ import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
 interface HankkutListProps {
   list: Hankkut[];
 }
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
 
 function EmptyState() {
   return (
@@ -37,15 +56,18 @@ export default function HankkutList({ list }: HankkutListProps) {
         한끗
       </p>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <motion.div
+        className="grid grid-cols-1 gap-5 md:grid-cols-3"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {list.map((hankkut, index) => (
-          <HankkutCard
-            key={hankkut.id}
-            hankkut={hankkut}
-            featured={index === 0}
-          />
+          <motion.div key={hankkut.id} variants={itemVariants}>
+            <HankkutCard hankkut={hankkut} featured={index === 0} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
