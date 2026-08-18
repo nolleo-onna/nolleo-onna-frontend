@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { ME_QUERY_KEY } from "@/hooks/useMe";
+import { commitLoginSuccess } from "@/features/auth/lastLogin";
 import { fetchMe } from "@/libs/api/auth";
 
 const RETURN_URL_KEY = "auth:returnUrl";
@@ -30,6 +31,7 @@ export default function AuthCallback() {
     fetchMe()
       .then((user) => {
         if (cancelled) return;
+        commitLoginSuccess();
         queryClient.setQueryData(ME_QUERY_KEY, user);
         router.replace(getReturnUrl());
       })
