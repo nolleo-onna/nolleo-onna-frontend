@@ -63,7 +63,11 @@ export default function HankkutList({ list }: HankkutListProps) {
         animate="visible"
       >
         {list.map((hankkut, index) => (
-          <motion.div key={hankkut.id} variants={itemVariants}>
+          <motion.div
+            key={hankkut.id}
+            variants={itemVariants}
+            className={index === 0 ? "md:col-span-2 md:row-span-2" : undefined}
+          >
             <HankkutCard hankkut={hankkut} featured={index === 0} />
           </motion.div>
         ))}
