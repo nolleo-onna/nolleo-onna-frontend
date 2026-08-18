@@ -1,5 +1,7 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 import { useWeather } from "@/features/home/hooks/useWeather";
 import { pickDistrictWeather } from "@/features/home/utils/weatherUtils";
 import { ptyEmojiMap, ptyLabelMap } from "@/types/weather";
@@ -12,10 +14,14 @@ function windLabel(wsd: number | null): string | null {
   return "바람 강함";
 }
 
-/** 하드코딩 대신 실시간 부산 전체 평균 날씨를 보여주는 한 줄 요약 */
+/**
+ * 실시간 날씨 한 줄 요약.
+ * 지역 필터(?region=동래구)가 선택돼 있으면 그 구의 날씨를, 아니면 부산 전체 평균을 보여준다.
+ */
 export default function TodayWeather() {
+  const region = useSearchParams().get("region");
   const { data: weather, isPending } = useWeather();
-  const summary = pickDistrictWeather(weather);
+  const summary = pickDistrictWeather(weather, region ?? undefined);
 
   if (isPending) {
     return <div className="mt-2 h-4 w-32 animate-shimmer rounded" />;
@@ -26,6 +32,9 @@ export default function TodayWeather() {
 
   return (
     <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+      {region && (
+        <span className="font-semibold text-navy-400">{summary.district}</span>
+      )}
       <span aria-hidden="true">{ptyEmojiMap[summary.pty]}</span>
       {ptyLabelMap[summary.pty]} {Math.round(summary.tmp)}°
       {wind && <> · {wind}</>}

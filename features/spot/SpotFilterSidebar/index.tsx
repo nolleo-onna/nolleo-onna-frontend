@@ -24,7 +24,10 @@ export default function SpotFilterSidebar({ onSelectRegion }: SpotFilterSidebarP
           부산 어디로<br />
           <span className="text-navy-400">놀러갈래?</span>
         </h2>
-        <TodayWeather />
+        {/* useSearchParams(지역 필터 읽기)를 쓰므로 Suspense 필요 */}
+        <Suspense fallback={<div className="mt-2 h-4 w-32 animate-shimmer rounded" />}>
+          <TodayWeather />
+        </Suspense>
       </div>
 
       {/* 필터 목록 */}
