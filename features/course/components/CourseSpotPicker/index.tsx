@@ -45,7 +45,7 @@ export default function CourseSpotPicker({
   }, [data, category, search]);
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col overflow-hidden border-l border-gray-100 bg-gray-50">
+    <aside className="flex h-[45vh] w-full shrink-0 flex-col overflow-hidden border-t border-gray-100 bg-gray-50 lg:h-auto lg:w-[340px] lg:border-t-0 lg:border-l">
       {/* 헤더 + 검색 */}
       <div className="border-b border-gray-100 bg-white px-4 pt-4 pb-3">
         <h3 className="mb-3 text-sm font-bold text-gray-900">코스에 장소 추가</h3>

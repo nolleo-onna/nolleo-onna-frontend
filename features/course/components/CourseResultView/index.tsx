@@ -203,6 +203,11 @@ export default function CourseResultView() {
     updateCustomization({ ...customization, order });
   };
 
+  // 드래그 정렬은 바뀐 전체 순서를 한 번에 받는다
+  const handleReorderPlaces = (order: number[]) => {
+    updateCustomization({ ...customization, order });
+  };
+
   const handleRemovePlace = (id: number) => {
     if (places.length <= 1) return;
     const order = places.map((p) => p.id).filter((pid) => pid !== id);
@@ -269,8 +274,8 @@ export default function CourseResultView() {
   return (
     <>
       <div className="flex h-screen flex-col pt-16">
-        {/* 사이드바 + 지도 */}
-        <div className="flex flex-1 overflow-hidden">
+        {/* 모바일: 지도 위 + 타임라인 아래(편집 시 지도 대신 추가 패널) / lg: 가로 3컬럼 */}
+        <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           <CourseSidebar
             course={course}
             selectedDay={1}
@@ -280,12 +285,17 @@ export default function CourseResultView() {
             hasCustomization={hasCustomization}
             onToggleEdit={() => setIsEditing((prev) => !prev)}
             onMovePlace={handleMovePlace}
+            onReorderPlaces={handleReorderPlaces}
             onRemovePlace={handleRemovePlace}
             onResetCustomization={handleResetCustomization}
             onSelectDay={() => {}}
             onSelectPlace={handleSelectPlace}
           />
-          <main className="relative flex-1">
+          <main
+            className={`relative order-first w-full shrink-0 lg:order-none lg:h-auto lg:w-auto lg:flex-1 ${
+              isEditing ? "hidden lg:block" : "h-[42vh]"
+            }`}
+          >
             <CourseMap
               places={places}
               selectedPlaceId={resolvedPlaceId}

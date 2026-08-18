@@ -1,6 +1,15 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Footprints, Pencil, RotateCcw, X } from "lucide-react";
+import { Reorder, useDragControls } from "motion/react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Footprints,
+  GripVertical,
+  Pencil,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
@@ -16,10 +25,166 @@ interface Props {
   hasCustomization?: boolean;
   onToggleEdit?: () => void;
   onMovePlace?: (id: number, direction: -1 | 1) => void;
+  /** 드래그로 순서를 바꿨을 때 전체 순서(id 배열)를 통째로 전달한다 */
+  onReorderPlaces?: (orderedIds: number[]) => void;
   onRemovePlace?: (id: number) => void;
   onResetCustomization?: () => void;
   onSelectDay: (day: number) => void;
   onSelectPlace: (place: CoursePlace) => void;
+}
+
+interface PlaceTimelineItemProps {
+  place: CoursePlace;
+  index: number;
+  isLast: boolean;
+  isSelected: boolean;
+  isEditing: boolean;
+  placesCount: number;
+  nextDistance?: number;
+  onSelectPlace: (place: CoursePlace) => void;
+  onMovePlace?: (id: number, direction: -1 | 1) => void;
+  onRemovePlace?: (id: number) => void;
+}
+
+// useDragControls는 항목마다 하나씩 필요해서(훅은 반복문에서 못 씀) 분리한 서브 컴포넌트.
+// 드래그는 그립 핸들에서만 시작되게 해서(dragListener={false}) 카드 클릭·스크롤과 안 섞이게 한다.
+function PlaceTimelineItem({
+  place,
+  index,
+  isLast,
+  isSelected,
+  isEditing,
+  placesCount,
+  nextDistance,
+  onSelectPlace,
+  onMovePlace,
+  onRemovePlace,
+}: PlaceTimelineItemProps) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      as="li"
+      value={place}
+      dragListener={false}
+      dragControls={dragControls}
+      className={`relative ${isEditing ? "select-none" : ""}`}
+      whileDrag={{
+        scale: 1.02,
+        zIndex: 10,
+        boxShadow: "0 8px 24px rgba(13,48,128,0.15)",
+        borderRadius: 12,
+        backgroundColor: "#ffffff",
+      }}
+    >
+      <div className="flex gap-3">
+        {/* 번호 + 연결선 */}
+        <div className="flex flex-shrink-0 flex-col items-center">
+          <div
+            className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
+              isSelected
+                ? "bg-ocean-500 text-white shadow-[0_2px_8px_rgba(10,132,255,0.4)]"
+                : "border border-gray-200 bg-white text-gray-500"
+            }`}
+          >
+            {index + 1}
+          </div>
+          {!isLast && <div className="w-[2px] flex-1 bg-gray-100" />}
+        </div>
+
+        {/* 드래그 핸들 (편집 모드 전용) */}
+        {isEditing && (
+          <button
+            type="button"
+            aria-label={`${place.name} 잡고 끌어서 순서 바꾸기`}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              dragControls.start(e);
+            }}
+            className="mb-1 flex cursor-grab touch-none items-center rounded-md px-0.5 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500 active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* 카드 */}
+        <button
+          onClick={() => onSelectPlace(place)}
+          className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
+            isSelected
+              ? "bg-ocean-50 ring-1 ring-ocean-200"
+              : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
+          }`}
+        >
+          <p
+            className={`mb-0.5 truncate text-[14px] font-semibold ${
+              isSelected ? "text-ocean-900" : "text-gray-800"
+            }`}
+          >
+            {place.name}
+          </p>
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`text-[11px] ${
+                isSelected ? "text-ocean-600" : "text-gray-400"
+              }`}
+            >
+              {place.category}
+            </span>
+            {place.expectedCost !== undefined && place.expectedCost > 0 && (
+              <span
+                className={`text-[11px] ${
+                  isSelected ? "text-ocean-600" : "text-gray-400"
+                }`}
+              >
+                · {place.expectedCost.toLocaleString()}원
+              </span>
+            )}
+          </div>
+        </button>
+
+        {/* 편집 컨트롤 */}
+        {isEditing && (
+          <div className="mb-1 flex flex-col items-center justify-center gap-0.5">
+            <button
+              onClick={() => onMovePlace?.(place.id, -1)}
+              disabled={index === 0}
+              aria-label={`${place.name} 순서 위로`}
+              className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => onRemovePlace?.(place.id)}
+              disabled={placesCount <= 1}
+              aria-label={`${place.name} 코스에서 제외`}
+              className="rounded-md p-1 text-gray-400 transition-colors hover:bg-pink-50 hover:text-pink-500 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => onMovePlace?.(place.id, 1)}
+              disabled={isLast}
+              aria-label={`${place.name} 순서 아래로`}
+              className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 이동 거리 */}
+      {!isLast && nextDistance !== undefined && nextDistance > 0 && (
+        <div className="flex items-center gap-1.5 py-1 pl-[38px]">
+          <Footprints className="h-3 w-3 text-gray-300" />
+          <span className="text-[11px] text-gray-400">
+            {formatDistance(nextDistance)}
+          </span>
+        </div>
+      )}
+    </Reorder.Item>
+  );
 }
 
 export default function CourseSidebar({
@@ -30,6 +195,7 @@ export default function CourseSidebar({
   hasCustomization = false,
   onToggleEdit,
   onMovePlace,
+  onReorderPlaces,
   onRemovePlace,
   onResetCustomization,
   onSelectPlace,
@@ -43,7 +209,7 @@ export default function CourseSidebar({
   const totalCost = places.reduce((sum, p) => sum + (p.expectedCost ?? 0), 0);
 
   return (
-    <aside className="w-[340px] flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white">
+    <aside className="min-h-0 w-full flex-1 overflow-y-auto border-t border-gray-100 bg-white lg:w-[340px] lg:flex-none lg:border-t-0 lg:border-r">
       <div className="p-5">
         {/* 헤더 */}
         <div className="mb-1 flex items-center justify-between">
@@ -113,110 +279,32 @@ export default function CourseSidebar({
           </div>
         )}
 
-        {/* 타임라인 */}
-        <ol className="relative">
-          {places.map((place, i) => {
-            const isSelected = place.id === selectedPlaceId;
-            const isLast = i === places.length - 1;
-            const nextDistance = places[i + 1]?.distanceFromPrevM;
-
-            return (
-              <li key={place.id}>
-                <div className="flex gap-3">
-                  {/* 번호 + 연결선 */}
-                  <div className="flex flex-shrink-0 flex-col items-center">
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
-                        isSelected
-                          ? "bg-ocean-500 text-white shadow-[0_2px_8px_rgba(10,132,255,0.4)]"
-                          : "border border-gray-200 bg-white text-gray-500"
-                      }`}
-                    >
-                      {i + 1}
-                    </div>
-                    {!isLast && <div className="w-[2px] flex-1 bg-gray-100" />}
-                  </div>
-
-                  {/* 카드 */}
-                  <button
-                    onClick={() => onSelectPlace(place)}
-                    className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
-                      isSelected
-                        ? "bg-ocean-50 ring-1 ring-ocean-200"
-                        : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
-                    }`}
-                  >
-                    <p
-                      className={`mb-0.5 truncate text-[14px] font-semibold ${
-                        isSelected ? "text-ocean-900" : "text-gray-800"
-                      }`}
-                    >
-                      {place.name}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`text-[11px] ${
-                          isSelected ? "text-ocean-600" : "text-gray-400"
-                        }`}
-                      >
-                        {place.category}
-                      </span>
-                      {place.expectedCost !== undefined && place.expectedCost > 0 && (
-                        <span
-                          className={`text-[11px] ${
-                            isSelected ? "text-ocean-600" : "text-gray-400"
-                          }`}
-                        >
-                          · {place.expectedCost.toLocaleString()}원
-                        </span>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* 편집 컨트롤 */}
-                  {isEditing && (
-                    <div className="mb-1 flex flex-col items-center justify-center gap-0.5">
-                      <button
-                        onClick={() => onMovePlace?.(place.id, -1)}
-                        disabled={i === 0}
-                        aria-label={`${place.name} 순서 위로`}
-                        className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent"
-                      >
-                        <ChevronUp className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => onRemovePlace?.(place.id)}
-                        disabled={places.length <= 1}
-                        aria-label={`${place.name} 코스에서 제외`}
-                        className="rounded-md p-1 text-gray-400 transition-colors hover:bg-pink-50 hover:text-pink-500 disabled:opacity-30 disabled:hover:bg-transparent"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => onMovePlace?.(place.id, 1)}
-                        disabled={isLast}
-                        aria-label={`${place.name} 순서 아래로`}
-                        className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent"
-                      >
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 이동 거리 */}
-                {!isLast && nextDistance !== undefined && nextDistance > 0 && (
-                  <div className="flex items-center gap-1.5 py-1 pl-[38px]">
-                    <Footprints className="h-3 w-3 text-gray-300" />
-                    <span className="text-[11px] text-gray-400">
-                      {formatDistance(nextDistance)}
-                    </span>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        {/* 타임라인 — 편집 모드에서는 드래그(잡고 끌기)로도 순서를 바꿀 수 있다 */}
+        <Reorder.Group
+          as="ol"
+          axis="y"
+          values={places}
+          onReorder={(next: CoursePlace[]) =>
+            onReorderPlaces?.(next.map((p) => p.id))
+          }
+          className="relative"
+        >
+          {places.map((place, i) => (
+            <PlaceTimelineItem
+              key={place.id}
+              place={place}
+              index={i}
+              isLast={i === places.length - 1}
+              isSelected={place.id === selectedPlaceId}
+              isEditing={isEditing}
+              placesCount={places.length}
+              nextDistance={places[i + 1]?.distanceFromPrevM}
+              onSelectPlace={onSelectPlace}
+              onMovePlace={onMovePlace}
+              onRemovePlace={onRemovePlace}
+            />
+          ))}
+        </Reorder.Group>
       </div>
     </aside>
   );
