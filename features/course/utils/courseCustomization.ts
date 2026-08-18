@@ -3,11 +3,27 @@
 // 재방문해도 유지되게 한다.
 const STORAGE_KEY = "course:customizations";
 
+/** 편집 모드에서 스팟 검색으로 코스에 추가한 장소. CoursePlace 재구성에 필요한 값만 보관한다. */
+export interface AddedCoursePlace {
+  /** 원본 serialNum(양수)과 충돌하지 않게 -mapPlaceId를 쓴다 */
+  id: number;
+  originalId: string;
+  mapPlaceId: number;
+  name: string;
+  category: string;
+  lat: number;
+  lng: number;
+  imageUrl: string;
+  expectedCost: number;
+}
+
 export interface CourseCustomization {
   /** serialNum 순서. 여기 없는 장소는 뒤에 원래 순서대로 붙는다. */
   order?: number[];
   /** 코스에서 제외한 장소의 serialNum 목록 */
   removed?: number[];
+  /** 스팟 검색으로 추가한 장소 목록 */
+  added?: AddedCoursePlace[];
 }
 
 function readMap(): Record<string, CourseCustomization> {

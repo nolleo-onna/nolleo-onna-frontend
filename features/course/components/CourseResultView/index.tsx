@@ -11,7 +11,9 @@ import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import { loadCourseBudget } from "@/features/course/utils/budgetStorage";
+import CourseSpotPicker from "@/features/course/components/CourseSpotPicker";
 import {
+  type AddedCoursePlace,
   type CourseCustomization,
   clearCourseCustomization,
   loadCourseCustomization,
@@ -19,11 +21,13 @@ import {
 } from "@/features/course/utils/courseCustomization";
 import { getDistance } from "@/features/course/data/mockCourse";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import type {
   CourseItemResponse,
   CourseResponse,
 } from "@/features/course/hooks/useCourseResult";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
+import type { MapPlace } from "@/types/map";
 
 const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
   ssr: false,
@@ -62,13 +66,34 @@ function toCourse(course: CourseResponse): Course {
   };
 }
 
+function addedToPlace(added: AddedCoursePlace): CoursePlace {
+  return {
+    id: added.id,
+    name: added.name,
+    category: added.category,
+    lat: added.lat,
+    lng: added.lng,
+    imageUrl: added.imageUrl,
+    description: "",
+    rating: 0,
+    reviewCount: 0,
+    originalId: added.originalId,
+    mapPlaceId: added.mapPlaceId,
+    expectedCost: added.expectedCost,
+    distanceFromPrevM: 0,
+  };
+}
+
 function applyCustomization(
   places: CoursePlace[],
   customization?: CourseCustomization,
 ): CoursePlace[] {
   if (!customization) return places;
   const removed = new Set(customization.removed ?? []);
-  let list = places.filter((p) => !removed.has(p.id));
+  let list = [
+    ...places.filter((p) => !removed.has(p.id)),
+    ...(customization.added ?? []).map(addedToPlace),
+  ];
   if (customization.order?.length) {
     const rank = new Map(customization.order.map((id, i) => [id, i]));
     list = [...list].sort(
@@ -155,7 +180,13 @@ export default function CourseResultView() {
   const hasCustomization =
     customization !== undefined &&
     ((customization.removed?.length ?? 0) > 0 ||
-      (customization.order?.length ?? 0) > 0);
+      (customization.order?.length ?? 0) > 0 ||
+      (customization.added?.length ?? 0) > 0);
+
+  // 스팟 피커에서 "이미 담김" 표시용
+  const existingIds = new Set(
+    places.map((p) => p.originalId).filter((v): v is string => !!v),
+  );
 
   const updateCustomization = (next: CourseCustomization) => {
     if (!pairId) return;
@@ -174,11 +205,43 @@ export default function CourseResultView() {
 
   const handleRemovePlace = (id: number) => {
     if (places.length <= 1) return;
-    updateCustomization({
-      order: places.map((p) => p.id).filter((pid) => pid !== id),
-      removed: [...(customization?.removed ?? []), id],
-    });
+    const order = places.map((p) => p.id).filter((pid) => pid !== id);
+    // 음수 id는 편집으로 추가한 장소라 removed에 쌓지 않고 added에서 뺀다.
+    updateCustomization(
+      id < 0
+        ? {
+            ...customization,
+            order,
+            added: (customization?.added ?? []).filter((a) => a.id !== id),
+          }
+        : {
+            ...customization,
+            order,
+            removed: [...(customization?.removed ?? []), id],
+          },
+    );
     if (selectedPlaceId === id) setSelectedPlaceId(null);
+  };
+
+  const handleAddPlace = (place: MapPlace) => {
+    const added: AddedCoursePlace = {
+      id: -place.id,
+      originalId: place.originalId,
+      mapPlaceId: place.id,
+      name: place.name,
+      category:
+        CATEGORY_META[place.category as keyof typeof CATEGORY_META]?.label ??
+        "기타",
+      lat: place.latitude,
+      lng: place.longitude,
+      imageUrl: place.imageUrl ?? "",
+      expectedCost: place.free ? 0 : (place.minPrice ?? 0),
+    };
+    updateCustomization({
+      ...customization,
+      order: [...places.map((p) => p.id), added.id],
+      added: [...(customization?.added ?? []), added],
+    });
   };
 
   const handleResetCustomization = () => {
@@ -238,6 +301,14 @@ export default function CourseResultView() {
               />
             )}
           </main>
+
+          {/* 편집 모드: 스팟 검색·추가 패널 */}
+          {isEditing && (
+            <CourseSpotPicker
+              existingIds={existingIds}
+              onAddPlace={handleAddPlace}
+            />
+          )}
         </div>
       </div>
 
