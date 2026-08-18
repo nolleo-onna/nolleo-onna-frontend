@@ -22,9 +22,7 @@ export default function HankkutCard({
   return (
     <Link
       href={`/hankkut/${hankkut.id}`}
-      className={`group relative block overflow-hidden rounded-2xl ${
-        featured ? "md:col-span-2 md:row-span-2" : ""
-      }`}
+      className="group relative block h-full overflow-hidden rounded-2xl"
     >
       {/* 이미지 */}
       <div
