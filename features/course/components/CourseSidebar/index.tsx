@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Reorder, useDragControls } from "motion/react";
 import {
   ChevronDown,
@@ -47,7 +48,9 @@ interface PlaceTimelineItemProps {
 }
 
 // useDragControls는 항목마다 하나씩 필요해서(훅은 반복문에서 못 씀) 분리한 서브 컴포넌트.
-// 드래그는 그립 핸들에서만 시작되게 해서(dragListener={false}) 카드 클릭·스크롤과 안 섞이게 한다.
+// 편집 모드에서는 카드 전체를 잡고 끌 수 있다(dragListener={isEditing}).
+// 드래그가 실제로 일어난 직후에는 클릭 이벤트가 따라오므로, 장소 선택으로
+// 오인되지 않게 isDraggingRef로 걸러낸다.
 function PlaceTimelineItem({
   place,
   index,
@@ -61,13 +64,23 @@ function PlaceTimelineItem({
   onRemovePlace,
 }: PlaceTimelineItemProps) {
   const dragControls = useDragControls();
+  const isDraggingRef = useRef(false);
 
   return (
     <Reorder.Item
       as="li"
       value={place}
-      dragListener={false}
+      dragListener={isEditing}
       dragControls={dragControls}
+      onDragStart={() => {
+        isDraggingRef.current = true;
+      }}
+      onDragEnd={() => {
+        // 드래그 종료 직후 발생하는 click까지 무시되도록 다음 틱에 해제
+        setTimeout(() => {
+          isDraggingRef.current = false;
+        }, 0);
+      }}
       className={`relative ${isEditing ? "select-none" : ""}`}
       whileDrag={{
         scale: 1.02,
@@ -107,14 +120,17 @@ function PlaceTimelineItem({
           </button>
         )}
 
-        {/* 카드 */}
+        {/* 카드 — 편집 모드에서는 카드 자체를 잡고 끌어 순서를 바꿀 수 있다 */}
         <button
-          onClick={() => onSelectPlace(place)}
+          onClick={() => {
+            if (isDraggingRef.current) return;
+            onSelectPlace(place);
+          }}
           className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
             isSelected
               ? "bg-ocean-50 ring-1 ring-ocean-200"
               : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
-          }`}
+          } ${isEditing ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           <p
             className={`mb-0.5 truncate text-[14px] font-semibold ${
