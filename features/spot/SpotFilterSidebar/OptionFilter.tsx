@@ -2,12 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
-import { Clock, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 
-const OPTIONS = [
-	{ id: "open_now", label: "지금 영업중만", icon: Clock },
-	{ id: "free_only", label: "무료 스팟만", icon: Tag },
-];
+// "지금 영업중만"(open_now)은 읽는 곳이 없는 무기능 토글이라 제거했다.
+const OPTIONS = [{ id: "free_only", label: "무료 스팟만", icon: Tag }];
 
 export default function OptionFilter() {
 	const router = useRouter();
