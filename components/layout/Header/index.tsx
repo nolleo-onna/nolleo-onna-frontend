@@ -126,8 +126,8 @@ export default function Header() {
               <Image
                 src="/logo/logo.png"
                 alt="놀러온나 로고"
-                width={69}
-                height={44}
+                width={88}
+                height={56}
                 priority
               />
             </Link>
