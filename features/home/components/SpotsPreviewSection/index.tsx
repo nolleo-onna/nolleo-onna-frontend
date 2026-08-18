@@ -138,24 +138,27 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
 
   const data = spots ?? realSpots ?? (isCrowd ? mockCrowdSpots : mockRelaxedSpots);
 
+  // 카드 목록을 두 벌 이어 붙여 놓고, 두 번째 벌 영역에 들어서면 화면상 똑같이
+  // 보이는 첫 벌의 같은 위치로 순간 이동(사용자에겐 안 보임)시킨 뒤 계속 앞으로
+  // 스크롤한다 — 마지막 카드에서 처음으로 되감기지 않고 자연스럽게 이어진다.
   const scrollByCard = (direction: 1 | -1) => {
     const el = scrollRef.current;
     if (!el) return;
     const cardWidth = el.firstElementChild instanceof HTMLElement
       ? el.firstElementChild.getBoundingClientRect().width + 12
       : el.clientWidth / 4;
+    const half = el.scrollWidth / 2;
 
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    const next = el.scrollLeft + direction * cardWidth;
-
-    // 끝에 닿으면 처음으로, 처음에서 뒤로 가면 끝으로 — 계속 순환되게 한다.
-    if (next >= maxScroll - 1) {
-      el.scrollTo({ left: 0, behavior: "smooth" });
-    } else if (next <= 0) {
-      el.scrollTo({ left: maxScroll, behavior: "smooth" });
-    } else {
-      el.scrollTo({ left: next, behavior: "smooth" });
+    let current = el.scrollLeft;
+    if (direction === 1 && current >= half) {
+      current -= half;
+      el.scrollLeft = current;
+    } else if (direction === -1 && current < cardWidth) {
+      current += half;
+      el.scrollLeft = current;
     }
+
+    el.scrollTo({ left: current + direction * cardWidth, behavior: "smooth" });
   };
 
   // 3초마다 카드 한 칸씩 자동으로 넘어간다. 마우스가 올라와 있거나 직접
@@ -249,8 +252,13 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
       >
-        {data.map((spot, index) => (
-          <CrowdCard key={spot.id} spot={spot} rank={isCrowd ? index + 1 : undefined} />
+        {/* 무한 루프용으로 같은 목록을 두 벌 렌더링 (scrollByCard 참고) */}
+        {[...data, ...data].map((spot, index) => (
+          <CrowdCard
+            key={`${index < data.length ? "a" : "b"}-${spot.id}`}
+            spot={spot}
+            rank={isCrowd ? (index % data.length) + 1 : undefined}
+          />
         ))}
       </div>
     </motion.section>
