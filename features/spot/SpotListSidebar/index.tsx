@@ -2,6 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { motion } from "motion/react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
@@ -135,9 +136,13 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                 CATEGORY_META[place.category as keyof typeof CATEGORY_META] ?? FALLBACK_CATEGORY;
 
               return (
-                <li
+                <motion.li
                   key={place.id}
                   ref={isSelected ? selectedRef : null}
+                  layout="position"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
                   onClick={() => onSelectSpot(
                     place.originalId,
                     place.latitude,
@@ -198,7 +203,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                       <div className="h-2 w-2 rounded-full bg-navy-400" />
                     </div>
                   )}
-                </li>
+                </motion.li>
               );
             })}
             <div ref={bottomRef} className="py-2 flex justify-center">
