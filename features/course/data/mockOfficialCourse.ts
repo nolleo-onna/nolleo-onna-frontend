@@ -1,0 +1,185 @@
+import type { Course } from "@/features/course/data/mockCourse";
+
+// 관광공사 추천 코스 = 기존 Course + 카드/캐러셀용 필드
+export interface OfficialCourse extends Course {
+  coverImageUrl: string;
+  rating: number;
+  reviewCount: string;
+  location: string;
+  regionTags?: string[];
+}
+
+export const MOCK_OFFICIAL_COURSES: OfficialCourse[] = [
+  {
+    id: 101,
+    title: "A코스 · 부산 바다 일주",
+    coverImageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg",
+    rating: 4.8,
+    reviewCount: "2.1k",
+    location: "해운대",
+    regionTags: ["해운대"],
+    days: [
+      {
+        day: 1,
+        title: "해운대·광안리",
+        places: [
+          {
+            id: 1001,
+            name: "자갈치시장",
+            category: "쇼핑",
+            description: "싱싱한 해산물을 바로 맛보는 부산 대표 시장",
+            lat: 35.0966,
+            lng: 129.0306,
+            rating: 4.4,
+            reviewCount: 4218,
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/46/3049246_image2_1.JPG",
+          },
+          {
+            id: 1002,
+            name: "해동용궁사",
+            category: "관광명소",
+            description: "바다 위에 세워진 부산 대표 사찰",
+            lat: 35.1884,
+            lng: 129.2233,
+            rating: 4.5,
+            reviewCount: 3812,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/35/3499335_image2_1.jpg",
+          },
+          {
+            id: 1003,
+            name: "광안리해수욕장",
+            category: "관광명소",
+            description: "광안대교 뷰와 함께 즐기는 부산 대표 해변",
+            lat: 35.1532,
+            lng: 129.1186,
+            rating: 4.6,
+            reviewCount: 5231,
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/45/3311245_image2_1.jpg",
+          },
+          {
+            id: 1004,
+            name: "해운대해수욕장",
+            category: "관광명소",
+            description: "사계절 활기 넘치는 부산 NO.1 해변",
+            lat: 35.1587,
+            lng: 129.1604,
+            rating: 4.7,
+            reviewCount: 8412,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/34/3090534_image2_1.JPG",
+          },
+          {
+            id: 1005,
+            name: "부산아쿠아리움",
+            category: "관광명소",
+            description: "해운대 해변 앞 대형 아쿠아리움",
+            lat: 35.1591,
+            lng: 129.1606,
+            rating: 4.2,
+            reviewCount: 2103,
+            imageUrl: "http://tong.visitkorea.or.kr/cms/resource/09/3020609_image2_1.jpg",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 102,
+    title: "B코스 · 원도심 감성",
+    coverImageUrl: "https://tong.visitkorea.or.kr/cms/resource/91/3365491_image2_1.jpg",
+    rating: 4.9,
+    reviewCount: "3.5k",
+    location: "중구",
+    regionTags: ["중구"],
+    days: [
+      {
+        day: 1,
+        title: "원도심 일대",
+        places: [
+          {
+            id: 2001,
+            name: "감천문화마을",
+            category: "관광명소",
+            description: "알록달록 계단식 마을, 부산의 마추픽추",
+            lat: 35.0976,
+            lng: 129.0107,
+            rating: 4.6,
+            reviewCount: 6523,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/91/3365491_image2_1.jpg",
+          },
+          {
+            id: 2002,
+            name: "BIFF광장",
+            category: "관광명소",
+            description: "씨앗호떡 들고 걷는 영화의 거리",
+            lat: 35.0986,
+            lng: 129.0277,
+            rating: 4.3,
+            reviewCount: 2891,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/19/3493419_image2_1.jpg",
+          },
+          {
+            id: 2003,
+            name: "흰여울문화마을",
+            category: "관광명소",
+            description: "절벽 아래 바다가 펼쳐지는 영도 골목길",
+            lat: 35.0786,
+            lng: 129.0455,
+            rating: 4.5,
+            reviewCount: 3647,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/74/3495874_image2_1.jpg",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 103,
+    title: "C코스 · 자연 힐링",
+    coverImageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg",
+    rating: 4.7,
+    reviewCount: "1.8k",
+    location: "영도",
+    regionTags: ["영도"],
+    days: [
+      {
+        day: 1,
+        title: "자연 코스",
+        places: [
+          {
+            id: 3001,
+            name: "태종대",
+            category: "관광명소",
+            description: "기암절벽과 울창한 숲의 영도 명소",
+            lat: 35.0518,
+            lng: 129.0873,
+            rating: 4.5,
+            reviewCount: 4012,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/83/3506383_image2_1.jpg",
+          },
+          {
+            id: 3002,
+            name: "오륙도 스카이워크",
+            category: "관광명소",
+            description: "바다 위를 걷는 듯한 투명 전망대",
+            lat: 35.1018,
+            lng: 129.1235,
+            rating: 4.3,
+            reviewCount: 2587,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/69/3492369_image2_1.jpg",
+          },
+          {
+            id: 3003,
+            name: "이기대 해안산책로",
+            category: "관광명소",
+            description: "광안대교를 바라보며 걷는 해안 트레킹",
+            lat: 35.1284,
+            lng: 129.1217,
+            rating: 4.6,
+            reviewCount: 1894,
+            imageUrl: "https://tong.visitkorea.or.kr/cms/resource/02/3496802_image2_1.jpg",
+          },
+        ],
+      },
+    ],
+  },
+];

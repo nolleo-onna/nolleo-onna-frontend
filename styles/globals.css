@@ -1,0 +1,368 @@
+@import url("https://fonts.googleapis.com/css2?family=Tektur:wght@800&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import "tailwindcss";
+@import "./font.css";
+@import "react-loading-skeleton/dist/skeleton.css";
+@import "@smastrom/react-rating/style.css";
+@plugin "@tailwindcss/typography";
+
+@theme static {
+	/* ─── Gray ─── */
+	--color-gray-50: #f6f7f9;
+	--color-gray-100: #edeff1;
+	--color-gray-200: #dddddd;
+	--color-gray-300: #cccccc;
+	--color-gray-400: #bbbbbb;
+	--color-gray-500: #a4a4a4;
+	--color-gray-600: #737373;
+	--color-gray-700: #4a4a4a;
+	--color-gray-800: #333333;
+	--color-gray-900: #191919;
+
+	/* ─── Navy (Primary) ─── */
+	--color-navy-50: #e8f0ff;
+	--color-navy-100: #c5d4f5;
+	--color-navy-200: #9db5ee;
+	--color-navy-300: #6b90f4;
+	--color-navy-400: #3d68d9;
+	--color-navy-500: #1e4d87;
+	--color-navy-600: #0d3080;
+	--color-navy-700: #0d1b3e;
+	--color-navy-800: #091429;
+	--color-navy-900: #050c1a;
+
+	/* ─── Lime (Secondary) ─── */
+	--color-lime-50: #f9ffd8;
+	--color-lime-100: #eeffa0;
+	--color-lime-200: #e2ff6b;
+	--color-lime-300: #d4f55a;
+	--color-lime-400: #c8f135;
+	--color-lime-500: #abcc1a;
+	--color-lime-600: #7a9a10;
+	--color-lime-700: #526808;
+	--color-lime-800: #2e3d02;
+	--color-lime-900: #141a00;
+
+	/* ─── Ocean (Tertiary / Accent) ─── */
+	--color-ocean-50: #eaf6ff;
+	--color-ocean-100: #cfeaff;
+	--color-ocean-200: #a3d8ff;
+	--color-ocean-300: #6cc0ff;
+	--color-ocean-400: #34a6ff;
+	--color-ocean-500: #0a84ff;
+	--color-ocean-600: #0066d6;
+	--color-ocean-700: #004fa8;
+	--color-ocean-800: #003b7a;
+	--color-ocean-900: #002550;
+
+	/* ─── Error ─── */
+	--color-error: #e91616;
+
+	/*─── Mono ─── */
+	--color-white: #ffffff;
+	--color-black: #000000;
+	--color-black-70: rgba(0, 0, 0, 0.7);
+	--color-black-50: rgba(0, 0, 0, 0.5);
+
+	/* ─── SocialBrand ─── */
+	--color-kakao-bg: #fee500;
+	--color-kakao-text: rgba(0, 0, 0, 0.85);
+	--color-google-border: #747775;
+	--color-google-text: #1f1f1f;
+
+	/* ─── Gradients ─── */
+	--gradient-navy-100-lr: linear-gradient(
+		to right,
+		var(--color-navy-50),
+		var(--color-navy-100)
+	);
+	--gradient-navy-100-td: linear-gradient(
+		to bottom,
+		var(--color-navy-50),
+		var(--color-navy-100)
+	);
+	--gradient-navy-200-lr: linear-gradient(
+		to right,
+		var(--color-navy-100),
+		var(--color-navy-200)
+	);
+	--gradient-navy-200-rl: linear-gradient(
+		to left,
+		var(--color-navy-200),
+		var(--color-navy-100)
+	);
+	--gradient-navy-500: linear-gradient(
+		to right,
+		var(--color-navy-400),
+		var(--color-navy-700)
+	);
+
+	/* ─── Box Shadow ─── */
+	--shadow-base: 0px 4px 16px 0px #0000000a;
+	--shadow-xl: 0px 0px 50px 0px #00000014;
+
+	/* ─── breakpoint ─── */
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 744px; /* tablet */
+	--breakpoint-lg: 1280px; /* desktop */
+	/* ─── font family ─── */
+	--font-pretendard: "Pretendard";
+	--font-taenada: "Taenada";
+	--font-tektur: "Tektur";
+
+	/* ─── font ─── */
+	--text-xs: 0.75rem;
+	--text-xs--line-height: 1rem;
+	--text-xs--letter-spacing: -0.02em;
+
+	--text-sm: 0.875rem;
+	--text-sm--line-height: 1.25rem;
+	--text-sm--letter-spacing: -0.02em;
+
+	--text-base: 1rem;
+	--text-base--line-height: 1.5rem;
+	--text-base--letter-spacing: -0.02em;
+
+	--text-lg: 1.125rem;
+	--text-lg--line-height: 1.75rem;
+	--text-lg--letter-spacing: -0.02em;
+
+	--text-xl: 1.25rem;
+	--text-xl--line-height: 1.875rem;
+	--text-xl--letter-spacing: -0.02em;
+
+	--text-2xl: 1.5rem;
+	--text-2xl--line-height: 2rem;
+	--text-2xl--letter-spacing: -0.02em;
+
+	--text-3xl: 1.75rem;
+	--text-3xl--line-height: 2rem;
+	--text-3xl--letter-spacing: -0.03em;
+
+	--text-4xl: 1.875rem;
+	--text-4xl--line-height: 2.25rem;
+	--text-4xl--letter-spacing: -0.02em;
+
+	--text-5xl: 2rem;
+	--text-5xl--line-height: 2.25rem;
+	--text-5xl--letter-spacing: -0.02em;
+
+	--text-headline-md: 2.5rem;
+	--text-headline-md--line-height: 3.5rem;
+	--text-headline-md--letter-spacing: -0.02em;
+
+	--text-headline-lg: 3rem;
+	--text-headline-lg--line-height: 3.75rem;
+	--text-headline-lg--letter-spacing: -0.02em;
+
+	--text-headline-xl: 3.5rem;
+	--text-headline-xl--line-height: 4.25rem;
+	--text-headline-xl--letter-spacing: -0.02em;
+}
+
+@layer base {
+	.text-xs {
+		font-size: var(--text-xs);
+		line-height: var(--text-xs--line-height);
+		letter-spacing: var(--text-xs--letter-spacing);
+	}
+
+	.text-sm {
+		font-size: var(--text-sm);
+		line-height: var(--text-sm--line-height);
+		letter-spacing: var(--text-sm--letter-spacing);
+	}
+
+	.text-base {
+		font-size: var(--text-base);
+		line-height: var(--text-base--line-height);
+		letter-spacing: var(--text-base--letter-spacing);
+	}
+
+	.text-lg {
+		font-size: var(--text-lg);
+		line-height: var(--text-lg--line-height);
+		letter-spacing: var(--text-lg--letter-spacing);
+	}
+
+	.text-xl {
+		font-size: var(--text-xl);
+		line-height: var(--text-xl--line-height);
+		letter-spacing: var(--text-xl--letter-spacing);
+	}
+
+	.text-2xl {
+		font-size: var(--text-2xl);
+		line-height: var(--text-2xl--line-height);
+		letter-spacing: var(--text-2xl--letter-spacing);
+	}
+
+	.text-3xl {
+		font-size: var(--text-3xl);
+		line-height: var(--text-3xl--line-height);
+		letter-spacing: var(--text-3xl--letter-spacing);
+	}
+
+	.text-4xl {
+		font-size: var(--text-4xl);
+		line-height: var(--text-4xl--line-height);
+		letter-spacing: var(--text-4xl--letter-spacing);
+	}
+
+	.text-5xl {
+		font-size: var(--text-5xl);
+		line-height: var(--text-5xl--line-height);
+		letter-spacing: var(--text-5xl--letter-spacing);
+	}
+
+	.text-headline-md {
+		font-size: var(--text-headline-md);
+		line-height: var(--text-headline-md--line-height);
+		letter-spacing: var(--text-headline-md--letter-spacing);
+	}
+
+	.text-headline-lg {
+		font-size: var(--text-headline-lg);
+		line-height: var(--text-headline-lg--line-height);
+		letter-spacing: var(--text-headline-lg--letter-spacing);
+	}
+
+	.text-headline-xl {
+		font-size: var(--text-headline-xl);
+		line-height: var(--text-headline-xl--line-height);
+		letter-spacing: var(--text-headline-xl--letter-spacing);
+	}
+
+	body {
+		@apply bg-gray-50 text-gray-900;
+		font-family: "Pretendard", sans-serif;
+	}
+	.bg-gradient-navy-100-lr {
+		background-image: var(--gradient-navy-100-lr);
+	}
+	.bg-gradient-navy-100-td {
+		background-image: var(--gradient-navy-100-td);
+	}
+	.bg-gradient-navy-200-lr {
+		background-image: var(--gradient-navy-200-lr);
+	}
+	.bg-gradient-navy-200-rl {
+		background-image: var(--gradient-navy-200-rl);
+	}
+	.bg-gradient-navy-500 {
+		background-image: var(--gradient-navy-500);
+	}
+}
+
+@layer utilities {
+	.border-gradient-navy {
+		border: 1px solid transparent;
+		background:
+			linear-gradient(#fff, #fff) padding-box,
+			linear-gradient(to right, #3d68d9, #0d1b3e) border-box;
+	}
+}
+
+.scrollbar-hide {
+	-ms-overflow-style: none; /* 구형 IE / 구형 Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Edge(Chromium) */
+}
+
+/* 스크롤바 스타일 */
+.scrollbar {
+	overflow: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-gray-300) transparent;
+	scroll-behavior: smooth;
+	&::-webkit-scrollbar {
+		width: 10px;
+		background: transparent;
+	}
+	&::-webkit-scrollbar-track {
+		margin: 4px 0;
+		background: transparent;
+	}
+	&::-webkit-scrollbar-thumb {
+		border-radius: 40px;
+		background-color: var(--color-gray-300);
+		border: 4px solid transparent;
+		background-clip: content-box;
+	}
+	&::-webkit-scrollbar-corner {
+		background: transparent;
+	}
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-2deg); }
+  30% { transform: rotate(2deg); }
+  45% { transform: rotate(-2deg); }
+  60% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 40px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -450px 0; }
+  100% { background-position: 450px 0; }
+}
+
+/* 로딩 스켈레톤용 — 단색 pulse 대신 대각선으로 빛이 훑고 지나가는 효과.
+   bg-gray-* + animate-pulse 조합을 대체해서 쓴다(자체 배경색 포함). */
+.animate-shimmer {
+  background-color: var(--color-gray-100);
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 450px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s ease-in-out infinite;
+}

@@ -1,0 +1,27 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  output: "standalone",
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+      {
+        protocol: "http",
+        hostname: "tong.visitkorea.or.kr",
+      },
+      {
+        protocol: "https",
+        hostname: "img1.kakaocdn.net",
+      },
+      {
+        protocol: "https",
+        hostname: "tong.visitkorea.or.kr",
+      },
+    ],
+  },
+};
+
+export default nextConfig;
