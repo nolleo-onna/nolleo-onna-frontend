@@ -115,7 +115,24 @@ export default function CourseMap({
     });
     polylineRef.current.setMap(map);
 
-    map.setBounds(bounds, 80, 80, 200, 80);
+    // 하단 200px 여백은 데스크톱의 큰 상세 카드용 — 지도 높이가 42vh뿐인
+    // 모바일에서 그대로 쓰면 마커 영역이 위쪽으로 압축돼 과하게 줌아웃된다.
+    // 컨테이너 실제 높이 기준으로 여백을 조정하고, 레이아웃(모바일 스택 등)
+    // 변경 직후 컨테이너 크기가 달라졌을 수 있어 relayout으로 재계산한다.
+    const fitBounds = () => {
+      map.relayout();
+      const height = containerRef.current?.clientHeight ?? 0;
+      if (height < 500) {
+        map.setBounds(bounds, 40, 40, 110, 40);
+      } else {
+        map.setBounds(bounds, 80, 80, 200, 80);
+      }
+    };
+    fitBounds();
+
+    // 화면 회전·창 크기 변경 시에도 코스 전체가 계속 화면에 들어오게 유지
+    window.addEventListener("resize", fitBounds);
+    return () => window.removeEventListener("resize", fitBounds);
   }, [places, selectedPlaceId, onSelectPlace, mapReady]);  // ← mapReady 추가
 
   // 선택 장소로 이동

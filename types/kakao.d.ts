@@ -33,6 +33,8 @@ declare global {
       getLevel(): number;
       setLevel(level: number, options?: { anchor?: LatLng }): void;
       getProjection(): MapProjection;
+      /** 컨테이너 크기가 바뀐 뒤 지도 크기를 다시 계산한다 */
+      relayout(): void;
     }
 
     class CustomOverlay {
