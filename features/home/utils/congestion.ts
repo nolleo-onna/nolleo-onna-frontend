@@ -1,4 +1,5 @@
 import { getCrowdLevel } from "@/features/crowd/utils/crowdUtils";
+import { CONGESTION_ATTRACTION_IMAGES } from "@/features/home/data/congestionImages";
 import type { Congestion } from "@/types/congestion";
 import type { CrowdLevel } from "@/types/crowd";
 
@@ -7,7 +8,7 @@ export interface CongestionSpot {
   district: string;
   rate: number;
   level: CrowdLevel;
-  /** 백엔드가 이미지 URL을 내려줄 때만 채워짐 (없으면 카드에서 기본 이미지 사용) */
+  /** 백엔드 값 → CONGESTION_ATTRACTION_IMAGES 매칭 순으로 채워짐. 둘 다 없으면 카드에서 플레이스홀더 사용 */
   imageUrl?: string;
 }
 
@@ -48,7 +49,8 @@ function normalizeAttractions(data: Congestion[]): CongestionSpot[] {
       const rate = a.rate ?? a.cnctrRate ?? 0;
       const district =
         districtName ?? a.districtName ?? a.district ?? a.signguNm ?? "";
-      const imageUrl = a.imageUrl ?? a.firstImage ?? a.image;
+      const imageUrl =
+        a.imageUrl ?? a.firstImage ?? a.image ?? CONGESTION_ATTRACTION_IMAGES[name];
       return { name, district, rate, level: getCrowdLevel(rate), imageUrl };
     });
   });
