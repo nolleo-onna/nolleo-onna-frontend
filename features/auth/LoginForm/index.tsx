@@ -34,11 +34,13 @@ export default function LoginForm() {
           <Image
             src="/logo/icon.png"
             alt=""
-            width={44}
-            height={44}
+            width={64}
+            height={64}
             priority
           />
-          <span className="text-xl font-bold text-navy-900">놀러온나</span>
+          <span className="font-taenada text-3xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
+            놀러온나
+          </span>
         </div>
         <h1 className="text-xl font-bold text-navy-900">다시 만나서 반가워요</h1>
         <p className="mt-2 text-sm text-gray-500">
