@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { Reorder, useDragControls } from "motion/react";
 import {
   ChevronDown,
@@ -34,6 +34,24 @@ interface Props {
   onSelectPlace: (place: CoursePlace) => void;
 }
 
+// 모바일(터치)에서는 카드 전체가 드래그 대상이면 목록 스크롤이 안 돼서,
+// lg(1024px) 이상에서만 카드 전체 드래그를 켜고 그 미만에서는 그립 핸들로만 끈다.
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+function subscribeDesktop(callback: () => void) {
+  const mql = window.matchMedia(DESKTOP_QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function useIsDesktop() {
+  return useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => false, // SSR에서는 모바일 기준(핸들 전용)으로 시작
+  );
+}
+
 interface PlaceTimelineItemProps {
   place: CoursePlace;
   index: number;
@@ -48,7 +66,7 @@ interface PlaceTimelineItemProps {
 }
 
 // useDragControls는 항목마다 하나씩 필요해서(훅은 반복문에서 못 씀) 분리한 서브 컴포넌트.
-// 편집 모드에서는 카드 전체를 잡고 끌 수 있다(dragListener={isEditing}).
+// 편집 모드에서는 카드 전체를 잡고 끌 수 있다(dragListener={cardDraggable}).
 // 드래그가 실제로 일어난 직후에는 클릭 이벤트가 따라오므로, 장소 선택으로
 // 오인되지 않게 isDraggingRef로 걸러낸다.
 function PlaceTimelineItem({
@@ -65,12 +83,14 @@ function PlaceTimelineItem({
 }: PlaceTimelineItemProps) {
   const dragControls = useDragControls();
   const isDraggingRef = useRef(false);
+  const isDesktop = useIsDesktop();
+  const cardDraggable = isEditing && isDesktop;
 
   return (
     <Reorder.Item
       as="li"
       value={place}
-      dragListener={isEditing}
+      dragListener={cardDraggable}
       dragControls={dragControls}
       onDragStart={() => {
         isDraggingRef.current = true;
@@ -130,7 +150,7 @@ function PlaceTimelineItem({
             isSelected
               ? "bg-ocean-50 ring-1 ring-ocean-200"
               : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
-          } ${isEditing ? "cursor-grab active:cursor-grabbing" : ""}`}
+          } ${cardDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
           <p
             className={`mb-0.5 truncate text-[14px] font-semibold ${
