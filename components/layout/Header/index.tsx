@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, User, LogOut } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
 
 const NAV_ITEMS = [
   { label: "홈", href: "/" },
@@ -114,7 +115,10 @@ function UserChip({
 export default function Header() {
   const pathname = usePathname();
   const { user, isLoading, isLoggedIn, logout, isLoggingOut } = useAuth();
+  const { customNickname } = useCustomNickname(user?.userId);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // 마이페이지에서 바꾼 커스텀 닉네임이 있으면 우선 표시
+  const displayNickname = customNickname ?? user?.nickname ?? "";
 
   return (
     <>
@@ -157,7 +161,7 @@ export default function Header() {
             <div className="flex items-center gap-3">
               {isLoading ? null : isLoggedIn ? (
                 <UserChip
-                  nickname={user?.nickname ?? ''}
+                  nickname={displayNickname}
                   onLogout={logout}
                   isLoggingOut={isLoggingOut}
                 />
@@ -231,10 +235,10 @@ export default function Header() {
                       className="flex items-center gap-2"
                     >
                       <div className="w-7 h-7 rounded-full bg-gradient-to-br from-navy-600 to-ocean-500 flex items-center justify-center text-white text-[12px] font-bold">
-                        {user?.nickname?.charAt(0)}
+                        {displayNickname.charAt(0)}
                       </div>
                       <span className="text-[13px] font-semibold text-gray-700">
-                        {user?.nickname}님
+                        {displayNickname}님
                       </span>
                     </Link>
                     <button
