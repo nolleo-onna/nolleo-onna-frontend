@@ -90,7 +90,7 @@ function PlaceTimelineItem({
         backgroundColor: "#ffffff",
       }}
     >
-      <div className="flex gap-3">
+      <div className="flex gap-2 lg:gap-3">
         {/* 번호 + 연결선 */}
         <div className="flex flex-shrink-0 flex-col items-center">
           <div
@@ -126,7 +126,7 @@ function PlaceTimelineItem({
             if (isDraggingRef.current) return;
             onSelectPlace(place);
           }}
-          className={`mb-1 flex-1 rounded-xl px-3.5 py-2.5 text-left transition-all ${
+          className={`mb-1 min-w-0 flex-1 rounded-xl px-3 py-2.5 text-left transition-all lg:px-3.5 ${
             isSelected
               ? "bg-ocean-50 ring-1 ring-ocean-200"
               : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
@@ -161,7 +161,7 @@ function PlaceTimelineItem({
 
         {/* 편집 컨트롤 */}
         {isEditing && (
-          <div className="mb-1 flex flex-col items-center justify-center gap-0.5">
+          <div className="mb-1 flex shrink-0 flex-col items-center justify-center gap-0.5">
             <button
               onClick={() => onMovePlace?.(place.id, -1)}
               disabled={index === 0}
@@ -226,7 +226,7 @@ export default function CourseSidebar({
 
   return (
     <aside className="min-h-0 w-full flex-1 overflow-y-auto border-t border-gray-100 bg-white lg:w-[340px] lg:flex-none lg:border-t-0 lg:border-r">
-      <div className="p-5">
+      <div className="p-4 lg:p-5">
         {/* 헤더 */}
         <div className="mb-1 flex items-center justify-between">
           <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
