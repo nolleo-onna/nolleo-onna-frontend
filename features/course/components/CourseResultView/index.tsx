@@ -11,6 +11,13 @@ import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import { loadCourseBudget } from "@/features/course/utils/budgetStorage";
+import {
+  type CourseCustomization,
+  clearCourseCustomization,
+  loadCourseCustomization,
+  saveCourseCustomization,
+} from "@/features/course/utils/courseCustomization";
+import { getDistance } from "@/features/course/data/mockCourse";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
 import type {
   CourseItemResponse,
@@ -55,6 +62,27 @@ function toCourse(course: CourseResponse): Course {
   };
 }
 
+function applyCustomization(
+  places: CoursePlace[],
+  customization?: CourseCustomization,
+): CoursePlace[] {
+  if (!customization) return places;
+  const removed = new Set(customization.removed ?? []);
+  let list = places.filter((p) => !removed.has(p.id));
+  if (customization.order?.length) {
+    const rank = new Map(customization.order.map((id, i) => [id, i]));
+    list = [...list].sort(
+      (a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity),
+    );
+  }
+  // 순서/구성이 바뀌면 백엔드가 준 경로 거리가 더 이상 맞지 않아
+  // 좌표 기반 직선거리로 다시 계산한다.
+  return list.map((p, i) => ({
+    ...p,
+    distanceFromPrevM: i === 0 ? 0 : Math.round(getDistance(list[i - 1], p)),
+  }));
+}
+
 export default function CourseResultView() {
   const searchParams = useSearchParams();
   const pairId = searchParams.get("pairId");
@@ -83,6 +111,17 @@ export default function CourseResultView() {
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
 
+  // 사용자가 바꾼 장소 순서/제외 목록. 백엔드 수정 API가 없어 localStorage로 유지한다.
+  const [isEditing, setIsEditing] = useState(false);
+  const [customization, setCustomization] = useState<
+    CourseCustomization | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!pairId) return;
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage는 마운트 후에만 읽어야 하이드레이션 불일치가 안 생김 */
+    setCustomization(loadCourseCustomization(pairId));
+  }, [pairId]);
+
   if (isError) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -103,10 +142,51 @@ export default function CourseResultView() {
   }
 
   // 코스 생성은 pairId당 1건만 만들어지므로 여러 개가 와도 첫 번째만 보여준다.
-  const course = toCourse(data[0]);
-  const places = course.days[0].places;
+  const originalCourse = toCourse(data[0]);
+  const originalPlaces = originalCourse.days[0].places;
+  const places = applyCustomization(originalPlaces, customization);
+  const course: Course = {
+    ...originalCourse,
+    days: [{ ...originalCourse.days[0], places }],
+  };
   const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
   const selectedPlace = places.find((p) => p.id === resolvedPlaceId) ?? places[0];
+
+  const hasCustomization =
+    customization !== undefined &&
+    ((customization.removed?.length ?? 0) > 0 ||
+      (customization.order?.length ?? 0) > 0);
+
+  const updateCustomization = (next: CourseCustomization) => {
+    if (!pairId) return;
+    setCustomization(next);
+    saveCourseCustomization(pairId, next);
+  };
+
+  const handleMovePlace = (id: number, direction: -1 | 1) => {
+    const index = places.findIndex((p) => p.id === id);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= places.length) return;
+    const order = places.map((p) => p.id);
+    [order[index], order[targetIndex]] = [order[targetIndex], order[index]];
+    updateCustomization({ ...customization, order });
+  };
+
+  const handleRemovePlace = (id: number) => {
+    if (places.length <= 1) return;
+    updateCustomization({
+      order: places.map((p) => p.id).filter((pid) => pid !== id),
+      removed: [...(customization?.removed ?? []), id],
+    });
+    if (selectedPlaceId === id) setSelectedPlaceId(null);
+  };
+
+  const handleResetCustomization = () => {
+    if (!pairId) return;
+    clearCourseCustomization(pairId);
+    setCustomization(undefined);
+    setSelectedPlaceId(null);
+  };
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
 
@@ -133,6 +213,12 @@ export default function CourseResultView() {
             selectedDay={1}
             selectedPlaceId={resolvedPlaceId}
             budget={budget}
+            isEditing={isEditing}
+            hasCustomization={hasCustomization}
+            onToggleEdit={() => setIsEditing((prev) => !prev)}
+            onMovePlace={handleMovePlace}
+            onRemovePlace={handleRemovePlace}
+            onResetCustomization={handleResetCustomization}
             onSelectDay={() => {}}
             onSelectPlace={handleSelectPlace}
           />
