@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { MotionConfig } from "motion/react";
 
 import Header from "@/components/layout/Header";
 import QueryProvider from "@/providers/QueryProvider";
+import PageTransition from "@/providers/PageTransition";
 import "@/styles/globals.css";
 import "@/styles/font.css";
 
@@ -18,10 +20,12 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body>
-        <QueryProvider>
-          <Header />
-          {children}
-        </QueryProvider>
+        <MotionConfig reducedMotion="user">
+          <QueryProvider>
+            <Header />
+            <PageTransition>{children}</PageTransition>
+          </QueryProvider>
+        </MotionConfig>
       </body>
     </html>
   );
