@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { X, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import type { CoursePlace } from "@/features/course/data/mockCourse";
@@ -27,24 +28,32 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  if (!place) return null;
-
   return (
-    <>
-      {/* 백드롭 */}
-      <div
-        className="fixed inset-0 bg-black/40 z-40"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {place && (
+        <>
+          {/* 백드롭 */}
+          <motion.div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          />
 
-      {/* 모달 */}
-      <div
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50
+          {/* 모달 */}
+          <motion.div
+            className="fixed left-1/2 top-1/2 z-50
                       w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden"
-        role="dialog"
-        aria-modal="true"
-        aria-label={place.name}
-      >
+            role="dialog"
+            aria-modal="true"
+            aria-label={place.name}
+            initial={{ opacity: 0, x: "-50%", y: "calc(-50% + 24px)", scale: 0.98 }}
+            animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1 }}
+            exit={{ opacity: 0, x: "-50%", y: "calc(-50% + 16px)", scale: 0.98 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          >
         {/* 이미지 */}
         <div className="relative h-52">
           <Image
@@ -84,7 +93,9 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
             {place.description}
           </p>
         </div>
-      </div>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

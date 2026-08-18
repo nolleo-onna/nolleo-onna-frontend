@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { X, MapPin, Phone, Clock, ParkingSquare, ExternalLink } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -143,17 +144,28 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  if (!contentId) return null;
-
   return (
-    <>
-      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-      <div
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-xl"
-        role="dialog"
-        aria-modal="true"
-        aria-label="장소 상세 정보"
-      >
+    <AnimatePresence>
+      {contentId && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          />
+          <motion.div
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="장소 상세 정보"
+            initial={{ opacity: 0, x: "-50%", y: "calc(-50% + 24px)", scale: 0.98 }}
+            animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1 }}
+            exit={{ opacity: 0, x: "-50%", y: "calc(-50% + 16px)", scale: 0.98 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          >
         {isPending ? (
           <div className="flex items-center justify-center h-60">
             <span className="text-sm text-gray-400">불러오는 중...</span>
@@ -317,7 +329,9 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
             <span className="text-sm text-gray-400">정보를 불러올 수 없어요</span>
           </div>
         )}
-      </div>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
