@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
@@ -191,7 +192,13 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
   }, [data]);
 
   return (
-    <section className="py-6 md:py-10">
+    <motion.section
+      className="py-6 md:py-10"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex flex-col gap-1">
@@ -240,6 +247,6 @@ export default function SpotsPreviewSection({ type = "crowd", spots }: Props) {
           <CrowdCard key={spot.id} spot={spot} rank={isCrowd ? index + 1 : undefined} />
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }

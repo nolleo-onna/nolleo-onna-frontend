@@ -1,4 +1,7 @@
+"use client";
+
 import { Sparkles, TrendingUp, PiggyBank } from "lucide-react";
+import { type Variants, motion } from "motion/react";
 
 const features = [
   {
@@ -18,6 +21,22 @@ const features = [
   },
 ];
 
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12 },
+  },
+};
+
 export default function ServiceIntroSection() {
   return (
     <section
@@ -26,20 +45,33 @@ export default function ServiceIntroSection() {
     >
       <div className="px-8 md:px-16 py-16 md:py-20">
         {/* 헤더 */}
-        <div className="text-center mb-12">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <span className="text-xs font-semibold text-ocean-400 tracking-widest uppercase block mb-3">
             왜 놀러온나인가요
           </span>
           <h2 className="text-2xl md:text-3xl font-bold text-white">
             왜 <span className="text-ocean-400">놀러온나</span>인가요?
           </h2>
-        </div>
+        </motion.div>
 
         {/* 피처 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {features.map((feature) => (
-            <div
+            <motion.div
               key={feature.title}
+              variants={itemVariants}
               className="flex flex-col items-center text-center gap-4"
             >
               {/* 아이콘 */}
@@ -53,9 +85,9 @@ export default function ServiceIntroSection() {
                   {feature.description}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

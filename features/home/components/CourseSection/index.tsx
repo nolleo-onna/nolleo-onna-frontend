@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 
 import ThemeCourseCard from "@/components/ui/Card/ThemeCourseCard";
 import { useAIChatContext } from "@/providers/AIChatProvider";
@@ -108,7 +109,13 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
 
   return (
     <>
-      <section className="py-6 md:py-10">
+      <motion.section
+        className="py-6 md:py-10"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         {/* 헤더 */}
         <div className="mb-6 flex items-end justify-between">
           <div>
@@ -183,7 +190,7 @@ export default function CourseSection({ courses = THEME_COURSES }: Props) {
             스팟 둘러보기
           </button>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 }

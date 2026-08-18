@@ -1,7 +1,26 @@
+"use client";
+
 import Link from "next/link";
+import { type Variants, motion } from "motion/react";
 
 import TourCourseCard from "@/components/ui/Card/TourCourseCard";
 import { MOCK_OFFICIAL_COURSES } from "@/features/course/data/mockOfficialCourse";
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
 
 export default function TourCourseSection() {
   const courses = MOCK_OFFICIAL_COURSES;
@@ -21,20 +40,28 @@ export default function TourCourseSection() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+      >
         {courses.map((course) => (
-          <Link key={course.id} href={`/course/official?courseId=${course.id}`}>
-            <TourCourseCard
-              imageSrc={course.coverImageUrl}
-              title={course.title}
-              rating={course.rating}
-              reviewCount={course.reviewCount}
-              location={course.location}
-              regionTags={course.regionTags}
-            />
-          </Link>
+          <motion.div key={course.id} variants={itemVariants}>
+            <Link href={`/course/official?courseId=${course.id}`}>
+              <TourCourseCard
+                imageSrc={course.coverImageUrl}
+                title={course.title}
+                rating={course.rating}
+                reviewCount={course.reviewCount}
+                location={course.location}
+                regionTags={course.regionTags}
+              />
+            </Link>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
