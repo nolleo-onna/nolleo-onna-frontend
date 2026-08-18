@@ -1,8 +1,8 @@
 export default function MapSkeleton() {
   return (
-    <div className="relative h-full w-full bg-gray-100 animate-pulse">
+    <div className="relative h-full w-full bg-gray-100">
       {/* 지도 배경 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+      <div className="absolute inset-0 animate-shimmer" />
       
       {/* 줌 컨트롤 */}
       <div className="absolute right-4 top-4 flex flex-col gap-1">

@@ -77,8 +77,8 @@ export default function CoursePlaceDetail({
             {/* 설명글 */}
             {isLoading ? (
               <div className="mb-2.5 space-y-1.5">
-                <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
-                <div className="h-3 w-4/5 animate-pulse rounded bg-gray-100" />
+                <div className="h-3 w-full animate-shimmer rounded" />
+                <div className="h-3 w-4/5 animate-shimmer rounded" />
               </div>
             ) : overview ? (
               <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500">

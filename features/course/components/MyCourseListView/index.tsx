@@ -40,14 +40,14 @@ function LoadingState() {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="rounded-[28px] border border-gray-100 bg-white p-6 animate-pulse"
+          className="rounded-[28px] border border-gray-100 bg-white p-6"
         >
-          <div className="h-5 w-3/4 bg-gray-100 rounded-lg mb-3" />
-          <div className="h-3 w-full bg-gray-50 rounded mb-2" />
-          <div className="h-3 w-2/3 bg-gray-50 rounded mb-6" />
+          <div className="h-5 w-3/4 rounded-lg mb-3 animate-shimmer" />
+          <div className="h-3 w-full rounded mb-2 animate-shimmer" />
+          <div className="h-3 w-2/3 rounded mb-6 animate-shimmer" />
           <div className="flex gap-2">
-            <div className="h-6 w-20 bg-gray-50 rounded-full" />
-            <div className="h-6 w-16 bg-gray-50 rounded-full" />
+            <div className="h-6 w-20 rounded-full animate-shimmer" />
+            <div className="h-6 w-16 rounded-full animate-shimmer" />
           </div>
         </div>
       ))}

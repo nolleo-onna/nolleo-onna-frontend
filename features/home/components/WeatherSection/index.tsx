@@ -17,10 +17,10 @@ export default function WeatherSection() {
       {districts.length === 0 ? (
         // 로딩 스켈레톤
         <>
-          <div className="h-4 w-40 rounded bg-gray-100 animate-pulse mb-4" />
+          <div className="h-4 w-40 rounded animate-shimmer mb-4" />
           <div className="grid grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-2xl bg-gray-100 animate-pulse" />
+              <div key={i} className="h-28 rounded-2xl animate-shimmer" />
             ))}
           </div>
         </>

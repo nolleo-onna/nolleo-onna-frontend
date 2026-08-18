@@ -74,11 +74,11 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
     return (
       <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-gray-100 bg-white">
         <div className="px-4 py-3 border-b border-gray-100">
-          <div className="h-5 w-24 animate-pulse rounded bg-gray-100" />
+          <div className="h-5 w-24 animate-shimmer rounded" />
         </div>
         <div className="p-3 space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="h-24 animate-shimmer rounded-xl" />
           ))}
         </div>
       </aside>

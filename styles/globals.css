@@ -344,3 +344,25 @@
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+@keyframes shimmer {
+  0% { background-position: -450px 0; }
+  100% { background-position: 450px 0; }
+}
+
+/* 로딩 스켈레톤용 — 단색 pulse 대신 대각선으로 빛이 훑고 지나가는 효과.
+   bg-gray-* + animate-pulse 조합을 대체해서 쓴다(자체 배경색 포함). */
+.animate-shimmer {
+  background-color: var(--color-gray-100);
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 450px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s ease-in-out infinite;
+}

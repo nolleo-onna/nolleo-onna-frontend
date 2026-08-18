@@ -37,8 +37,8 @@ export default function MyPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-20 w-20 animate-pulse rounded-full bg-gray-200" />
-          <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-20 w-20 animate-shimmer rounded-full" />
+          <div className="h-5 w-32 animate-shimmer rounded" />
         </div>
       </div>
     );
@@ -134,10 +134,10 @@ export default function MyPageContent() {
             <div className="divide-y divide-gray-50">
               {Array.from({ length: 2 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 px-5 py-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div className="w-9 h-9 rounded-xl animate-shimmer shrink-0" />
                   <div className="flex-1 min-w-0 space-y-2">
-                    <div className="h-4 w-2/3 rounded bg-gray-100 animate-pulse" />
-                    <div className="h-3 w-1/3 rounded bg-gray-50 animate-pulse" />
+                    <div className="h-4 w-2/3 rounded animate-shimmer" />
+                    <div className="h-3 w-1/3 rounded animate-shimmer" />
                   </div>
                 </div>
               ))}
