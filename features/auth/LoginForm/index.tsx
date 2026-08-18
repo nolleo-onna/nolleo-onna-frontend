@@ -33,8 +33,8 @@ export default function LoginForm() {
         <Image
           src="/logo/logo.png"
           alt="놀러온나 로고"
-          width={132}
-          height={40}
+          width={82}
+          height={52}
           className="mb-6"
           priority
         />
