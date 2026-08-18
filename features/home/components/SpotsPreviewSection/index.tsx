@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { motion } from "motion/react";
 
 import { useCongestion } from "@/features/home/hooks/useCongestion";
@@ -76,7 +76,7 @@ function CrowdCard({ spot, rank }: { spot: Spot; rank?: number }) {
       onClick={() => router.push("/crowd")}
       className="group relative aspect-[3/4] w-[calc((100%-12px)/2)] shrink-0 snap-start overflow-hidden rounded-3xl bg-gray-200 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[calc((100%-24px)/3)] lg:w-[calc((100%-36px)/4)]"
     >
-      {spot.imageUrl && (
+      {spot.imageUrl ? (
         <Image
           src={spot.imageUrl}
           alt={spot.name}
@@ -84,6 +84,12 @@ function CrowdCard({ spot, rank }: { spot: Spot; rank?: number }) {
           sizes="(max-width: 744px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
+      ) : (
+        // 관광공사 혼잡도 API는 이미지를 안 내려줘서, 대신 브랜드 톤 배경 +
+        // 핀 아이콘으로 채운다(빈 회색 박스로 보이지 않게).
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-navy-700 to-ocean-600">
+          <MapPin className="h-9 w-9 text-white/25" strokeWidth={1.5} />
+        </div>
       )}
 
       {/* 하단 그라데이션 (텍스트 가독성용) */}
