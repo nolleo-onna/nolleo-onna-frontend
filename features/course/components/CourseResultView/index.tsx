@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
@@ -10,6 +10,7 @@ import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
+import { loadCourseBudget } from "@/features/course/utils/budgetStorage";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
 import type {
   CourseItemResponse,
@@ -59,10 +60,21 @@ export default function CourseResultView() {
   const pairId = searchParams.get("pairId");
   // 검색바에서 예산을 확정하고 생성한 코스만 budget 파라미터를 갖는다.
   const budgetParam = searchParams.get("budget");
-  const budget =
+  const paramBudget =
     budgetParam !== null && /^\d+$/.test(budgetParam)
       ? Number(budgetParam)
       : undefined;
+
+  // 코스 목록 등 budget 파라미터 없는 경로로 들어오면 생성 시 저장해둔
+  // 값에서 복원한다. localStorage는 SSR에 없어 마운트 후에만 읽는다.
+  const [storedBudget, setStoredBudget] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    if (paramBudget !== undefined || !pairId) return;
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage는 마운트 후에만 읽어야 하이드레이션 불일치가 안 생김 */
+    setStoredBudget(loadCourseBudget(pairId));
+  }, [paramBudget, pairId]);
+
+  const budget = paramBudget ?? storedBudget;
 
   const { data, isLoading, isError } = useCourseResult(pairId);
 
