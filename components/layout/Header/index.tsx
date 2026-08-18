@@ -126,8 +126,8 @@ export default function Header() {
               <Image
                 src="/logo/icon.png"
                 alt=""
-                width={56}
-                height={56}
+                width={52}
+                height={44}
                 priority
               />
               <span className="font-taenada text-2xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">

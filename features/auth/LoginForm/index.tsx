@@ -35,7 +35,7 @@ export default function LoginForm() {
             src="/logo/icon.png"
             alt=""
             width={64}
-            height={64}
+            height={54}
             priority
           />
           <span className="font-taenada text-3xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">

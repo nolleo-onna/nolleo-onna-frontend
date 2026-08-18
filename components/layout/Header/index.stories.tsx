@@ -123,7 +123,7 @@ function HeaderStory({ isLoggedIn, isLoading, isLoggingOut, user, onLogout }: He
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20">
           <div className="relative flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <Image src="/logo/icon.png" alt="" width={56} height={56} priority />
+              <Image src="/logo/icon.png" alt="" width={52} height={44} priority />
               <span className="font-taenada text-2xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
                 놀러온나
               </span>
