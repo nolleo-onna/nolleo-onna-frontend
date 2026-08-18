@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAIChat } from "@/hooks/useAIChat";
+import { saveCourseBudget } from "@/features/course/utils/budgetStorage";
 import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
 import QuickGenerateOverlay from "@/components/ui/Chat/QuickGenerateOverlay";
 
@@ -91,8 +92,13 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
     const delay = viewMode === "quick" ? 400 : 2000;
     const timer = setTimeout(() => {
       setIsOpen(false);
-      const budgetParam =
-        budgetRef.current !== undefined ? `&budget=${budgetRef.current}` : "";
+      const budget = budgetRef.current;
+      if (budget !== undefined) {
+        // 코스 목록 등 budget 파라미터 없는 경로로 재진입해도 게이지를
+        // 복원할 수 있게 저장해둔다.
+        saveCourseBudget(completedPairId, budget);
+      }
+      const budgetParam = budget !== undefined ? `&budget=${budget}` : "";
       router.push(`/course/result?pairId=${completedPairId}${budgetParam}`);
     }, delay);
     return () => clearTimeout(timer);
