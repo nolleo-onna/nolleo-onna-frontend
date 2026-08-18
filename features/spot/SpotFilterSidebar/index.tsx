@@ -5,6 +5,7 @@ import BudgetFilter from "./BudgetFilter";
 import CategoryFilter from "./CategoryFilter";
 import OptionFilter from "./OptionFilter";
 import RegionFilter from "./RegionFilter";
+import TodayWeather from "./TodayWeather";
 
 interface SpotFilterSidebarProps {
   onSelectRegion: (region: string | null) => void;
@@ -23,10 +24,7 @@ export default function SpotFilterSidebar({ onSelectRegion }: SpotFilterSidebarP
           부산 어디로<br />
           <span className="text-navy-400">놀러갈래?</span>
         </h2>
-        <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-          <span>🌤️</span>
-          맑음 18° · 바람 약함
-        </p>
+        <TodayWeather />
       </div>
 
       {/* 필터 목록 */}
