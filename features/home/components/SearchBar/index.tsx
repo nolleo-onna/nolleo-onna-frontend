@@ -9,6 +9,14 @@ import { useAIChatContext } from "@/providers/AIChatProvider";
 type Tab = "course" | "spot";
 
 const BUDGET_OPTIONS = ["무지출", "1만원", "3만원", "5만원", "제한 없음"];
+
+// 결과 페이지의 예산 게이지에 쓰이는 금액값. "제한 없음"은 기준값이 없어 제외.
+const BUDGET_AMOUNT: Record<string, number> = {
+  "무지출": 0,
+  "1만원": 10_000,
+  "3만원": 30_000,
+  "5만원": 50_000,
+};
 const TIME_OPTIONS = ["오전", "오후", "반나절"];
 const COMPANION_OPTIONS = ["혼자", "연인", "친구", "가족", "단체"];
 
@@ -201,7 +209,9 @@ export default function SearchBar() {
 
     // 드롭다운으로 이미 모든 조건을 정한 뒤 누른 버튼이라, 그 자체가 확정 의사표시다.
     // 대화형 챗 모달 없이 바로 생성만 진행한다.
-    generateCourse(trimmedExtra ? `${prompt}. ${trimmedExtra}` : prompt);
+    generateCourse(trimmedExtra ? `${prompt}. ${trimmedExtra}` : prompt, {
+      budget: BUDGET_AMOUNT[selectedBudget],
+    });
   };
 
   const handleInteract = () => setHasInteracted(true);
