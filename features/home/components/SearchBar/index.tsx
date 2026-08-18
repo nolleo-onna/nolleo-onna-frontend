@@ -195,12 +195,14 @@ export default function SearchBar() {
 
   // 검색 버튼 → 선택 조건을 자연어로 변환해 prefill
   const handleSearch = () => {
+    // "돈 안 쓰고" 정도의 표현은 AI가 느슨하게 해석해 유료 스팟을 섞는 경우가
+    // 있어서, 무지출은 무료 장소만 담으라고 명시적으로 요구한다.
     const budgetLabel =
       selectedBudget === "제한 없음"
         ? "예산 제한 없이"
         : selectedBudget === "무지출"
-          ? "돈 안 쓰고"
-          : `${selectedBudget} 예산으로`;
+          ? "입장료나 이용료가 전혀 없는 무료 장소만으로"
+          : `${selectedBudget} 예산을 절대 넘지 않게`;
     const timeLabel = TIME_LABEL[selectedTime] ?? selectedTime;
     const companionLabel = COMPANION_LABEL[selectedCompanion] ?? selectedCompanion;
 
