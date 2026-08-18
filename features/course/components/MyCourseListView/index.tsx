@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { MapPin, Sparkles, ArrowUpRight, Compass } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MapPin, Sparkles, ArrowUpRight, Compass, SearchX } from "lucide-react";
+import CourseListToolbar from "@/features/course/components/CourseListToolbar";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
+import {
+  applyCourseListControls,
+  parseCostFilter,
+  parseSortKey,
+} from "@/features/course/utils/courseListFilters";
 
 // ── 빈 상태 ───────────────────────────────────────────────────────────────────
 function EmptyState() {
@@ -130,13 +136,42 @@ function CourseCard({
   );
 }
 
+// ── 필터 결과 빈 상태 ─────────────────────────────────────────────────────────
+function FilteredEmptyState({ onReset }: { onReset: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
+        <SearchX className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+      </div>
+      <p className="text-[15px] text-gray-500">조건에 맞는 코스가 없어요</p>
+      <button
+        onClick={onReset}
+        className="text-[13px] font-semibold text-ocean-500 hover:underline"
+      >
+        필터 초기화
+      </button>
+    </div>
+  );
+}
+
 // ── 메인 뷰 ───────────────────────────────────────────────────────────────────
 export default function MyCourseListView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: courses, isLoading, isError } = useMyCourses();
+
+  const sort = parseSortKey(searchParams.get("sort"));
+  const cost = parseCostFilter(searchParams.get("cost"));
+  const visibleCourses = courses
+    ? applyCourseListControls(courses, sort, cost)
+    : [];
 
   const handleCardClick = (pairId: string) => {
     router.push(`/course/result?pairId=${pairId}`);
+  };
+
+  const handleResetFilters = () => {
+    router.replace("?", { scroll: false });
   };
 
   return (
@@ -185,19 +220,26 @@ export default function MyCourseListView() {
       ) : !courses || courses.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <CourseCard
-              key={course.id}
-              pairId={course.pairId}
-              title={course.title}
-              description={course.description}
-              totalCost={course.totalCost}
-              spotTitles={course.spotTitles ?? []}
-              onClick={() => handleCardClick(course.pairId)}
-            />
-          ))}
-        </div>
+        <>
+          <CourseListToolbar />
+          {visibleCourses.length === 0 ? (
+            <FilteredEmptyState onReset={handleResetFilters} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  pairId={course.pairId}
+                  title={course.title}
+                  description={course.description}
+                  totalCost={course.totalCost}
+                  spotTitles={course.spotTitles ?? []}
+                  onClick={() => handleCardClick(course.pairId)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </main>
   );
