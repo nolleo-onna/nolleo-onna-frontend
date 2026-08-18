@@ -1,6 +1,7 @@
 "use client";
 
 import { Footprints } from "lucide-react";
+import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 
@@ -8,6 +9,8 @@ interface Props {
   course: Course;
   selectedDay: number;
   selectedPlaceId: number | null;
+  /** 사용자가 설정한 예산(원). 없으면 게이지를 표시하지 않는다. */
+  budget?: number;
   onSelectDay: (day: number) => void;
   onSelectPlace: (place: CoursePlace) => void;
 }
@@ -15,6 +18,7 @@ interface Props {
 export default function CourseSidebar({
   course,
   selectedPlaceId,
+  budget,
   onSelectPlace,
 }: Props) {
   const places = course.days[0]?.places ?? [];
@@ -55,6 +59,11 @@ export default function CourseSidebar({
             </p>
           </div>
         </div>
+
+        {/* 예산 게이지 */}
+        {budget !== undefined && (
+          <CourseBudgetGauge budget={budget} totalCost={totalCost} />
+        )}
 
         {/* 코스 설명 */}
         {course.days[0]?.title && (

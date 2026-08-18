@@ -57,6 +57,12 @@ function toCourse(course: CourseResponse): Course {
 export default function CourseResultView() {
   const searchParams = useSearchParams();
   const pairId = searchParams.get("pairId");
+  // 검색바에서 예산을 확정하고 생성한 코스만 budget 파라미터를 갖는다.
+  const budgetParam = searchParams.get("budget");
+  const budget =
+    budgetParam !== null && /^\d+$/.test(budgetParam)
+      ? Number(budgetParam)
+      : undefined;
 
   const { data, isLoading, isError } = useCourseResult(pairId);
 
@@ -114,6 +120,7 @@ export default function CourseResultView() {
             course={course}
             selectedDay={1}
             selectedPlaceId={resolvedPlaceId}
+            budget={budget}
             onSelectDay={() => {}}
             onSelectPlace={handleSelectPlace}
           />
