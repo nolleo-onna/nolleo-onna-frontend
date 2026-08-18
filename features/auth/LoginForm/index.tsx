@@ -30,14 +30,16 @@ export default function LoginForm() {
       className="flex w-full max-w-sm flex-col gap-7 rounded-3xl border border-gray-100 bg-white/80 p-8 shadow-[0_8px_40px_rgba(13,48,128,0.10)] backdrop-blur-xl"
     >
       <div className="flex flex-col items-center text-center">
-        <Image
-          src="/logo/logo.png"
-          alt="놀러온나 로고"
-          width={82}
-          height={52}
-          className="mb-6"
-          priority
-        />
+        <div className="flex items-center gap-2 mb-6">
+          <Image
+            src="/logo/icon.png"
+            alt=""
+            width={44}
+            height={44}
+            priority
+          />
+          <span className="text-xl font-bold text-navy-900">놀러온나</span>
+        </div>
         <h1 className="text-xl font-bold text-navy-900">다시 만나서 반가워요</h1>
         <p className="mt-2 text-sm text-gray-500">
           소셜 계정으로 간편하게 시작하세요

@@ -122,14 +122,15 @@ export default function Header() {
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20">
           <div className="relative flex items-center justify-between h-16">
             {/* 로고 */}
-            <Link href="/" className="flex items-center shrink-0">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
               <Image
-                src="/logo/logo.png"
-                alt="놀러온나 로고"
-                width={88}
-                height={56}
+                src="/logo/icon.png"
+                alt=""
+                width={44}
+                height={44}
                 priority
               />
+              <span className="text-xl font-bold text-navy-900">놀러온나</span>
             </Link>
 
             {/* 데스크탑 네비 */}
