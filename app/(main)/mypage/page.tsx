@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import Container from "@/components/layout/Container";
 import MyPageContent from "@/features/mypage/components/MyPageContent";
 
 export const metadata: Metadata = {
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MyPage() {
-  return (
-    <Container>
-      <MyPageContent />
-    </Container>
-  );
+  return <MyPageContent />;
 }
