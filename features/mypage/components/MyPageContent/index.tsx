@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
+import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import ProfileEditModal from "@/features/mypage/components/ProfileEditModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
 
@@ -340,23 +341,30 @@ function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
 }
 
 function SettingsSection({
+  onOpenNotifications,
   onLogout,
   isLoggingOut,
 }: {
+  onOpenNotifications: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
   return (
     <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-      {["알림 설정", "이용약관"].map((label) => (
-        <button
-          key={label}
-          className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
-        >
-          <span className="text-sm text-gray-700">{label}</span>
-          <ChevronRight className="h-4 w-4 text-gray-300" />
-        </button>
-      ))}
+      <button
+        onClick={onOpenNotifications}
+        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
+      >
+        <span className="text-sm text-gray-700">알림 설정</span>
+        <ChevronRight className="h-4 w-4 text-gray-300" />
+      </button>
+      <Link
+        href="/terms"
+        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
+      >
+        <span className="text-sm text-gray-700">이용약관</span>
+        <ChevronRight className="h-4 w-4 text-gray-300" />
+      </Link>
       <button
         onClick={onLogout}
         disabled={isLoggingOut}
@@ -379,6 +387,7 @@ export default function MyPageContent() {
   const savedHankkut = useSavedHankkut();
   const { customNickname, saveNickname } = useCustomNickname(user?.userId);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   if (isLoading) return <LoadingState />;
   if (!isLoggedIn || !user) return <LoggedOutState />;
@@ -436,9 +445,18 @@ export default function MyPageContent() {
         </div>
         <div className="flex flex-col gap-6">
           <SavedHankkutSection saved={savedHankkut} />
-          <SettingsSection onLogout={() => logout()} isLoggingOut={isLoggingOut} />
+          <SettingsSection
+            onOpenNotifications={() => setIsNotifOpen(true)}
+            onLogout={() => logout()}
+            isLoggingOut={isLoggingOut}
+          />
         </div>
       </div>
+
+      <NotificationSettingsModal
+        isOpen={isNotifOpen}
+        onClose={() => setIsNotifOpen(false)}
+      />
     </main>
   );
 }
