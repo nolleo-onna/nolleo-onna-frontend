@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { CalendarClock, List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
+import { useDistrictSpotMarkers } from "@/features/crowd/hooks/useDistrictSpotMarkers";
 import { getCrowdLevel, CROWD_STYLE, formatBaseYmd } from "@/features/crowd/utils/crowdUtils";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import DistrictPanel from "@/features/crowd/components/DistrictPanel";
@@ -53,6 +54,9 @@ export default function CrowdView() {
 
   // 모든 구가 같은 기준 일자를 공유하므로 첫 항목 것을 쓴다
   const baseDate = data?.[0]?.baseYmd ? formatBaseYmd(data[0].baseYmd) : null;
+
+  // 선택한 구의 관광지를 스팟 DB와 이름 매칭해 지도에 찍을 좌표를 얻는다
+  const spotMarkers = useDistrictSpotMarkers(selectedDistrict, districtSpots);
 
   return (
     <div className="relative flex h-screen pt-16">
@@ -169,7 +173,11 @@ export default function CrowdView() {
         </div>
       </aside>
 
-      <CrowdMap selectedDistrict={selectedDistrict} onSelectDistrict={handleSelectDistrict} />
+      <CrowdMap
+        selectedDistrict={selectedDistrict}
+        onSelectDistrict={handleSelectDistrict}
+        spotMarkers={spotMarkers}
+      />
 
       {/* 구 상세 패널 — 데스크톱은 지도 우측, 모바일은 하단 시트 */}
       {selectedDistrict && (
