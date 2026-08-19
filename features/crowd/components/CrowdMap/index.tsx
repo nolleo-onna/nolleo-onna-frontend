@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { getDistrictSummaries } from "@/features/home/utils/congestion";
 import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
@@ -20,14 +21,28 @@ interface CrowdMapProps {
   spotMarkers: DistrictSpotMarker[];
 }
 
-// 관광지별 좌표는 혼잡도 API에 없어서(이름/구/집중률만 제공), 개별 스팟이 아닌
-// 구 단위 원형 마커로 표현한다 — 이미 구 중심좌표(DISTRICT_COORDS)가 있어 바로 그릴 수 있다.
+// 구별 행정구역 경계 폴리곤 (public/data, [lng, lat] 링 배열 — 섬이 있는 구는 링 여러 개)
+type DistrictPaths = Record<string, [number, number][][]>;
+
+// 구 경계를 혼잡도 등급색 폴리곤으로 칠하고, 중심에 구 이름·집중률 라벨을 띄운다.
+// 경계 데이터 로드 전이나 실패 시에는 기존 원형 마커로 폴백한다.
 export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarkers }: CrowdMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const polygonsRef = useRef<kakao.maps.Polygon[]>([]);
   const spotOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const { data: congestion, isLoading } = useCongestion();
+
+  const { data: districtPaths } = useQuery<DistrictPaths>({
+    queryKey: ["busanDistrictPolygons"],
+    queryFn: async () => {
+      const res = await fetch("/data/busan-districts.json");
+      if (!res.ok) throw new Error("Failed to load district polygons");
+      return res.json();
+    },
+    staleTime: Infinity,
+  });
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -96,6 +111,8 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
 
     overlaysRef.current.forEach((o) => o.setMap(null));
     overlaysRef.current = [];
+    polygonsRef.current.forEach((p) => p.setMap(null));
+    polygonsRef.current = [];
 
     getDistrictSummaries(congestion).forEach((summary) => {
       const coords = DISTRICT_COORDS[summary.district];
@@ -103,30 +120,81 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
 
       const style = CROWD_STYLE[summary.level];
       const isSelected = summary.district === selectedDistrict;
-      const size = isSelected ? 64 : 54;
+      const rings = districtPaths?.[summary.district];
+
+      if (rings?.length) {
+        // 구 경계 폴리곤 — 혼잡도 등급색으로 채운다
+        const baseFill = isSelected ? 0.42 : 0.2;
+        const polygon = new kakao.maps.Polygon({
+          path: rings.map((ring) =>
+            ring.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng))
+          ),
+          strokeWeight: isSelected ? 2.5 : 1.5,
+          strokeColor: style.bg,
+          strokeOpacity: 0.9,
+          fillColor: style.bg,
+          fillOpacity: baseFill,
+        });
+        polygon.setMap(map);
+        kakao.maps.event.addListener(polygon, "click", () =>
+          onSelectDistrict(summary.district)
+        );
+        kakao.maps.event.addListener(polygon, "mouseover", () =>
+          polygon.setOptions({ fillOpacity: 0.4 })
+        );
+        kakao.maps.event.addListener(polygon, "mouseout", () =>
+          polygon.setOptions({ fillOpacity: baseFill })
+        );
+        polygonsRef.current.push(polygon);
+      }
 
       const content = document.createElement("div");
-      content.innerHTML = `
-        <div style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: ${size}px;
-          height: ${size}px;
-          border-radius: 9999px;
-          background: ${style.bg};
-          color: ${style.text};
-          border: ${isSelected ? "3px" : "2px"} solid white;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-          cursor: pointer;
-          font-weight: 700;
-          user-select: none;
-        ">
-          <span style="font-size: 11px; opacity: 0.85;">${summary.district}</span>
-          <span style="font-size: 13px;">${Math.round(summary.rate)}%</span>
-        </div>
-      `;
+      if (rings?.length) {
+        // 폴리곤이 색을 담당하므로 라벨은 작은 알약 형태로
+        content.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.95);
+            border: ${isSelected ? "2px" : "1.5px"} solid ${style.bg};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            user-select: none;
+            line-height: 1.25;
+          ">
+            <span style="font-size: 11px; font-weight: 700; color: #191919;">${summary.district}</span>
+            <span style="font-size: 12px; font-weight: 800; color: ${style.bg};">${Math.round(summary.rate)}%</span>
+          </div>
+        `;
+      } else {
+        // 경계 데이터가 없을 때의 폴백: 기존 원형 마커
+        const size = isSelected ? 64 : 54;
+        content.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 9999px;
+            background: ${style.bg};
+            color: ${style.text};
+            border: ${isSelected ? "3px" : "2px"} solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            cursor: pointer;
+            font-weight: 700;
+            user-select: none;
+          ">
+            <span style="font-size: 11px; opacity: 0.85;">${summary.district}</span>
+            <span style="font-size: 13px;">${Math.round(summary.rate)}%</span>
+          </div>
+        `;
+      }
       content.addEventListener("click", () => onSelectDistrict(summary.district));
 
       const overlay = new kakao.maps.CustomOverlay({
@@ -137,7 +205,7 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
       overlay.setMap(map);
       overlaysRef.current.push(overlay);
     });
-  }, [congestion, selectedDistrict, onSelectDistrict]);
+  }, [congestion, selectedDistrict, onSelectDistrict, districtPaths]);
 
   // 구 선택 시 그 구의 상세 스팟 마커(작은 칩)를 그린다
   useEffect(() => {
