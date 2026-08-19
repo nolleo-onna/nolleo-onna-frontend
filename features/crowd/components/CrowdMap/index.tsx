@@ -182,6 +182,17 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
       overlay.setMap(map);
       spotOverlaysRef.current.push(overlay);
     });
+
+    // 강서구·기장군처럼 넓은 구는 고정 확대 레벨로는 마커가 화면 밖에 잘리므로,
+    // 마커가 2개 이상이면 전체가 들어오게 지도 범위를 자동으로 맞춘다
+    // (1개일 때 setBounds를 쓰면 과하게 확대돼 구 레벨 뷰를 유지한다)
+    if (spotMarkers.length >= 2) {
+      const bounds = new kakao.maps.LatLngBounds();
+      spotMarkers.forEach((marker) =>
+        bounds.extend(new kakao.maps.LatLng(marker.lat, marker.lng))
+      );
+      map.setBounds(bounds, 60, 60, 60, 60);
+    }
   }, [selectedDistrict, spotMarkers]);
 
   return (
