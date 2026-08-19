@@ -10,6 +10,8 @@ import { buildCourseCongestion } from "@/features/course/utils/courseCongestion"
 import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { fetchMapPlaces } from "@/features/spot/apis/map";
+import { getDistance } from "@/features/course/data/mockCourse";
+import { formatDistance } from "@/features/course/utils/format";
 import { CATEGORIES, CATEGORY_META } from "@/features/spot/constants/categoryMap";
 
 import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
@@ -19,6 +21,8 @@ import type { MapPlace } from "@/types/map";
 interface CourseSpotPickerProps {
   /** 이미 코스에 있는 장소의 originalId 목록 (중복 추가 방지) */
   existingIds: Set<string>;
+  /** 코스 장소들의 중심 좌표 — 가까운 순 정렬 기준. 없으면 기존 정렬 유지 */
+  courseCenter?: { lat: number; lng: number };
   onAddPlace: (place: MapPlace) => void;
 }
 
@@ -39,6 +43,7 @@ function crowdSortKey(congestion: PlaceCongestion | undefined): number {
 
 export default function CourseSpotPicker({
   existingIds,
+  courseCenter,
   onAddPlace,
 }: CourseSpotPickerProps) {
   const [search, setSearch] = useState("");
@@ -71,13 +76,27 @@ export default function CourseSpotPicker({
       congestion,
     );
     return list
-      .map((place) => ({ place, congestion: congestionById.get(place.id) }))
-      .sort(
-        (a, b) =>
+      .map((place) => ({
+        place,
+        congestion: congestionById.get(place.id),
+        distanceM: courseCenter
+          ? getDistance(courseCenter, { lat: place.latitude, lng: place.longitude })
+          : null,
+      }))
+      .sort((a, b) => {
+        // 코스 중심에서 가까운 순이 1순위 — 500m 단위로 묶어서, 비슷한 거리
+        // 안에서는 여유로운 곳 → 이미지 있는 곳 순을 유지한다.
+        if (a.distanceM !== null && b.distanceM !== null) {
+          const bucketDiff =
+            Math.floor(a.distanceM / 500) - Math.floor(b.distanceM / 500);
+          if (bucketDiff !== 0) return bucketDiff;
+        }
+        return (
           crowdSortKey(a.congestion) - crowdSortKey(b.congestion) ||
-          Number(!!b.place.imageUrl) - Number(!!a.place.imageUrl),
-      );
-  }, [data, category, search, congestion]);
+          Number(!!b.place.imageUrl) - Number(!!a.place.imageUrl)
+        );
+      });
+  }, [data, category, search, congestion, courseCenter]);
 
   return (
     <aside className="flex h-[45vh] w-full shrink-0 flex-col overflow-hidden border-t border-gray-100 bg-gray-50 lg:h-auto lg:w-[340px] lg:border-t-0 lg:border-l">
@@ -87,7 +106,7 @@ export default function CourseSpotPicker({
           <h3 className="text-sm font-bold text-gray-900">코스에 장소 추가</h3>
           {hasCongestion && (
             <p className="mt-0.5 text-[11px] text-gray-400">
-              실시간 혼잡도 기준, 여유로운 곳부터 보여드려요
+              코스 근처의 여유로운 곳부터 보여드려요
             </p>
           )}
         </div>
@@ -152,7 +171,7 @@ export default function CourseSpotPicker({
             <p className="text-sm">검색 결과가 없어요</p>
           </li>
         ) : (
-          places.slice(0, 100).map(({ place, congestion: crowdInfo }) => {
+          places.slice(0, 100).map(({ place, congestion: crowdInfo, distanceM }) => {
             const meta =
               CATEGORY_META[place.category as keyof typeof CATEGORY_META] ??
               FALLBACK_CATEGORY;
@@ -187,9 +206,16 @@ export default function CourseSpotPicker({
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <p className="truncate text-[13px] font-semibold text-gray-900">
-                    {place.name}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate text-[13px] font-semibold text-gray-900">
+                      {place.name}
+                    </p>
+                    {distanceM !== null && (
+                      <span className="shrink-0 text-[10px] tabular-nums text-gray-400">
+                        {formatDistance(Math.round(distanceM))}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1">
                     <span
                       className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"

@@ -193,6 +193,15 @@ export default function CourseResultView() {
     places.map((p) => p.originalId).filter((v): v is string => !!v),
   );
 
+  // 스팟 피커 "가까운 순" 기준점 — 코스 장소들의 좌표 평균
+  const courseCenter =
+    places.length > 0
+      ? {
+          lat: places.reduce((sum, p) => sum + p.lat, 0) / places.length,
+          lng: places.reduce((sum, p) => sum + p.lng, 0) / places.length,
+        }
+      : undefined;
+
   const updateCustomization = (next: CourseCustomization) => {
     if (!pairId) return;
     setCustomization(next);
@@ -323,6 +332,7 @@ export default function CourseResultView() {
           {isEditing && (
             <CourseSpotPicker
               existingIds={existingIds}
+              courseCenter={courseCenter}
               onAddPlace={handleAddPlace}
             />
           )}
