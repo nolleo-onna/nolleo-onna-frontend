@@ -21,12 +21,19 @@ export default function SpotContainer() {
   const [modalInfo, setModalInfo] = useState<{
     id: string;
     placeType: "SPOT" | "FOOD";
-    mapPlaceId: number;
+    // null이면 마커 클릭 경로 — 렌더 시점에 placeIdMap에서 해석한다.
+    // 클릭 시점 값으로 고정하면 매핑 로딩이 끝나도 모달에 반영이 안 된다.
+    mapPlaceId: number | null;
   } | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const mapRef = useRef<kakao.maps.Map | null>(null);
-  const { data: placeIdMap } = usePlaceIdMap();
+  const { data: placeIdMap, isLoading: isPlaceIdMapLoading } = usePlaceIdMap();
+
+  const resolvedMapPlaceId =
+    modalInfo === null
+      ? null
+      : (modalInfo.mapPlaceId ?? placeIdMap?.get(modalInfo.id) ?? 0);
 
   const handleSelectSpot = (
     id: string,
@@ -94,9 +101,8 @@ export default function SpotContainer() {
           selectedId={selectedId}
           onSelectMarker={(id, placeType) => {
             setSelectedId(id);
-            // 마커 API는 mapPlaceId를 안 내려줘서 전체 장소 매핑에서 찾는다.
-            // 매핑이 아직 로드 전이거나 없는 장소면 0 → 모달에서 찜·별점 숨김
-            setModalInfo({ id, placeType, mapPlaceId: placeIdMap?.get(id) ?? 0 });
+            // 마커 API는 mapPlaceId를 안 내려줘서 렌더 시점에 매핑에서 해석한다
+            setModalInfo({ id, placeType, mapPlaceId: null });
           }}
           mapInstanceRef={mapRef}
         />
@@ -127,7 +133,12 @@ export default function SpotContainer() {
         <SpotDetailModal
           contentId={modalInfo?.id ?? null}
           placeType={modalInfo?.placeType ?? null}
-          mapPlaceId={modalInfo?.mapPlaceId ?? null}
+          mapPlaceId={resolvedMapPlaceId}
+          isMapPlaceIdLoading={
+            modalInfo !== null &&
+            modalInfo.mapPlaceId === null &&
+            isPlaceIdMapLoading
+          }
           onClose={() => setModalInfo(null)}
         />
 

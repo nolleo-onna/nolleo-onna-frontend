@@ -14,6 +14,8 @@ type Props = {
   contentId: string | null;
   placeType: "SPOT" | "FOOD" | null;
   mapPlaceId: number | null;
+  /** 마커 클릭 경로에서 mapPlaceId 매핑이 아직 로딩 중인지 — 찜·별점 자리에 스켈레톤 표시 */
+  isMapPlaceIdLoading?: boolean;
   onClose: () => void;
 };
 
@@ -124,7 +126,7 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   );
 }
 
-export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onClose }: Props) {
+export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMapPlaceIdLoading = false, onClose }: Props) {
   const { data: spotData, isPending: spotPending } = useSpotDetail(
     placeType === "SPOT" ? contentId : null
   );
@@ -208,7 +210,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
-              {favoriteId !== null && (
+              {favoriteId !== null ? (
                 <FavoriteButton
                   isFavorite={isFavorite}
                   disabled={isTogglingFavorite}
@@ -217,7 +219,9 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                   }
                   className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 z-10"
                 />
-              )}
+              ) : isMapPlaceIdLoading ? (
+                <div className="absolute top-3 right-12 w-8 h-8 rounded-full animate-shimmer z-10" />
+              ) : null}
             </div>
             <div className="p-5 flex flex-col gap-4">
               <h2 className="text-xl font-bold text-gray-900">{spotData.title}</h2>
@@ -258,7 +262,11 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                   {stripHtml(spotData.overview)}
                 </p>
               )}
-              {mapPlaceId != null && mapPlaceId > 0 && <StarRating mapPlaceId={mapPlaceId} />}
+              {mapPlaceId != null && mapPlaceId > 0 ? (
+                <StarRating mapPlaceId={mapPlaceId} />
+              ) : isMapPlaceIdLoading ? (
+                <div className="animate-shimmer h-24 rounded-xl" />
+              ) : null}
               {spotData.homepage && (
                 <a
                   href={extractUrl(spotData.homepage)}
@@ -283,14 +291,16 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
-              {favoriteId !== null && (
+              {favoriteId !== null ? (
                 <FavoriteButton
                   isFavorite={isFavorite}
                   disabled={isTogglingFavorite}
                   onToggle={() => handleToggleFavorite(foodData.name, null)}
                   className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60"
                 />
-              )}
+              ) : isMapPlaceIdLoading ? (
+                <div className="absolute top-3 right-12 w-8 h-8 rounded-full animate-shimmer" />
+              ) : null}
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
                 🍽️
               </div>
@@ -355,7 +365,11 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
                   ))}
                 </div>
               )}
-              {mapPlaceId && <StarRating mapPlaceId={mapPlaceId} />}
+              {mapPlaceId != null && mapPlaceId > 0 ? (
+                <StarRating mapPlaceId={mapPlaceId} />
+              ) : isMapPlaceIdLoading ? (
+                <div className="animate-shimmer h-24 rounded-xl" />
+              ) : null}
             </div>
           </>
         ) : (
