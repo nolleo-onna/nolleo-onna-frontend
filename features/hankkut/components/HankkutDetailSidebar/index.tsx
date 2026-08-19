@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import SaveToggleButton from "@/features/hankkut/components/HankkutDetailSidebar/SaveToggleButton";
-import ShareButton from "@/features/hankkut/components/HankkutDetailSidebar/ShareButton";
+import ShareButton from "@/components/ui/ShareButton";
 import type { HankkutDetail } from "@/features/hankkut/data/hankkutDetail";
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
 
@@ -23,7 +23,7 @@ export default function HankkutDetailSidebar({
         <h2 className="text-sm font-bold text-navy-900">이 한끗 저장하기</h2>
         <div className="mt-3 space-y-2">
           <SaveToggleButton id={hankkut.id} />
-          <ShareButton title={hankkut.title} />
+          <ShareButton title={hankkut.title} className="w-full" />
         </div>
       </section>
 

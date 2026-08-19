@@ -7,11 +7,13 @@ import {
   ChevronUp,
   Footprints,
   GripVertical,
+  Navigation,
   Pencil,
   RotateCcw,
   X,
 } from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
+import ShareButton from "@/components/ui/ShareButton";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 
@@ -179,6 +181,21 @@ function PlaceTimelineItem({
           </div>
         </button>
 
+        {/* 길찾기 (편집 모드가 아닐 때만 — 그 자리는 편집 컨트롤이 씀) */}
+        {!isEditing && (
+          <a
+            href={`https://map.kakao.com/link/to/${encodeURIComponent(place.name)},${place.lat},${place.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`${place.name} 카카오맵 길찾기`}
+            title="카카오맵 길찾기"
+            className="mb-1 flex shrink-0 items-center self-start rounded-md p-1.5 text-gray-300 transition-colors hover:bg-ocean-50 hover:text-ocean-600"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+          </a>
+        )}
+
         {/* 편집 컨트롤 */}
         {isEditing && (
           <div className="mb-1 flex shrink-0 flex-col items-center justify-center gap-0.5">
@@ -249,9 +266,12 @@ export default function CourseSidebar({
       <div className="p-4 lg:p-5">
         {/* 헤더 */}
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
-            부산 여행 코스
-          </p>
+          <div className="flex items-center gap-1">
+            <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
+              부산 여행 코스
+            </p>
+            <ShareButton title={course.title} variant="icon" />
+          </div>
           {onToggleEdit && (
             <div className="flex items-center gap-1.5">
               {hasCustomization && (
