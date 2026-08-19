@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code 에이전트 워크트리 사본 — 여기까지 lint하면 경고/에러가 사본 수만큼 중복된다.
+    ".claude/worktrees/**",
   ]),
   ...storybook.configs["flat/recommended"]
 ]);
