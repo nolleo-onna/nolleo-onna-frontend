@@ -8,6 +8,9 @@ import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
+// 부산 전체 뷰(스팟 페이지와 동일)와 구 선택 시 확대 레벨
+const DEFAULT_LEVEL = 8;
+const DISTRICT_LEVEL = 6;
 
 interface CrowdMapProps {
   selectedDistrict: string | null;
@@ -29,7 +32,7 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict }: CrowdMa
       kakao.maps.load(() => {
         const map = new kakao.maps.Map(mapRef.current!, {
           center: new kakao.maps.LatLng(BUSAN_CENTER.lat, BUSAN_CENTER.lng),
-          level: 9,
+          level: DEFAULT_LEVEL,
         });
         mapInstanceRef.current = map;
       });
@@ -67,6 +70,21 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict }: CrowdMa
       attachedScript?.removeEventListener("load", initMap);
     };
   }, []);
+
+  // 구를 선택하면 그 구 중심으로 확대하고, 선택을 해제하면 부산 전체 뷰로 복귀
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    if (selectedDistrict) {
+      const coords = DISTRICT_COORDS[selectedDistrict];
+      if (!coords) return;
+      map.setLevel(DISTRICT_LEVEL);
+      map.panTo(new kakao.maps.LatLng(coords.lat, coords.lng));
+    } else {
+      map.setLevel(DEFAULT_LEVEL);
+      map.panTo(new kakao.maps.LatLng(BUSAN_CENTER.lat, BUSAN_CENTER.lng));
+    }
+  }, [selectedDistrict]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
