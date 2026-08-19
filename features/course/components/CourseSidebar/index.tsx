@@ -7,11 +7,17 @@ import {
   ChevronUp,
   Footprints,
   GripVertical,
+  Leaf,
   Pencil,
   RotateCcw,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
+import CrowdBadge from "@/features/course/components/CrowdBadge";
+import { useCourseCongestion } from "@/features/course/hooks/useCourseCongestion";
+import { summarizeCourseCongestion } from "@/features/course/utils/courseCongestion";
+import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 
@@ -60,6 +66,8 @@ interface PlaceTimelineItemProps {
   isEditing: boolean;
   placesCount: number;
   nextDistance?: number;
+  /** 현재 혼잡도. 매칭 실패(null)면 배지를 그리지 않는다 */
+  congestion: PlaceCongestion | null;
   onSelectPlace: (place: CoursePlace) => void;
   onMovePlace?: (id: number, direction: -1 | 1) => void;
   onRemovePlace?: (id: number) => void;
@@ -77,6 +85,7 @@ function PlaceTimelineItem({
   isEditing,
   placesCount,
   nextDistance,
+  congestion,
   onSelectPlace,
   onMovePlace,
   onRemovePlace,
@@ -152,13 +161,16 @@ function PlaceTimelineItem({
               : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
           } ${cardDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
-          <p
-            className={`mb-0.5 truncate text-[14px] font-semibold ${
-              isSelected ? "text-ocean-900" : "text-gray-800"
-            }`}
-          >
-            {place.name}
-          </p>
+          <div className="mb-0.5 flex items-center gap-1.5">
+            <p
+              className={`min-w-0 truncate text-[14px] font-semibold ${
+                isSelected ? "text-ocean-900" : "text-gray-800"
+              }`}
+            >
+              {place.name}
+            </p>
+            {congestion && <CrowdBadge congestion={congestion} />}
+          </div>
           <div className="flex items-center gap-1.5">
             <span
               className={`text-[11px] ${
@@ -244,6 +256,13 @@ export default function CourseSidebar({
   );
   const totalCost = places.reduce((sum, p) => sum + (p.expectedCost ?? 0), 0);
 
+  // 장소별 현재 혼잡도 — 이름 매칭 → 좌표 기반 구 폴백. 실패한 장소는 null(배지 생략)
+  const { getPlaceCongestion } = useCourseCongestion();
+  const placeCongestions = places.map((p) =>
+    getPlaceCongestion({ name: p.name, lat: p.lat, lng: p.lng })
+  );
+  const { knownCount, crowdedCount } = summarizeCourseCongestion(placeCongestions);
+
   return (
     <aside className="min-h-0 w-full flex-1 overflow-y-auto border-t border-gray-100 bg-white lg:w-[340px] lg:flex-none lg:border-t-0 lg:border-r">
       <div className="p-4 lg:p-5">
@@ -321,6 +340,26 @@ export default function CourseSidebar({
           </div>
         )}
 
+        {/* 혼잡도 요약 — 혼잡도를 아는 장소가 하나도 없으면 배너 자체를 생략 */}
+        {knownCount > 0 &&
+          (crowdedCount > 0 ? (
+            <div className="mb-4 flex items-start gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3.5 py-3 lg:mb-5">
+              <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-500" />
+              <p className="text-[12px] leading-relaxed text-orange-700">
+                이 코스에 지금 혼잡한 곳이{" "}
+                <span className="font-bold">{crowdedCount}곳</span> 있어요. 방문
+                시간을 조절하거나 여유로운 곳으로 바꿔보세요.
+              </p>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-3 lg:mb-5">
+              <Leaf className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+              <p className="text-[12px] leading-relaxed text-emerald-700">
+                지금은 붐비는 곳 없이 여유롭게 다닐 수 있어요.
+              </p>
+            </div>
+          ))}
+
         {/* 타임라인 — 편집 모드에서는 드래그(잡고 끌기)로도 순서를 바꿀 수 있다 */}
         <Reorder.Group
           as="ol"
@@ -341,6 +380,7 @@ export default function CourseSidebar({
               isEditing={isEditing}
               placesCount={places.length}
               nextDistance={places[i + 1]?.distanceFromPrevM}
+              congestion={placeCongestions[i] ?? null}
               onSelectPlace={onSelectPlace}
               onMovePlace={onMovePlace}
               onRemovePlace={onRemovePlace}

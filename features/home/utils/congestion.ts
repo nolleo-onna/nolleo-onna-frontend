@@ -37,7 +37,11 @@ type RawAttraction = {
   signguNm?: string;
 };
 
-function normalizeAttractions(data: Congestion[]): CongestionSpot[] {
+/**
+ * 구별로 중첩된 혼잡도 응답을 관광지 단위 목록으로 평탄화.
+ * (홈 카드뿐 아니라 코스 혼잡도 매칭에서도 재사용)
+ */
+export function flattenCongestionSpots(data: Congestion[]): CongestionSpot[] {
   return data.flatMap((item) => {
     const d = item as RawDistrict;
     const districtName =
@@ -58,14 +62,14 @@ function normalizeAttractions(data: Congestion[]): CongestionSpot[] {
 
 /** 집중률 높은 순 상위 n개 (붐빌 곳) */
 export function getTopCongested(data: Congestion[], n = 4): CongestionSpot[] {
-  return [...normalizeAttractions(data)]
+  return [...flattenCongestionSpots(data)]
     .sort((a, b) => b.rate - a.rate)
     .slice(0, n);
 }
 
 /** 집중률 낮은 순 하위 n개 (여유로운 곳) */
 export function getLeastCongested(data: Congestion[], n = 4): CongestionSpot[] {
-  return [...normalizeAttractions(data)]
+  return [...flattenCongestionSpots(data)]
     .sort((a, b) => a.rate - b.rate)
     .slice(0, n);
 }

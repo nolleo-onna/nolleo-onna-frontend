@@ -6,8 +6,13 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Plus, Search } from "lucide-react";
 
+import CrowdBadge from "@/features/course/components/CrowdBadge";
+import { useCourseCongestion } from "@/features/course/hooks/useCourseCongestion";
 import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { CATEGORIES, CATEGORY_META } from "@/features/spot/constants/categoryMap";
+
+import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
+import type { CrowdLevel } from "@/types/crowd";
 import type { MapPlace } from "@/types/map";
 
 interface CourseSpotPickerProps {
@@ -17,6 +22,18 @@ interface CourseSpotPickerProps {
 }
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
+
+// 여유로운 곳 우선 정렬용 순서 — 혼잡도를 모르는 스팟(2)은 보통과 혼잡 사이에 둔다
+const CROWD_SORT_ORDER: Record<CrowdLevel, number> = {
+  여유: 0,
+  보통: 1,
+  혼잡: 3,
+  매우혼잡: 4,
+};
+
+function crowdSortKey(congestion: PlaceCongestion | null): number {
+  return congestion ? CROWD_SORT_ORDER[congestion.level] : 2;
+}
 
 export default function CourseSpotPicker({
   existingIds,
@@ -33,6 +50,10 @@ export default function CourseSpotPicker({
     staleTime: 1000 * 60 * 5,
   });
 
+  const { getPlaceCongestion, isReady } = useCourseCongestion();
+
+  // 장소별 혼잡도를 붙여서 여유로운 곳부터 정렬(혼잡은 뒤로),
+  // 같은 등급 안에서는 기존처럼 이미지 있는 스팟을 먼저 보여준다.
   const places = useMemo(() => {
     let list = data?.content ?? [];
     if (category !== "ALL") list = list.filter((p) => p.category === category);
@@ -41,14 +62,35 @@ export default function CourseSpotPicker({
         p.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
-    return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
-  }, [data, category, search]);
+    return list
+      .map((place) => ({
+        place,
+        congestion: getPlaceCongestion({
+          name: place.name,
+          district: place.district,
+          lat: place.latitude,
+          lng: place.longitude,
+        }),
+      }))
+      .sort(
+        (a, b) =>
+          crowdSortKey(a.congestion) - crowdSortKey(b.congestion) ||
+          Number(!!b.place.imageUrl) - Number(!!a.place.imageUrl),
+      );
+  }, [data, category, search, getPlaceCongestion]);
 
   return (
     <aside className="flex h-[45vh] w-full shrink-0 flex-col overflow-hidden border-t border-gray-100 bg-gray-50 lg:h-auto lg:w-[340px] lg:border-t-0 lg:border-l">
       {/* 헤더 + 검색 */}
       <div className="border-b border-gray-100 bg-white px-4 pt-4 pb-3">
-        <h3 className="mb-3 text-sm font-bold text-gray-900">코스에 장소 추가</h3>
+        <div className="mb-3">
+          <h3 className="text-sm font-bold text-gray-900">코스에 장소 추가</h3>
+          {isReady && (
+            <p className="mt-0.5 text-[11px] text-gray-400">
+              실시간 혼잡도 기준, 여유로운 곳부터 보여드려요
+            </p>
+          )}
+        </div>
         <div className="relative">
           <Search
             size={14}
@@ -110,7 +152,7 @@ export default function CourseSpotPicker({
             <p className="text-sm">검색 결과가 없어요</p>
           </li>
         ) : (
-          places.slice(0, 100).map((place) => {
+          places.slice(0, 100).map(({ place, congestion }) => {
             const meta =
               CATEGORY_META[place.category as keyof typeof CATEGORY_META] ??
               FALLBACK_CATEGORY;
@@ -148,15 +190,18 @@ export default function CourseSpotPicker({
                   <p className="truncate text-[13px] font-semibold text-gray-900">
                     {place.name}
                   </p>
-                  <span
-                    className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      backgroundColor: `${meta.color}1A`,
-                      color: meta.color,
-                    }}
-                  >
-                    {meta.label}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        backgroundColor: `${meta.color}1A`,
+                        color: meta.color,
+                      }}
+                    >
+                      {meta.label}
+                    </span>
+                    {congestion && <CrowdBadge congestion={congestion} />}
+                  </div>
                   <span className="text-[11px] text-gray-400">
                     {place.free || !place.minPrice
                       ? "무료"

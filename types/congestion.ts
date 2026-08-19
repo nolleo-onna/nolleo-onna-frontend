@@ -16,7 +16,7 @@ export interface Congestion {
 /**
  * 구 내 관광지별 집중률.
  * ※ 백엔드 실제 필드명이 다르면 features/home/utils/congestion.ts 의
- *    normalizeAttractions 매핑만 수정하면 됩니다.
+ *    flattenCongestionSpots 매핑만 수정하면 됩니다.
  */
 export interface CongestionAttraction {
   /** 관광지명 */

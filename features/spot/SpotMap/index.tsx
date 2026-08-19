@@ -7,6 +7,7 @@ import type { MapMarker } from "@/types/spot";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
+import { nearestDistrict } from "@/features/spot/utils/nearestDistrict";
 
 const FOOD_COLOR = CATEGORY_META.FD.color;
 const FOOD_EMOJI = CATEGORY_META.FD.emoji;
@@ -39,26 +40,11 @@ const DISTRICT_VIEW_MIN_LEVEL = 7;
 
 // 마커에는 구 정보가 없어서(위경도만 있음), 가장 가까운 구 중심좌표로
 // 대략 묶는다 — 행정구역 경계까지 정확할 필요 없이 "대충 어느 구"만 맞으면
-// 되는 개요용 집계라 이 정도 근사로 충분하다.
-function nearestDistrict(spot: MapMarker): string {
-  let best = "";
-  let bestDistSq = Infinity;
-  for (const [district, coords] of Object.entries(DISTRICT_COORDS)) {
-    const dy = coords.lat - spot.mapY;
-    const dx = coords.lng - spot.mapX;
-    const distSq = dx * dx + dy * dy;
-    if (distSq < bestDistSq) {
-      bestDistSq = distSq;
-      best = district;
-    }
-  }
-  return best;
-}
-
+// 되는 개요용 집계라 이 정도 근사로 충분하다. (공용 nearestDistrict 유틸 사용)
 function groupByDistrict(spots: MapMarker[]): Map<string, number> {
   const counts = new Map<string, number>();
   spots.forEach((spot) => {
-    const district = nearestDistrict(spot);
+    const district = nearestDistrict(spot.mapY, spot.mapX);
     counts.set(district, (counts.get(district) ?? 0) + 1);
   });
   return counts;
@@ -243,7 +229,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.15)"; });
     el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
     el.addEventListener("click", () => {
-      showStatus(`${nearestDistrict(spot).replace("구", "").replace("군", "")} ${spot.title}`);
+      showStatus(`${nearestDistrict(spot.mapY, spot.mapX).replace("구", "").replace("군", "")} ${spot.title}`);
       onSelectMarker(spot.id, spot.type);
     });
 

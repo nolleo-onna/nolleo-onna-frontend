@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X, MapPin, Star } from "lucide-react";
 import Image from "next/image";
+import CrowdBadge from "@/features/course/components/CrowdBadge";
+import { useCourseCongestion } from "@/features/course/hooks/useCourseCongestion";
 import type { CoursePlace } from "@/features/course/data/mockCourse";
 
 type Props = {
@@ -20,6 +22,12 @@ const CATEGORY_COLOR: Record<CoursePlace["category"], string> = {
 };
 
 export default function CoursePlaceModal({ place, onClose }: Props) {
+  // 현재 혼잡도 — 매칭 실패 시 null이면 해당 줄을 통째로 생략한다
+  const { getPlaceCongestion } = useCourseCongestion();
+  const congestion = place
+    ? getPlaceCongestion({ name: place.name, lat: place.lat, lng: place.lng })
+    : null;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -87,6 +95,18 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
             <span className="text-sm font-semibold text-gray-800">{place.rating}</span>
             <span className="text-xs text-gray-400">({place.reviewCount.toLocaleString()})</span>
           </div>
+
+          {/* 실시간 혼잡도 */}
+          {congestion && (
+            <div className="flex items-center gap-1.5">
+              <CrowdBadge congestion={congestion} />
+              <span className="text-xs text-gray-500">
+                {congestion.source === "district"
+                  ? `${congestion.district} 일대 실시간 집중률 ${Math.round(congestion.rate)}%`
+                  : `실시간 집중률 ${Math.round(congestion.rate)}%`}
+              </span>
+            </div>
+          )}
 
           {/* 설명 */}
           <p className="text-sm text-gray-600 leading-relaxed">
