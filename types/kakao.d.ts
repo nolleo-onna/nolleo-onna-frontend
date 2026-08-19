@@ -58,14 +58,34 @@ declare global {
       setMap(map: Map | null): void;
     }
 
+    class Polygon {
+      constructor(options: {
+        /** 단일 링(LatLng[]) 또는 멀티폴리곤(LatLng[][] — 섬이 있는 구) */
+        path: LatLng[] | LatLng[][];
+        strokeWeight?: number;
+        strokeColor?: string;
+        strokeOpacity?: number;
+        strokeStyle?: string;
+        fillColor?: string;
+        fillOpacity?: number;
+        zIndex?: number;
+      });
+      setMap(map: Map | null): void;
+      setOptions(options: {
+        strokeWeight?: number;
+        strokeOpacity?: number;
+        fillOpacity?: number;
+      }): void;
+    }
+
     namespace event {
       function addListener(
-        target: Map,
+        target: Map | Polygon,
         type: string,
         handler: () => void
       ): void;
       function removeListener(
-        target: Map,
+        target: Map | Polygon,
         type: string,
         handler: () => void
       ): void;
