@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { List, X } from "lucide-react";
+import { CalendarClock, List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
-import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { getCrowdLevel, CROWD_STYLE, formatBaseYmd } from "@/features/crowd/utils/crowdUtils";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import DistrictPanel from "@/features/crowd/components/DistrictPanel";
 import type { CrowdLevel } from "@/types/crowd";
@@ -51,6 +51,9 @@ export default function CrowdView() {
     [data, selectedDistrict],
   );
 
+  // 모든 구가 같은 기준 일자를 공유하므로 첫 항목 것을 쓴다
+  const baseDate = data?.[0]?.baseYmd ? formatBaseYmd(data[0].baseYmd) : null;
+
   return (
     <div className="relative flex h-screen pt-16">
       {/* 모바일 목록 열림 시 배경 딤 처리 */}
@@ -80,6 +83,12 @@ export default function CrowdView() {
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-xs font-semibold text-ocean-600">오늘 붐빌 곳</span>
           <h1 className="text-lg font-bold text-gray-900 mt-1">오늘 혼잡도 지도</h1>
+          {baseDate && (
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400">
+              <CalendarClock className="h-3 w-3" />
+              {baseDate} 기준 · 하루 단위로 갱신돼요
+            </p>
+          )}
         </div>
 
         {/* 검색 */}
@@ -170,6 +179,16 @@ export default function CrowdView() {
             spots={districtSpots}
             onClose={() => setSelectedDistrict(null)}
           />
+        </div>
+      )}
+
+      {/* 모바일에서는 사이드바가 숨겨져 기준 일자를 못 보니 지도 위 칩으로 표시 */}
+      {baseDate && (
+        <div className="pointer-events-none absolute left-3 top-20 z-20 lg:hidden">
+          <span className="flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm backdrop-blur-sm">
+            <CalendarClock className="h-3 w-3" />
+            {baseDate} 기준
+          </span>
         </div>
       )}
 
