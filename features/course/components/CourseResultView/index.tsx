@@ -12,6 +12,7 @@ import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
 import { loadCourseBudget } from "@/features/course/utils/budgetStorage";
 import CourseSpotPicker from "@/features/course/components/CourseSpotPicker";
+import CourseShareButton from "@/features/course/components/CourseShareButton";
 import {
   type AddedCoursePlace,
   type CourseCustomization,
@@ -301,6 +302,13 @@ export default function CourseResultView() {
               selectedPlaceId={resolvedPlaceId}
               onSelectPlace={handleSelectPlace}
             />
+            {pairId && (
+              <CourseShareButton
+                pairId={pairId}
+                title={course.title}
+                className="absolute right-3 top-3 z-10"
+              />
+            )}
             {selectedPlace && (
               <CoursePlaceDetail
                 course={course}

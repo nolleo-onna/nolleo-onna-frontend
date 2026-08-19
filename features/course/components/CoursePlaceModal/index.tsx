@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X, MapPin, Star } from "lucide-react";
 import Image from "next/image";
+import KakaoDirectionsLink from "@/features/course/components/KakaoDirectionsLink";
 import type { CoursePlace } from "@/features/course/data/mockCourse";
 
 type Props = {
@@ -86,6 +87,12 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm font-semibold text-gray-800">{place.rating}</span>
             <span className="text-xs text-gray-400">({place.reviewCount.toLocaleString()})</span>
+            <KakaoDirectionsLink
+              name={place.name}
+              lat={place.lat}
+              lng={place.lng}
+              className="ml-auto"
+            />
           </div>
 
           {/* 설명 */}

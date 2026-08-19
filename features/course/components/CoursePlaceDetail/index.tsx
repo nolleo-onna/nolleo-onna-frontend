@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Wallet, Footprints, ArrowRight, ImageIcon } from "lucide-react";
+import KakaoDirectionsLink from "@/features/course/components/KakaoDirectionsLink";
 import { useSpotDescription } from "@/features/course/hooks/useSpotDescription";
 import { formatDistance } from "@/features/course/utils/format";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
@@ -114,6 +115,13 @@ export default function CoursePlaceDetail({
           </div>
         </div>
       </button>
+      {/* 카드 전체가 버튼이라 길찾기 링크는 형제 요소로 우상단에 겹쳐 배치 */}
+      <KakaoDirectionsLink
+        name={place.name}
+        lat={place.lat}
+        lng={place.lng}
+        className="absolute right-3 top-3 lg:right-4 lg:top-4"
+      />
     </div>
   );
 }
