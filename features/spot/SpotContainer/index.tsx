@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { SlidersHorizontal, List, X } from "lucide-react";
 import SpotFilterSidebar from "../SpotFilterSidebar";
@@ -49,6 +49,24 @@ export default function SpotContainer() {
       mapRef.current.setLevel(4);
     }
   };
+
+  // 오른쪽 사이드바 검색 결과 위치들로 지도 화면을 맞춘다.
+  // 사이드바 effect의 의존성으로 들어가므로 참조가 안정적이어야 한다(useCallback).
+  const handleSearchResults = useCallback(
+    (coords: { lat: number; lng: number }[]) => {
+      const map = mapRef.current;
+      if (!map || coords.length === 0) return;
+      if (coords.length === 1) {
+        map.setLevel(4);
+        map.panTo(new kakao.maps.LatLng(coords[0].lat, coords[0].lng));
+        return;
+      }
+      const bounds = new kakao.maps.LatLngBounds();
+      coords.forEach((c) => bounds.extend(new kakao.maps.LatLng(c.lat, c.lng)));
+      map.setBounds(bounds, 60, 60, 60, 60);
+    },
+    [],
+  );
 
   const handleSelectRegion = (region: string | null) => {
     setIsFilterOpen(false);
@@ -127,6 +145,7 @@ export default function SpotContainer() {
               setIsListOpen(false);
               handleSelectSpot(...args);
             }}
+            onSearchResults={handleSearchResults}
           />
         </div>
 

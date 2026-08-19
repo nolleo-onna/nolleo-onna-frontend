@@ -20,11 +20,13 @@ interface SpotListSidebarProps {
     placeType: "SPOT" | "FOOD",
     mapPlaceId: number
   ) => void;
+  /** 검색 결과 위치 목록 — 지도 화면 맞추기용. 검색어가 비면 호출하지 않는다 */
+  onSearchResults?: (coords: { lat: number; lng: number }[]) => void;
 }
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
 
-export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSidebarProps) {
+export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResults }: SpotListSidebarProps) {
   const selectedRef = useRef<HTMLLIElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
@@ -51,6 +53,18 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
     // 뒤로 밀어낸다. 정렬은 안정적이라 같은 그룹 안의 원래 순서는 유지된다.
     return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
   }, [allPlaces, search]);
+
+  // 검색 결과가 바뀌면(타이핑 멈춘 뒤) 지도가 결과 위치로 이동하도록 좌표를 올려보낸다.
+  // 검색어를 지웠을 때는 지도를 건드리지 않는다(사용자가 보던 화면 유지).
+  useEffect(() => {
+    if (!onSearchResults || !search.trim() || places.length === 0) return;
+    const timeout = setTimeout(() => {
+      onSearchResults(
+        places.slice(0, 60).map((p) => ({ lat: p.latitude, lng: p.longitude })),
+      );
+    }, 450);
+    return () => clearTimeout(timeout);
+  }, [search, places, onSearchResults]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
