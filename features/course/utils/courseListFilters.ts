@@ -60,3 +60,29 @@ export function applyCourseListControls(
       );
   }
 }
+
+/** 한 페이지에 보여줄 코스 카드 수 */
+export const COURSE_PAGE_SIZE = 9;
+
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, "").toLowerCase();
+}
+
+/**
+ * 검색어로 코스를 거른다 — 제목·설명·담긴 장소 이름까지 대조해서
+ * "광안리"처럼 장소로 검색해도 그 장소가 든 코스가 잡히게 한다.
+ * 공백은 무시한다("광안리 카페" = "광안리카페").
+ */
+export function filterCoursesBySearch(
+  courses: MyCourseSummary[],
+  search: string,
+): MyCourseSummary[] {
+  const term = normalizeText(search);
+  if (!term) return courses;
+  return courses.filter((course) => {
+    const haystack = normalizeText(
+      [course.title, course.description ?? "", ...(course.spotTitles ?? [])].join(" "),
+    );
+    return haystack.includes(term);
+  });
+}
