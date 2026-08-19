@@ -9,7 +9,13 @@ import { useMapPlaces } from "../hooks/useMapPlaces";
 import { useFavoriteIds, useToggleFavorite } from "../hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
-import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
+import {
+  SEARCH_SUGGESTIONS,
+  filterPlaces,
+  getMapCoords,
+  parseSearch,
+  suggestPlaceName,
+} from "@/features/spot/utils/spotSearch";
 import type { MapPlace } from "@/types/map";
 
 interface SpotListSidebarProps {
@@ -27,16 +33,23 @@ interface SpotListSidebarProps {
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
 
-// "남구", "해운대", "해운대구"처럼 입력해도 구 이름으로 인식되게 한다.
-function matchDistrict(search: string): string | null {
-  const trimmed = search.trim();
-  if (trimmed.length < 2) return null;
-  for (const district of Object.keys(DISTRICT_COORDS)) {
-    if (district === trimmed) return district;
-    // 접미사(구/군) 없이 입력한 경우: "해운대" → "해운대구"
-    if (district.replace(/[구군]$/, "") === trimmed) return district;
+// 검색어와 일치한 부분을 강조해서 보여준다 (공백 차이 등으로 위치를 못 찾으면 그냥 이름만)
+function HighlightedName({ name, term, className }: { name: string; term: string | null; className: string }) {
+  if (term) {
+    const index = name.toLowerCase().indexOf(term.toLowerCase());
+    if (index >= 0) {
+      return (
+        <p className={className}>
+          {name.slice(0, index)}
+          <mark className="rounded-sm bg-lime-200/70 px-0.5 text-inherit">
+            {name.slice(index, index + term.length)}
+          </mark>
+          {name.slice(index + term.length)}
+        </p>
+      );
+    }
   }
-  return null;
+  return <p className={className}>{name}</p>;
 }
 
 export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResults }: SpotListSidebarProps) {
@@ -55,42 +68,27 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
     return data?.pages.flatMap((page) => page.content) ?? [];
   }, [data]);
 
-  const searchedDistrict = useMemo(() => matchDistrict(search), [search]);
+  // 지역(구/동네)·카테고리·무료·이름/초성을 한 번에 해석하는 검색 파이프라인
+  const parsed = useMemo(() => parseSearch(search), [search]);
 
   const places = useMemo(() => {
-    let list = allPlaces;
-    if (searchedDistrict) {
-      // 구 이름 검색: 그 구의 장소들을 보여준다
-      list = list.filter((p) => p.district === searchedDistrict);
-    } else if (search.trim()) {
-      list = list.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+    const list = filterPlaces(allPlaces, parsed);
     // 이미지 없는 항목(FOOD는 항상 이미지가 없음)이 먼저 보이면 밋밋해 보여서
     // 뒤로 밀어낸다. 정렬은 안정적이라 같은 그룹 안의 원래 순서는 유지된다.
     return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
-  }, [allPlaces, search, searchedDistrict]);
+  }, [allPlaces, parsed]);
 
   // 검색 결과가 바뀌면(타이핑 멈춘 뒤) 지도가 결과 위치로 이동하도록 좌표를 올려보낸다.
   // 검색어를 지웠을 때는 지도를 건드리지 않는다(사용자가 보던 화면 유지).
   useEffect(() => {
     if (!onSearchResults || !search.trim()) return;
     const timeout = setTimeout(() => {
-      // 구 이름 검색이면 결과 좌표를 감싸는 대신 구 중심으로 확대 이동한다
-      // (외곽 스팟 하나 때문에 화면이 넓게 퍼지는 걸 막기 위해).
-      if (searchedDistrict) {
-        const coords = DISTRICT_COORDS[searchedDistrict];
-        if (coords) onSearchResults([coords]);
-        return;
-      }
-      if (places.length === 0) return;
-      onSearchResults(
-        places.slice(0, 60).map((p) => ({ lat: p.latitude, lng: p.longitude })),
-      );
+      // 동네·구 검색은 중심 한 점으로 확대 이동, 그 외에는 결과 전체가 화면에 들어오게
+      const coords = getMapCoords(parsed, places);
+      if (coords.length > 0) onSearchResults(coords);
     }, 450);
     return () => clearTimeout(timeout);
-  }, [search, searchedDistrict, places, onSearchResults]);
+  }, [search, parsed, places, onSearchResults]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -164,6 +162,19 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
             </button>
           )}
         </div>
+        {!search && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {SEARCH_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => setSearch(suggestion)}
+                className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] text-gray-500 transition-colors hover:border-ocean-300 hover:text-ocean-600"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <ul className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
@@ -171,6 +182,17 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
           <li className="flex flex-col items-center justify-center py-16 text-gray-400">
             <span className="text-3xl mb-2">🔍</span>
             <p className="text-sm">검색 결과가 없어요</p>
+            {(() => {
+              const suggestion = suggestPlaceName(search);
+              return suggestion ? (
+                <button
+                  onClick={() => setSearch(suggestion)}
+                  className="mt-2 text-xs font-semibold text-ocean-600 underline underline-offset-2 hover:text-ocean-700"
+                >
+                  혹시 &quot;{suggestion}&quot; 찾으세요?
+                </button>
+              ) : null;
+            })()}
           </li>
         ) : (
           <>
@@ -225,9 +247,11 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
-                    <p className={`truncate text-sm font-semibold ${isSelected ? "text-navy-600" : "text-gray-900"}`}>
-                      {place.name}
-                    </p>
+                    <HighlightedName
+                      name={place.name}
+                      term={parsed.nameTerms[0] ?? null}
+                      className={`truncate text-sm font-semibold ${isSelected ? "text-navy-600" : "text-gray-900"}`}
+                    />
                     <span
                       className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
                       style={{ backgroundColor: `${category.color}1A`, color: category.color }}
