@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { X, MapPin, Phone, Clock, ParkingSquare, ExternalLink } from "lucide-react";
+import { X, MapPin, Phone, Clock, ParkingSquare, ExternalLink, CalendarX } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
@@ -26,6 +26,29 @@ const extractUrl = (homepage: string) => {
 
 const stripHtml = (html: string) =>
   html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+
+// 헤더 이미지 위에 겹치는 반투명 유리 버튼 스타일
+const GLASS_BUTTON =
+  "flex items-center justify-center rounded-full bg-white/15 text-white border border-white/25 backdrop-blur-md transition-colors hover:bg-white/35";
+
+function InfoRow({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ocean-50 text-ocean-500">
+        {icon}
+      </span>
+      <span className="min-w-0 pt-1.5 text-sm leading-relaxed text-gray-600">
+        {children}
+      </span>
+    </div>
+  );
+}
 
 function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   const storageKey = `rating_${mapPlaceId}`;
@@ -65,7 +88,7 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl">
+    <div className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-4">
       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">내 별점</span>
 
       {submitted && !editing ? (
@@ -107,14 +130,14 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
             <button
               onClick={handleSubmit}
               disabled={selected === 0 || isPending}
-              className="flex-1 py-2 rounded-lg bg-navy-400 text-white text-sm font-semibold disabled:opacity-40 hover:bg-navy-500 transition-colors"
+              className="flex-1 rounded-xl bg-navy-900 py-2.5 text-sm font-semibold text-lime-300 transition-transform active:scale-[0.98] disabled:opacity-40"
             >
               {isPending ? "저장 중..." : "등록"}
             </button>
             {editing && (
               <button
                 onClick={handleCancel}
-                className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-500 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-500 transition-colors hover:bg-gray-100"
               >
                 취소
               </button>
@@ -167,7 +190,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
       {contentId && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/40 z-40"
+            className="fixed inset-0 z-40 bg-navy-900/45 backdrop-blur-[2px]"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -175,7 +198,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
             transition={{ duration: 0.2, ease: "easeOut" }}
           />
           <motion.div
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-xl"
+            className="scrollbar-hide fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[28px] bg-white shadow-[0_32px_80px_-16px_rgba(13,48,128,0.45)]"
             role="dialog"
             aria-modal="true"
             aria-label="장소 상세 정보"
@@ -185,30 +208,36 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
           >
         {isPending ? (
-          <div className="flex items-center justify-center h-60">
-            <span className="text-sm text-gray-400">불러오는 중...</span>
+          <div className="flex flex-col">
+            <div className="animate-shimmer h-64 w-full" />
+            <div className="flex flex-col gap-3 p-6">
+              <div className="animate-shimmer h-6 w-2/3 rounded-lg" />
+              <div className="animate-shimmer h-4 w-full rounded-lg" />
+              <div className="animate-shimmer h-4 w-5/6 rounded-lg" />
+              <div className="animate-shimmer h-12 w-full rounded-2xl" />
+            </div>
           </div>
         ) : placeType === "SPOT" && spotData ? (
           <>
-            <div className="relative h-56 bg-gray-100">
+            {/* 히어로 이미지 — 제목·주소를 이미지 위에 겹쳐 잡지 표지처럼 */}
+            <div className="relative h-64 bg-gray-100">
               {spotData.firstImage ? (
                 <Image
                   src={spotData.firstImage}
                   alt={spotData.title}
                   fill
                   sizes="(max-width: 512px) 100vw, 512px"
-                  className="object-cover rounded-t-2xl"
+                  className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">
-                  이미지 없음
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ocean-500 to-navy-600 text-5xl">
+                  🌊
                 </div>
               )}
-              <button
-                onClick={onClose}
-                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition z-10"
-              >
-                <X className="w-4 h-4" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/10" />
+
+              <button onClick={onClose} aria-label="닫기" className={`absolute right-4 top-4 z-10 h-9 w-9 ${GLASS_BUTTON}`}>
+                <X className="h-4 w-4" />
               </button>
               {favoriteId !== null ? (
                 <FavoriteButton
@@ -217,64 +246,73 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
                   onToggle={() =>
                     handleToggleFavorite(spotData.title, spotData.firstImage ?? null)
                   }
-                  className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 z-10"
+                  className={`absolute right-[60px] top-4 z-10 h-9 w-9 ${GLASS_BUTTON}`}
                 />
               ) : isMapPlaceIdLoading ? (
-                <div className="absolute top-3 right-12 w-8 h-8 rounded-full animate-shimmer z-10" />
+                <div className="animate-shimmer absolute right-[60px] top-4 z-10 h-9 w-9 rounded-full" />
               ) : null}
-            </div>
-            <div className="p-5 flex flex-col gap-4">
-              <h2 className="text-xl font-bold text-gray-900">{spotData.title}</h2>
-              <div className="flex flex-col gap-2">
+
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                <h2 className="text-2xl font-bold text-white drop-shadow-sm">{spotData.title}</h2>
                 {spotData.addr1 && (
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
-                    <span>{spotData.addr1} {spotData.addr2}</span>
-                  </div>
-                )}
-                {spotData.tel && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-ocean-500 shrink-0" />
-                    <span>{spotData.tel}</span>
-                  </div>
-                )}
-                {spotData.intro?.usetime && (
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
-                    <span>{spotData.intro.usetime}</span>
-                  </div>
-                )}
-                {spotData.intro?.restdate && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="text-ocean-500 text-xs font-medium shrink-0">휴무</span>
-                    <span>{spotData.intro.restdate}</span>
-                  </div>
-                )}
-                {spotData.parkingAvailable && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ParkingSquare className="w-4 h-4 text-ocean-500 shrink-0" />
-                    <span>주차 가능</span>
-                  </div>
+                  <p className="mt-1 flex items-center gap-1 text-[13px] text-white/85">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{spotData.addr1} {spotData.addr2}</span>
+                  </p>
                 )}
               </div>
+            </div>
+
+            <div className="flex flex-col gap-5 p-6">
+              {/* 한눈에 보는 특징 칩 */}
+              {(spotData.parkingAvailable || spotData.intro?.restdate) && (
+                <div className="flex flex-wrap gap-2">
+                  {spotData.parkingAvailable && (
+                    <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                      <ParkingSquare className="h-3.5 w-3.5 text-ocean-500" />
+                      주차 가능
+                    </span>
+                  )}
+                  {spotData.intro?.restdate && (
+                    <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                      <CalendarX className="h-3.5 w-3.5 text-ocean-500" />
+                      휴무 {spotData.intro.restdate}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {(spotData.tel || spotData.intro?.usetime) && (
+                <div className="flex flex-col gap-3">
+                  {spotData.tel && (
+                    <InfoRow icon={<Phone className="h-4 w-4" />}>{spotData.tel}</InfoRow>
+                  )}
+                  {spotData.intro?.usetime && (
+                    <InfoRow icon={<Clock className="h-4 w-4" />}>{spotData.intro.usetime}</InfoRow>
+                  )}
+                </div>
+              )}
+
               {spotData.overview && (
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">
+                <p className="rounded-2xl bg-gradient-to-br from-ocean-50/60 to-lime-50/40 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
                   {stripHtml(spotData.overview)}
                 </p>
               )}
+
               {mapPlaceId != null && mapPlaceId > 0 ? (
                 <StarRating mapPlaceId={mapPlaceId} />
               ) : isMapPlaceIdLoading ? (
-                <div className="animate-shimmer h-24 rounded-xl" />
+                <div className="animate-shimmer h-24 rounded-2xl" />
               ) : null}
+
               {spotData.homepage && (
                 <a
                   href={extractUrl(spotData.homepage)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-navy-500 text-navy-500 text-sm font-medium"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-navy-900 py-3.5 text-sm font-semibold text-lime-300 transition-transform active:scale-[0.98]"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="h-4 w-4" />
                   홈페이지 바로가기
                 </a>
               )}
@@ -284,80 +322,93 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
           <>
             {/* 음식점은 백엔드에서 이미지를 내려주지 않아, 빈 이미지 칸 대신
                 이름/카테고리를 바로 보여주는 헤더로 그 공간을 채운다. */}
-            <div className="relative flex items-center gap-3 rounded-t-2xl bg-gradient-to-br from-amber-50 to-orange-50 px-5 pt-5 pb-4">
+            <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-white px-6 pb-5 pt-6">
+              <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-orange-100/70 blur-2xl" />
               <button
                 onClick={onClose}
-                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition"
+                aria-label="닫기"
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-gray-500 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-gray-800"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
               {favoriteId !== null ? (
                 <FavoriteButton
                   isFavorite={isFavorite}
                   disabled={isTogglingFavorite}
                   onToggle={() => handleToggleFavorite(foodData.name, null)}
-                  className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60"
+                  className="absolute right-[60px] top-4 z-10 h-9 w-9 rounded-full bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white"
                 />
               ) : isMapPlaceIdLoading ? (
-                <div className="absolute top-3 right-12 w-8 h-8 rounded-full animate-shimmer" />
+                <div className="animate-shimmer absolute right-[60px] top-4 z-10 h-9 w-9 rounded-full" />
               ) : null}
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                🍽️
-              </div>
-              <div className="flex min-w-0 flex-col gap-1">
-                <h2 className={`truncate text-xl font-bold text-gray-900 ${favoriteId !== null ? "pr-16" : "pr-8"}`}>{foodData.name}</h2>
-                {foodData.normalizedCategory && (
-                  <span className="w-fit rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-amber-700">
-                    {foodData.normalizedCategory}
-                  </span>
-                )}
+
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-md">
+                  🍽️
+                </div>
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <h2 className={`truncate text-2xl font-bold text-gray-900 ${favoriteId !== null ? "pr-16" : "pr-8"}`}>{foodData.name}</h2>
+                  {foodData.normalizedCategory && (
+                    <span className="w-fit rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-amber-700 shadow-sm">
+                      {foodData.normalizedCategory}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="p-5 flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                {foodData.address && (
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
-                    <span>{foodData.address}</span>
-                  </div>
-                )}
-                {foodData.tel && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="w-4 h-4 text-ocean-500 shrink-0" />
-                    <span>{foodData.tel}</span>
-                  </div>
-                )}
-                {foodData.businessHoursRaw && (
-                  <div className="flex items-start gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-ocean-500 mt-0.5 shrink-0" />
-                    <span>{foodData.businessHoursRaw}</span>
-                  </div>
-                )}
-                {foodData.parkingAvailable && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ParkingSquare className="w-4 h-4 text-ocean-500 shrink-0" />
-                    <span>주차 가능</span>
-                  </div>
-                )}
-              </div>
+
+            <div className="flex flex-col gap-5 p-6">
+              {foodData.parkingAvailable && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                    <ParkingSquare className="h-3.5 w-3.5 text-ocean-500" />
+                    주차 가능
+                  </span>
+                </div>
+              )}
+
+              {(foodData.address || foodData.tel || foodData.businessHoursRaw) && (
+                <div className="flex flex-col gap-3">
+                  {foodData.address && (
+                    <InfoRow icon={<MapPin className="h-4 w-4" />}>{foodData.address}</InfoRow>
+                  )}
+                  {foodData.tel && (
+                    <InfoRow icon={<Phone className="h-4 w-4" />}>{foodData.tel}</InfoRow>
+                  )}
+                  {foodData.businessHoursRaw && (
+                    <InfoRow icon={<Clock className="h-4 w-4" />}>{foodData.businessHoursRaw}</InfoRow>
+                  )}
+                </div>
+              )}
+
               {foodData.description && (
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">
+                <p className="rounded-2xl bg-gradient-to-br from-amber-50/70 to-orange-50/40 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
                   {stripHtml(foodData.description)}
                 </p>
               )}
+
               {foodData.menus.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">메뉴</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500">메뉴</span>
                   {foodData.menus.map((menu, i) => (
                     <div
                       key={i}
-                      className={`flex justify-between p-3 rounded-xl text-sm ${menu.representative ? "bg-navy-50" : "bg-gray-50"}`}
+                      className={`flex items-center justify-between rounded-2xl p-3.5 text-sm ${
+                        menu.representative
+                          ? "bg-navy-900 text-white"
+                          : "border border-gray-100 bg-gray-50 text-gray-800"
+                      }`}
                     >
-                      <span className={`font-medium ${menu.representative ? "text-navy-600" : "text-gray-800"}`}>
-                        {menu.representative && "⭐ "}{menu.menuName}
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {menu.representative && (
+                          <span className="rounded-full bg-lime-300 px-1.5 py-0.5 text-[10px] font-bold text-navy-900">
+                            대표
+                          </span>
+                        )}
+                        {menu.menuName}
                       </span>
                       {menu.price && (
-                        <span className="text-ocean-600 font-semibold">
+                        <span className={`font-bold ${menu.representative ? "text-lime-300" : "text-ocean-600"}`}>
                           {menu.price.toLocaleString()}원
                         </span>
                       )}
@@ -365,15 +416,17 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
                   ))}
                 </div>
               )}
+
               {mapPlaceId != null && mapPlaceId > 0 ? (
                 <StarRating mapPlaceId={mapPlaceId} />
               ) : isMapPlaceIdLoading ? (
-                <div className="animate-shimmer h-24 rounded-xl" />
+                <div className="animate-shimmer h-24 rounded-2xl" />
               ) : null}
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center h-60">
+          <div className="flex h-60 flex-col items-center justify-center gap-2">
+            <span className="text-3xl">🧭</span>
             <span className="text-sm text-gray-400">정보를 불러올 수 없어요</span>
           </div>
         )}
