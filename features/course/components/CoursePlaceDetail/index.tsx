@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { Wallet, Footprints, ArrowRight, ImageIcon } from "lucide-react";
+import { Wallet, Footprints, ArrowRight, ImageIcon, Navigation } from "lucide-react";
 import { useSpotDescription } from "@/features/course/hooks/useSpotDescription";
 import { formatDistance } from "@/features/course/utils/format";
+import { getKakaoMapDirectionsUrl } from "@/features/course/utils/kakaoMapLink";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
 interface Props {
@@ -32,9 +33,19 @@ export default function CoursePlaceDetail({
 
   return (
     <div className="absolute bottom-2 left-2 right-2 z-10 lg:bottom-4 lg:left-4 lg:right-4">
-      <button
+      {/* 길찾기 <a>를 품어야 해서 button 대신 role="button" div로 만든 카드
+          (button 안에 a를 중첩하면 HTML 유효성 위반) */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onPlaceClick}
-        className="w-full text-left rounded-2xl border border-gray-100 bg-white p-3 lg:p-4
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onPlaceClick();
+          }
+        }}
+        className="w-full cursor-pointer text-left rounded-2xl border border-gray-100 bg-white p-3 lg:p-4
                    shadow-[0_8px_32px_rgba(13,48,128,0.12)]
                    hover:shadow-[0_10px_36px_rgba(13,48,128,0.16)]
                    active:scale-[0.995] transition-all duration-200"
@@ -106,14 +117,24 @@ export default function CoursePlaceDetail({
                   다음까지 {formatDistance(next.distanceFromPrevM)}
                 </span>
               )}
-              <span className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-ocean-600">
+              <a
+                href={getKakaoMapDirectionsUrl(place.name, place.lat, place.lng)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-gray-500 transition-colors hover:text-ocean-600"
+              >
+                <Navigation className="h-3 w-3" />
+                길찾기
+              </a>
+              <span className="flex items-center gap-1 text-[12px] font-semibold text-ocean-600">
                 상세보기
                 <ArrowRight className="h-3 w-3" />
               </span>
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 }
