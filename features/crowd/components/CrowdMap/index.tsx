@@ -6,6 +6,7 @@ import { getDistrictSummaries } from "@/features/home/utils/congestion";
 import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
+import type { DistrictSpotMarker } from "@/features/crowd/hooks/useDistrictSpotMarkers";
 
 const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
 // 부산 전체 뷰(스팟 페이지와 동일)와 구 선택 시 확대 레벨
@@ -15,14 +16,17 @@ const DISTRICT_LEVEL = 6;
 interface CrowdMapProps {
   selectedDistrict: string | null;
   onSelectDistrict: (district: string) => void;
+  /** 선택한 구의 상세 스팟 마커 (이름 매칭으로 좌표를 얻은 것만) */
+  spotMarkers: DistrictSpotMarker[];
 }
 
 // 관광지별 좌표는 혼잡도 API에 없어서(이름/구/집중률만 제공), 개별 스팟이 아닌
 // 구 단위 원형 마커로 표현한다 — 이미 구 중심좌표(DISTRICT_COORDS)가 있어 바로 그릴 수 있다.
-export default function CrowdMap({ selectedDistrict, onSelectDistrict }: CrowdMapProps) {
+export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarkers }: CrowdMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const spotOverlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const { data: congestion, isLoading } = useCongestion();
 
   useEffect(() => {
@@ -119,7 +123,7 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict }: CrowdMa
           font-weight: 700;
           user-select: none;
         ">
-          <span style="font-size: 11px; opacity: 0.85;">${summary.district.replace("구", "").replace("군", "")}</span>
+          <span style="font-size: 11px; opacity: 0.85;">${summary.district}</span>
           <span style="font-size: 13px;">${Math.round(summary.rate)}%</span>
         </div>
       `;
@@ -134,6 +138,51 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict }: CrowdMa
       overlaysRef.current.push(overlay);
     });
   }, [congestion, selectedDistrict, onSelectDistrict]);
+
+  // 구 선택 시 그 구의 상세 스팟 마커(작은 칩)를 그린다
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    spotOverlaysRef.current.forEach((o) => o.setMap(null));
+    spotOverlaysRef.current = [];
+    if (!selectedDistrict || spotMarkers.length === 0) return;
+
+    spotMarkers.forEach((marker) => {
+      const style = CROWD_STYLE[marker.level];
+      const content = document.createElement("div");
+      content.innerHTML = `
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 9px 4px 6px;
+          border-radius: 9999px;
+          background: rgba(255,255,255,0.95);
+          border: 1.5px solid ${style.bg};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+          font-weight: 600;
+          font-size: 11px;
+          color: #191919;
+          white-space: nowrap;
+          user-select: none;
+        ">
+          <span style="width: 8px; height: 8px; border-radius: 9999px; background: ${style.bg};"></span>
+          ${marker.name}
+          <span style="color: ${style.bg}; font-weight: 700;">${Math.round(marker.rate)}%</span>
+        </div>
+      `;
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(marker.lat, marker.lng),
+        content,
+        yAnchor: 1.1,
+        zIndex: 10,
+      });
+      overlay.setMap(map);
+      spotOverlaysRef.current.push(overlay);
+    });
+  }, [selectedDistrict, spotMarkers]);
 
   return (
     <section className="relative flex-1">
