@@ -6,6 +6,7 @@ import { List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
 import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
+import DistrictPanel from "@/features/crowd/components/DistrictPanel";
 import type { CrowdLevel } from "@/types/crowd";
 
 const CrowdMap = dynamic(() => import("@/features/crowd/components/CrowdMap"), {
@@ -39,12 +40,16 @@ export default function CrowdView() {
     [data, filter, search]
   );
 
-  // 지도의 구 마커를 클릭하면 그 구로 목록을 좁혀서 보여준다.
+  // 지도의 구 마커를 클릭하면 지도 위에 그 구의 상세 패널을 띄운다.
   const handleSelectDistrict = useCallback((district: string) => {
-    setSelectedDistrict(district);
-    setSearch(district);
+    setSelectedDistrict((prev) => (prev === district ? null : district));
     setSelectedId(null);
   }, []);
+
+  const districtSpots = useMemo(
+    () => (data ?? []).filter((spot) => spot.district === selectedDistrict),
+    [data, selectedDistrict],
+  );
 
   return (
     <div className="relative flex h-screen pt-16">
@@ -156,6 +161,17 @@ export default function CrowdView() {
       </aside>
 
       <CrowdMap selectedDistrict={selectedDistrict} onSelectDistrict={handleSelectDistrict} />
+
+      {/* 구 상세 패널 — 데스크톱은 지도 우측, 모바일은 하단 시트 */}
+      {selectedDistrict && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-20 z-30 flex max-h-[55vh] justify-center lg:inset-x-auto lg:right-4 lg:top-20 lg:bottom-6 lg:max-h-none lg:w-[320px]">
+          <DistrictPanel
+            district={selectedDistrict}
+            spots={districtSpots}
+            onClose={() => setSelectedDistrict(null)}
+          />
+        </div>
+      )}
 
       {/* 모바일 전용 목록 토글 버튼 */}
       <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 lg:hidden">
