@@ -35,7 +35,8 @@ export default function ThemeCourseCard({ course, onClick }: Props) {
         src={course.imageUrl}
         alt={course.title}
         fill
-        sizes="(max-width: 744px) 45vw, (max-width: 1280px) 30vw, 320px"
+        quality={90}
+        sizes="(max-width: 744px) 45vw, (max-width: 1280px) 30vw, 400px"
         className="object-cover transition-transform duration-500 group-hover:scale-105"
       />
 

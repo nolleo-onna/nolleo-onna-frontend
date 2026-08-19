@@ -33,6 +33,7 @@ export default function TourCourseCard({
           src={imageSrc}
           alt={title}
           fill
+          quality={90}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, 33vw"
         />
