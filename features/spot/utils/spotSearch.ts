@@ -3,8 +3,8 @@ import type { MapPlace } from "@/types/map";
 
 /**
  * 스팟 검색 파이프라인.
- * "광안리 카페", "무료 박물관", "ㅎㅇㄷ" 같은 입력을 토큰 단위로 해석해
- * 지역(구/동네)·카테고리·무료 조건·이름 검색어로 나눠 적용한다.
+ * "광안리 카페", "해운대 박물관", "ㅎㅇㄷ" 같은 입력을 토큰 단위로 해석해
+ * 지역(구/동네)·카테고리·이름 검색어로 나눠 적용한다.
  */
 
 export interface Neighborhood {
@@ -53,8 +53,6 @@ const CATEGORY_KEYWORDS: Record<string, MapPlace["category"][]> = {
   레저: ["LS"], 스포츠: ["LS"], 서핑: ["LS"], 요트: ["LS"],
 };
 
-const FREE_KEYWORDS = new Set(["무료", "공짜"]);
-
 const CHOSEONG = [
   "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ",
   "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
@@ -94,7 +92,6 @@ export interface ParsedSearch {
   neighborhood: Neighborhood | null;
   neighborhoodName: string | null;
   categories: Set<MapPlace["category"]>;
-  freeOnly: boolean;
   /** 지역/카테고리로 해석되지 않은 나머지 = 이름 검색어 */
   nameTerms: string[];
   isEmpty: boolean;
@@ -106,7 +103,6 @@ export function parseSearch(raw: string): ParsedSearch {
     neighborhood: null,
     neighborhoodName: null,
     categories: new Set(),
-    freeOnly: false,
     nameTerms: [],
     isEmpty: true,
   };
@@ -115,10 +111,6 @@ export function parseSearch(raw: string): ParsedSearch {
   parsed.isEmpty = false;
 
   tokens.forEach((token) => {
-    if (FREE_KEYWORDS.has(token)) {
-      parsed.freeOnly = true;
-      return;
-    }
     const district = token.length >= 2 ? matchDistrict(token) : null;
     if (district) {
       parsed.district = district;
@@ -148,7 +140,6 @@ export function filterPlaces(places: MapPlace[], parsed: ParsedSearch): MapPlace
   return places.filter((p) => {
     if (district && p.district !== district) return false;
     if (parsed.categories.size > 0 && !parsed.categories.has(p.category)) return false;
-    if (parsed.freeOnly && !p.free) return false;
 
     if (parsed.nameTerms.length > 0) {
       const normName = normalize(p.name);
@@ -193,4 +184,5 @@ export function suggestPlaceName(raw: string): string | null {
 }
 
 /** 검색창이 비어있을 때 보여줄 추천 검색어 */
-export const SEARCH_SUGGESTIONS = ["광안리", "해운대 카페", "무료", "박물관", "서면 맛집"];
+// "무료"는 백엔드 데이터에 free=true인 장소가 하나도 없어 제외했다 (free 필드 미적재)
+export const SEARCH_SUGGESTIONS = ["광안리", "해운대 카페", "해변", "박물관", "서면 맛집"];
