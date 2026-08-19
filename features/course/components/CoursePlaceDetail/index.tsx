@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { Wallet, Footprints, ArrowRight, ImageIcon } from "lucide-react";
 import { useSpotDescription } from "@/features/course/hooks/useSpotDescription";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
 import { formatDistance } from "@/features/course/utils/format";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
@@ -10,6 +12,8 @@ interface Props {
   course: Course;
   selectedDay: number;
   place: CoursePlace;
+  /** 지금 혼잡도 (없으면 칩을 표시하지 않음) */
+  congestion?: PlaceCongestion;
   onSelectDay: (day: number) => void;
   onPlaceClick: () => void;
 }
@@ -17,6 +21,7 @@ interface Props {
 export default function CoursePlaceDetail({
   course,
   place,
+  congestion,
   onPlaceClick,
 }: Props) {
   const places = course.days[0]?.places ?? [];
@@ -67,6 +72,18 @@ export default function CoursePlaceDetail({
               <span className="rounded-md bg-gray-50 px-2 py-[3px] text-[11px] text-gray-500">
                 {place.category}
               </span>
+              {congestion && (
+                <span
+                  className="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+                  style={{
+                    backgroundColor: CROWD_STYLE[congestion.level].bg,
+                    color: CROWD_STYLE[congestion.level].text,
+                  }}
+                >
+                  지금 {CROWD_STYLE[congestion.level].label} · {Math.round(congestion.rate)}%
+                  {congestion.source === "district" && ` (${congestion.district})`}
+                </span>
+              )}
             </div>
 
             {/* 이름 */}

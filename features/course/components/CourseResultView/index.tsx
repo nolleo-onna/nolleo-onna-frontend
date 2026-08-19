@@ -10,6 +10,8 @@ import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import { useCourseResult } from "@/features/course/hooks/useCourseResult";
+import { useCongestion } from "@/features/home/hooks/useCongestion";
+import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
 import { loadCourseBudget } from "@/features/course/utils/budgetStorage";
 import CourseSpotPicker from "@/features/course/components/CourseSpotPicker";
 import {
@@ -130,6 +132,8 @@ export default function CourseResultView() {
   const budget = paramBudget ?? storedBudget;
 
   const { data, isLoading, isError } = useCourseResult(pairId);
+  // 코스 장소별 "지금 혼잡도" 배지용 — 실패해도 배지만 안 보일 뿐이라 로딩과 무관
+  const { data: congestion } = useCongestion();
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
@@ -174,6 +178,7 @@ export default function CourseResultView() {
     ...originalCourse,
     days: [{ ...originalCourse.days[0], places }],
   };
+  const congestionByPlaceId = buildCourseCongestion(places, congestion);
   const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
   const selectedPlace = places.find((p) => p.id === resolvedPlaceId) ?? places[0];
 
@@ -284,6 +289,7 @@ export default function CourseResultView() {
             isEditing={isEditing}
             hasCustomization={hasCustomization}
             onToggleEdit={() => setIsEditing((prev) => !prev)}
+            congestionByPlaceId={congestionByPlaceId}
             onMovePlace={handleMovePlace}
             onReorderPlaces={handleReorderPlaces}
             onRemovePlace={handleRemovePlace}
@@ -306,6 +312,7 @@ export default function CourseResultView() {
                 course={course}
                 selectedDay={1}
                 place={selectedPlace}
+                congestion={congestionByPlaceId.get(selectedPlace.id)}
                 onSelectDay={() => {}}
                 onPlaceClick={handlePlaceClick}
               />
