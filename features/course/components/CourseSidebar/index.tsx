@@ -7,13 +7,17 @@ import {
   ChevronUp,
   Footprints,
   GripVertical,
-  Navigation,
   Pencil,
   RotateCcw,
   X,
 } from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
-import ShareButton from "@/components/ui/ShareButton";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import {
+  getCongestedPlaces,
+  type PlaceCongestion,
+} from "@/features/course/utils/courseCongestion";
+import ShareButton from "@/features/course/components/CourseSidebar/ShareButton";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 
@@ -30,6 +34,8 @@ interface Props {
   onMovePlace?: (id: number, direction: -1 | 1) => void;
   /** 드래그로 순서를 바꿨을 때 전체 순서(id 배열)를 통째로 전달한다 */
   onReorderPlaces?: (orderedIds: number[]) => void;
+  /** 장소별 "지금 혼잡도" (없으면 배지를 표시하지 않음) */
+  congestionByPlaceId?: Map<number, PlaceCongestion>;
   onRemovePlace?: (id: number) => void;
   onResetCustomization?: () => void;
   onSelectDay: (day: number) => void;
@@ -56,6 +62,7 @@ function useIsDesktop() {
 
 interface PlaceTimelineItemProps {
   place: CoursePlace;
+  congestion?: PlaceCongestion;
   index: number;
   isLast: boolean;
   isSelected: boolean;
@@ -73,6 +80,7 @@ interface PlaceTimelineItemProps {
 // 오인되지 않게 isDraggingRef로 걸러낸다.
 function PlaceTimelineItem({
   place,
+  congestion,
   index,
   isLast,
   isSelected,
@@ -178,23 +186,24 @@ function PlaceTimelineItem({
                 · {place.expectedCost.toLocaleString()}원
               </span>
             )}
+            {congestion && (
+              <span
+                className="ml-auto shrink-0 rounded-full px-1.5 py-[1px] text-[10px] font-bold"
+                style={{
+                  backgroundColor: CROWD_STYLE[congestion.level].bg,
+                  color: CROWD_STYLE[congestion.level].text,
+                }}
+                title={
+                  congestion.source === "district"
+                    ? `${congestion.district} 평균 기준`
+                    : "관광지 실측 기준"
+                }
+              >
+                {CROWD_STYLE[congestion.level].label}
+              </span>
+            )}
           </div>
         </button>
-
-        {/* 길찾기 (편집 모드가 아닐 때만 — 그 자리는 편집 컨트롤이 씀) */}
-        {!isEditing && (
-          <a
-            href={`https://map.kakao.com/link/to/${encodeURIComponent(place.name)},${place.lat},${place.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`${place.name} 카카오맵 길찾기`}
-            title="카카오맵 길찾기"
-            className="mb-1 flex shrink-0 items-center self-start rounded-md p-1.5 text-gray-300 transition-colors hover:bg-ocean-50 hover:text-ocean-600"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-          </a>
-        )}
 
         {/* 편집 컨트롤 */}
         {isEditing && (
@@ -249,10 +258,14 @@ export default function CourseSidebar({
   onToggleEdit,
   onMovePlace,
   onReorderPlaces,
+  congestionByPlaceId,
   onRemovePlace,
   onResetCustomization,
   onSelectPlace,
 }: Props) {
+  const congested = congestionByPlaceId
+    ? getCongestedPlaces(course.days[0]?.places ?? [], congestionByPlaceId)
+    : [];
   const places = course.days[0]?.places ?? [];
 
   const totalDistance = places.reduce(
@@ -266,23 +279,21 @@ export default function CourseSidebar({
       <div className="p-4 lg:p-5">
         {/* 헤더 */}
         <div className="mb-1 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
-              부산 여행 코스
-            </p>
-            <ShareButton title={course.title} variant="icon" />
-          </div>
-          {onToggleEdit && (
-            <div className="flex items-center gap-1.5">
-              {hasCustomization && (
-                <button
-                  onClick={onResetCustomization}
-                  className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  원래대로
-                </button>
-              )}
+          <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
+            부산 여행 코스
+          </p>
+          <div className="flex items-center gap-1.5">
+            {onToggleEdit && hasCustomization && (
+              <button
+                onClick={onResetCustomization}
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+              >
+                <RotateCcw className="h-3 w-3" />
+                원래대로
+              </button>
+            )}
+            <ShareButton title={course.title} />
+            {onToggleEdit && (
               <button
                 onClick={onToggleEdit}
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
@@ -294,8 +305,8 @@ export default function CourseSidebar({
                 <Pencil className="h-3 w-3" />
                 {isEditing ? "완료" : "편집"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
           {course.title}
@@ -341,6 +352,30 @@ export default function CourseSidebar({
           </div>
         )}
 
+        {/* 지금 혼잡도 요약 — 혼잡한 곳이 있으면 경고, 데이터가 있고 모두 원활하면 안심 문구 */}
+        {congestionByPlaceId && congestionByPlaceId.size > 0 && (
+          congested.length > 0 ? (
+            <div className="mb-4 rounded-xl border border-orange-100 bg-orange-50 px-3.5 py-3">
+              <p className="text-[12px] font-semibold text-orange-700">
+                ⚠️ 지금 {congested[0].name}
+                {congested.length > 1 && ` 외 ${congested.length - 1}곳`}이 붐벼요
+              </p>
+              {onToggleEdit && !isEditing && (
+                <button
+                  onClick={onToggleEdit}
+                  className="mt-1 text-[11px] font-medium text-orange-600 underline underline-offset-2 hover:text-orange-800"
+                >
+                  편집에서 여유로운 곳으로 바꿔보기
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="mb-4 flex items-center gap-1 text-[11px] text-lime-600">
+              ✓ 지금 코스의 모든 장소가 원활해요
+            </p>
+          )
+        )}
+
         {/* 타임라인 — 편집 모드에서는 드래그(잡고 끌기)로도 순서를 바꿀 수 있다 */}
         <Reorder.Group
           as="ol"
@@ -355,6 +390,7 @@ export default function CourseSidebar({
             <PlaceTimelineItem
               key={place.id}
               place={place}
+              congestion={congestionByPlaceId?.get(place.id)}
               index={i}
               isLast={i === places.length - 1}
               isSelected={place.id === selectedPlaceId}

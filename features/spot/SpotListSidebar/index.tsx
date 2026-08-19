@@ -6,6 +6,8 @@ import { motion } from "motion/react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
+import { useFavoriteIds, useToggleFavorite } from "../hooks/useFavorites";
+import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import type { MapPlace } from "@/types/map";
 
@@ -30,6 +32,9 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
   // 그 검색어로 바로 필터링된 채 시작한다.
   const [search, setSearch] = useState(() => searchParams.get("keyword") ?? "");
   const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
+  // 카드마다 status를 호출하지 않고, 찜 목록 한 번을 Set으로 만들어 판별한다.
+  const favoriteIds = useFavoriteIds();
+  const { mutate: toggleFavorite } = useToggleFavorite();
 
   const allPlaces = useMemo(() => {
     return data?.pages.flatMap((page) => page.content) ?? [];
@@ -198,11 +203,26 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                     )}
                   </div>
 
-                  {isSelected && (
-                    <div className="flex items-center shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-navy-400" />
-                    </div>
-                  )}
+                  <div className="flex shrink-0 flex-col items-center justify-between self-stretch">
+                    <FavoriteButton
+                      isFavorite={favoriteIds.has(place.id)}
+                      onToggle={() =>
+                        toggleFavorite({
+                          mapPlaceId: place.id,
+                          place: {
+                            name: place.name,
+                            placeType: place.placeType,
+                            originalId: place.originalId,
+                            district: place.district,
+                            category: place.category,
+                            imageUrl: place.imageUrl,
+                          },
+                        })
+                      }
+                      className="h-7 w-7 rounded-full hover:bg-pink-50"
+                    />
+                    {isSelected && <div className="mb-2 h-2 w-2 rounded-full bg-navy-400" />}
+                  </div>
                 </motion.li>
               );
             })}
