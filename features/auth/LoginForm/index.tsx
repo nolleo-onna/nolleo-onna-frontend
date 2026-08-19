@@ -47,7 +47,7 @@ export default function LoginForm() {
             height={54}
             priority
           />
-          <span className="font-taenada text-3xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
+          <span className="font-taenada text-3xl translate-y-1 bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
             놀러온나
           </span>
         </div>
