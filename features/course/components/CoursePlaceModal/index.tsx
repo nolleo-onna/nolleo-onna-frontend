@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X, MapPin, Star } from "lucide-react";
 import Image from "next/image";
+import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { useCongestion } from "@/features/home/hooks/useCongestion";
 import type { CoursePlace } from "@/features/course/data/mockCourse";
 
 type Props = {
@@ -20,6 +23,12 @@ const CATEGORY_COLOR: Record<CoursePlace["category"], string> = {
 };
 
 export default function CoursePlaceModal({ place, onClose }: Props) {
+  // 현재 혼잡도 — 코스 화면과 같은 매칭 유틸 재사용, 매칭 실패 시 줄 자체를 생략
+  const { data: congestionData } = useCongestion();
+  const congestion = place
+    ? buildCourseCongestion([place], congestionData).get(place.id)
+    : undefined;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -87,6 +96,25 @@ export default function CoursePlaceModal({ place, onClose }: Props) {
             <span className="text-sm font-semibold text-gray-800">{place.rating}</span>
             <span className="text-xs text-gray-400">({place.reviewCount.toLocaleString()})</span>
           </div>
+
+          {/* 실시간 혼잡도 */}
+          {congestion && (
+            <div className="flex items-center gap-1.5">
+              <span
+                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                style={{
+                  backgroundColor: CROWD_STYLE[congestion.level].bg,
+                  color: CROWD_STYLE[congestion.level].text,
+                }}
+              >
+                {CROWD_STYLE[congestion.level].label}
+              </span>
+              <span className="text-xs text-gray-500">
+                지금 집중률 {Math.round(congestion.rate)}%
+                {congestion.source === "district" && ` (${congestion.district} 평균 기준)`}
+              </span>
+            </div>
+          )}
 
           {/* 설명 */}
           <p className="text-sm text-gray-600 leading-relaxed">

@@ -6,8 +6,14 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Plus, Search } from "lucide-react";
 
+import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { CATEGORIES, CATEGORY_META } from "@/features/spot/constants/categoryMap";
+
+import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
+import type { CrowdLevel } from "@/types/crowd";
 import type { MapPlace } from "@/types/map";
 
 interface CourseSpotPickerProps {
@@ -17,6 +23,19 @@ interface CourseSpotPickerProps {
 }
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
+
+// 여유로운 곳 우선 정렬 순서 — 혼잡도를 모르는 스팟(2)은 보통과 혼잡 사이에 둔다.
+// 혼잡한 곳 대신 여유로운 대체 장소가 목록 위쪽에 먼저 보이게 하는 게 목적.
+const CROWD_SORT_ORDER: Record<CrowdLevel, number> = {
+  여유: 0,
+  보통: 1,
+  혼잡: 3,
+  매우혼잡: 4,
+};
+
+function crowdSortKey(congestion: PlaceCongestion | undefined): number {
+  return congestion ? CROWD_SORT_ORDER[congestion.level] : 2;
+}
 
 export default function CourseSpotPicker({
   existingIds,
@@ -33,6 +52,12 @@ export default function CourseSpotPicker({
     staleTime: 1000 * 60 * 5,
   });
 
+  // 코스 화면과 같은 혼잡도 캐시(queryKey ["congestion"])를 공유 — 중복 요청 없음
+  const { data: congestion } = useCongestion();
+  const hasCongestion = (congestion?.length ?? 0) > 0;
+
+  // 장소별 혼잡도를 매칭(이름 → 좌표 기반 구 폴백, 실패 시 배지 생략)해서
+  // 여유로운 곳부터 정렬하고, 같은 등급 안에서는 기존처럼 이미지 있는 스팟 우선.
   const places = useMemo(() => {
     let list = data?.content ?? [];
     if (category !== "ALL") list = list.filter((p) => p.category === category);
@@ -41,14 +66,31 @@ export default function CourseSpotPicker({
         p.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
-    return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
-  }, [data, category, search]);
+    const congestionById = buildCourseCongestion(
+      list.map((p) => ({ id: p.id, name: p.name, lat: p.latitude, lng: p.longitude })),
+      congestion,
+    );
+    return list
+      .map((place) => ({ place, congestion: congestionById.get(place.id) }))
+      .sort(
+        (a, b) =>
+          crowdSortKey(a.congestion) - crowdSortKey(b.congestion) ||
+          Number(!!b.place.imageUrl) - Number(!!a.place.imageUrl),
+      );
+  }, [data, category, search, congestion]);
 
   return (
     <aside className="flex h-[45vh] w-full shrink-0 flex-col overflow-hidden border-t border-gray-100 bg-gray-50 lg:h-auto lg:w-[340px] lg:border-t-0 lg:border-l">
       {/* 헤더 + 검색 */}
       <div className="border-b border-gray-100 bg-white px-4 pt-4 pb-3">
-        <h3 className="mb-3 text-sm font-bold text-gray-900">코스에 장소 추가</h3>
+        <div className="mb-3">
+          <h3 className="text-sm font-bold text-gray-900">코스에 장소 추가</h3>
+          {hasCongestion && (
+            <p className="mt-0.5 text-[11px] text-gray-400">
+              실시간 혼잡도 기준, 여유로운 곳부터 보여드려요
+            </p>
+          )}
+        </div>
         <div className="relative">
           <Search
             size={14}
@@ -110,7 +152,7 @@ export default function CourseSpotPicker({
             <p className="text-sm">검색 결과가 없어요</p>
           </li>
         ) : (
-          places.slice(0, 100).map((place) => {
+          places.slice(0, 100).map(({ place, congestion: crowdInfo }) => {
             const meta =
               CATEGORY_META[place.category as keyof typeof CATEGORY_META] ??
               FALLBACK_CATEGORY;
@@ -148,15 +190,34 @@ export default function CourseSpotPicker({
                   <p className="truncate text-[13px] font-semibold text-gray-900">
                     {place.name}
                   </p>
-                  <span
-                    className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      backgroundColor: `${meta.color}1A`,
-                      color: meta.color,
-                    }}
-                  >
-                    {meta.label}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        backgroundColor: `${meta.color}1A`,
+                        color: meta.color,
+                      }}
+                    >
+                      {meta.label}
+                    </span>
+                    {/* 실시간 혼잡도 — 매칭 실패 시 배지 생략 (코스 타임라인과 같은 스타일) */}
+                    {crowdInfo && (
+                      <span
+                        className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                        style={{
+                          backgroundColor: CROWD_STYLE[crowdInfo.level].bg,
+                          color: CROWD_STYLE[crowdInfo.level].text,
+                        }}
+                        title={
+                          crowdInfo.source === "district"
+                            ? `${crowdInfo.district} 평균 기준`
+                            : "관광지 실측 기준"
+                        }
+                      >
+                        {CROWD_STYLE[crowdInfo.level].label}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[11px] text-gray-400">
                     {place.free || !place.minPrice
                       ? "무료"
