@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Flame, Leaf, X } from "lucide-react";
+import { ArrowRight, Flame, Leaf, Sparkles, X } from "lucide-react";
 
 import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { presetCourseRegion } from "@/features/home/utils/searchBarSelection";
 import type { CrowdSpot } from "@/types/crowd";
 
 interface DistrictPanelProps {
@@ -64,7 +66,14 @@ function SpotRow({ spot, rank }: { spot: CrowdSpot; rank?: number }) {
 
 /** 지도에서 구를 클릭했을 때 지도 위에 뜨는 구 상세 패널 */
 export default function DistrictPanel({ district, spots, onClose }: DistrictPanelProps) {
+  const router = useRouter();
   const sorted = [...spots].sort((a, b) => b.rate - a.rate);
+
+  // 홈 검색바에 이 구를 프리셋하고 홈으로 이동 → 사용자는 생성 버튼만 누르면 된다
+  const handleMakeCourse = () => {
+    presetCourseRegion(district);
+    router.push("/");
+  };
   const busiest = sorted.slice(0, 5);
   const relaxed = [...sorted].reverse().filter((s) => getCrowdLevel(s.rate) === "여유").slice(0, 3);
 
@@ -140,13 +149,23 @@ export default function DistrictPanel({ district, spots, onClose }: DistrictPane
       </div>
 
       {/* 푸터 */}
-      <Link
-        href={`/spot?region=${encodeURIComponent(district)}`}
-        className="flex shrink-0 items-center justify-center gap-1 border-t border-gray-100 bg-gray-50/60 py-3 text-[13px] font-semibold text-ocean-600 transition-colors hover:bg-ocean-50"
-      >
-        {district} 스팟 보러가기
-        <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
+      <div className="grid shrink-0 grid-cols-2 divide-x divide-gray-100 border-t border-gray-100 bg-gray-50/60">
+        <Link
+          href={`/spot?region=${encodeURIComponent(district)}`}
+          className="flex items-center justify-center gap-1 py-3 text-[13px] font-semibold text-ocean-600 transition-colors hover:bg-ocean-50"
+        >
+          스팟 보러가기
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+        <button
+          type="button"
+          onClick={handleMakeCourse}
+          className="flex items-center justify-center gap-1 py-3 text-[13px] font-semibold text-navy-900 transition-colors hover:bg-lime-50"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-ocean-500" />
+          이 지역 코스 만들기
+        </button>
+      </div>
     </motion.div>
   );
 }

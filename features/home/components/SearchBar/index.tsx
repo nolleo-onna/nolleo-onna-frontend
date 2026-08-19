@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Wallet, Clock, Users, Sparkles } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
 import { useAIChatContext } from "@/providers/AIChatProvider";
+import { SEARCHBAR_SELECTION_KEY } from "@/features/home/utils/searchBarSelection";
 
 type Tab = "course" | "spot";
 
@@ -35,7 +36,7 @@ const COMPANION_LABEL: Record<string, string> = {
   "단체": "단체로",
 };
 
-const STORAGE_KEY = "searchbar-selection";
+const STORAGE_KEY = SEARCHBAR_SELECTION_KEY;
 
 type StoredSelection = {
   activeTab: Tab;
