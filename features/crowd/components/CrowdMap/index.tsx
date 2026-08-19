@@ -205,6 +205,66 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
       overlay.setMap(map);
       overlaysRef.current.push(overlay);
     });
+
+    // 혼잡도 API가 데이터를 안 주는 구(금정·남·동·서구 등)는 지도에 구멍처럼
+    // 보이지 않게 회색 "정보 없음" 폴리곤으로 채운다. 클릭하면 패널이 열려
+    // 스팟 보러가기·코스 만들기 링크는 그대로 쓸 수 있다.
+    if (districtPaths) {
+      const covered = new Set(getDistrictSummaries(congestion).map((s) => s.district));
+      const NO_DATA_COLOR = "#9ca3af";
+
+      Object.entries(districtPaths).forEach(([district, rings]) => {
+        if (covered.has(district) || !rings.length) return;
+        const coords = DISTRICT_COORDS[district];
+        if (!coords) return;
+
+        const isSelected = district === selectedDistrict;
+        const polygon = new kakao.maps.Polygon({
+          path: rings.map((ring) =>
+            ring.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng))
+          ),
+          strokeWeight: isSelected ? 2 : 1,
+          strokeColor: NO_DATA_COLOR,
+          strokeOpacity: 0.7,
+          fillColor: NO_DATA_COLOR,
+          fillOpacity: isSelected ? 0.22 : 0.1,
+        });
+        polygon.setMap(map);
+        kakao.maps.event.addListener(polygon, "click", () =>
+          onSelectDistrict(district)
+        );
+        polygonsRef.current.push(polygon);
+
+        const content = document.createElement("div");
+        content.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.9);
+            border: ${isSelected ? "2px" : "1.5px"} solid ${NO_DATA_COLOR};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            cursor: pointer;
+            user-select: none;
+            line-height: 1.25;
+          ">
+            <span style="font-size: 11px; font-weight: 700; color: #6b7280;">${district}</span>
+            <span style="font-size: 10px; font-weight: 600; color: #9ca3af;">정보 없음</span>
+          </div>
+        `;
+        content.addEventListener("click", () => onSelectDistrict(district));
+
+        const overlay = new kakao.maps.CustomOverlay({
+          position: new kakao.maps.LatLng(coords.lat, coords.lng),
+          content,
+          yAnchor: 0.5,
+        });
+        overlay.setMap(map);
+        overlaysRef.current.push(overlay);
+      });
+    }
   }, [congestion, selectedDistrict, onSelectDistrict, districtPaths]);
 
   // 구 선택 시 그 구의 상세 스팟 마커(작은 칩)를 그린다
