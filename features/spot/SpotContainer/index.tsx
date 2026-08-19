@@ -7,6 +7,7 @@ import SpotFilterSidebar from "../SpotFilterSidebar";
 import SpotListSidebar from "../SpotListSidebar";
 import SpotDetailModal from "../components/SpotDetailModal";
 import SpotStatusBar from "../components/SpotStatusBar";
+import { usePlaceIdMap } from "../hooks/usePlaceIdMap";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 
@@ -25,6 +26,7 @@ export default function SpotContainer() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const mapRef = useRef<kakao.maps.Map | null>(null);
+  const { data: placeIdMap } = usePlaceIdMap();
 
   const handleSelectSpot = (
     id: string,
@@ -92,7 +94,9 @@ export default function SpotContainer() {
           selectedId={selectedId}
           onSelectMarker={(id, placeType) => {
             setSelectedId(id);
-            setModalInfo({ id, placeType, mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
+            // 마커 API는 mapPlaceId를 안 내려줘서 전체 장소 매핑에서 찾는다.
+            // 매핑이 아직 로드 전이거나 없는 장소면 0 → 모달에서 찜·별점 숨김
+            setModalInfo({ id, placeType, mapPlaceId: placeIdMap?.get(id) ?? 0 });
           }}
           mapInstanceRef={mapRef}
         />
