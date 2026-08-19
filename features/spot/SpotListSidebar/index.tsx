@@ -9,6 +9,7 @@ import { useMapPlaces } from "../hooks/useMapPlaces";
 import { useFavoriteIds, useToggleFavorite } from "../hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import type { MapPlace } from "@/types/map";
 
 interface SpotListSidebarProps {
@@ -26,6 +27,18 @@ interface SpotListSidebarProps {
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
 
+// "남구", "해운대", "해운대구"처럼 입력해도 구 이름으로 인식되게 한다.
+function matchDistrict(search: string): string | null {
+  const trimmed = search.trim();
+  if (trimmed.length < 2) return null;
+  for (const district of Object.keys(DISTRICT_COORDS)) {
+    if (district === trimmed) return district;
+    // 접미사(구/군) 없이 입력한 경우: "해운대" → "해운대구"
+    if (district.replace(/[구군]$/, "") === trimmed) return district;
+  }
+  return null;
+}
+
 export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResults }: SpotListSidebarProps) {
   const selectedRef = useRef<HTMLLIElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -42,9 +55,14 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
     return data?.pages.flatMap((page) => page.content) ?? [];
   }, [data]);
 
+  const searchedDistrict = useMemo(() => matchDistrict(search), [search]);
+
   const places = useMemo(() => {
     let list = allPlaces;
-    if (search.trim()) {
+    if (searchedDistrict) {
+      // 구 이름 검색: 그 구의 장소들을 보여준다
+      list = list.filter((p) => p.district === searchedDistrict);
+    } else if (search.trim()) {
       list = list.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase())
       );
@@ -52,19 +70,27 @@ export default function SpotListSidebar({ selectedId, onSelectSpot, onSearchResu
     // 이미지 없는 항목(FOOD는 항상 이미지가 없음)이 먼저 보이면 밋밋해 보여서
     // 뒤로 밀어낸다. 정렬은 안정적이라 같은 그룹 안의 원래 순서는 유지된다.
     return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
-  }, [allPlaces, search]);
+  }, [allPlaces, search, searchedDistrict]);
 
   // 검색 결과가 바뀌면(타이핑 멈춘 뒤) 지도가 결과 위치로 이동하도록 좌표를 올려보낸다.
   // 검색어를 지웠을 때는 지도를 건드리지 않는다(사용자가 보던 화면 유지).
   useEffect(() => {
-    if (!onSearchResults || !search.trim() || places.length === 0) return;
+    if (!onSearchResults || !search.trim()) return;
     const timeout = setTimeout(() => {
+      // 구 이름 검색이면 결과 좌표를 감싸는 대신 구 중심으로 확대 이동한다
+      // (외곽 스팟 하나 때문에 화면이 넓게 퍼지는 걸 막기 위해).
+      if (searchedDistrict) {
+        const coords = DISTRICT_COORDS[searchedDistrict];
+        if (coords) onSearchResults([coords]);
+        return;
+      }
+      if (places.length === 0) return;
       onSearchResults(
         places.slice(0, 60).map((p) => ({ lat: p.latitude, lng: p.longitude })),
       );
     }, 450);
     return () => clearTimeout(timeout);
-  }, [search, places, onSearchResults]);
+  }, [search, searchedDistrict, places, onSearchResults]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
