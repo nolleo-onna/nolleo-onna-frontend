@@ -13,6 +13,13 @@ export interface PlaceCongestion {
   district?: string;
 }
 
+/**
+ * 혼잡도 매칭에 필요한 최소 장소 형태.
+ * 코스 장소(CoursePlace)뿐 아니라 스팟 추가 패널의 MapPlace처럼
+ * id·이름·좌표만 있는 목록도 같은 매칭 로직을 재사용할 수 있게 한다.
+ */
+export type CongestionPlaceInput = Pick<CoursePlace, "id" | "name" | "lat" | "lng">;
+
 function normalize(name: string) {
   return name.replace(/\s+/g, "").toLowerCase();
 }
@@ -40,7 +47,7 @@ function nearestDistrict(lat: number, lng: number): string | null {
  * 혼잡도 데이터가 없으면 빈 Map을 반환하고 화면에서는 배지를 숨긴다.
  */
 export function buildCourseCongestion(
-  places: CoursePlace[],
+  places: CongestionPlaceInput[],
   congestion: Congestion[] | undefined,
 ): Map<number, PlaceCongestion> {
   const result = new Map<number, PlaceCongestion>();
