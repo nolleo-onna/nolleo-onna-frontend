@@ -15,6 +15,8 @@ const DEFAULT_LEVEL = 8;
 const DISTRICT_LEVEL = 6;
 
 interface CrowdMapProps {
+  /** 상세 스팟 칩 마커 클릭 시 (장소 상세 모달 열기) */
+  onSelectSpot: (marker: DistrictSpotMarker) => void;
   selectedDistrict: string | null;
   onSelectDistrict: (district: string) => void;
   /** 선택한 구의 상세 스팟 마커 (이름 매칭으로 좌표를 얻은 것만) */
@@ -26,7 +28,7 @@ type DistrictPaths = Record<string, [number, number][][]>;
 
 // 구 경계를 혼잡도 등급색 폴리곤으로 칠하고, 중심에 구 이름·집중률 라벨을 띄운다.
 // 경계 데이터 로드 전이나 실패 시에는 기존 원형 마커로 폴백한다.
-export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarkers }: CrowdMapProps) {
+export default function CrowdMap({ selectedDistrict, onSelectDistrict, onSelectSpot, spotMarkers }: CrowdMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
@@ -294,12 +296,14 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
           color: #191919;
           white-space: nowrap;
           user-select: none;
+          cursor: pointer;
         ">
           <span style="width: 8px; height: 8px; border-radius: 9999px; background: ${style.bg};"></span>
           ${marker.name}
           <span style="color: ${style.bg}; font-weight: 700;">${Math.round(marker.rate)}%</span>
         </div>
       `;
+      content.addEventListener("click", () => onSelectSpot(marker));
 
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(marker.lat, marker.lng),
@@ -321,7 +325,7 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, spotMarke
       );
       map.setBounds(bounds, 60, 60, 60, 60);
     }
-  }, [selectedDistrict, spotMarkers]);
+  }, [selectedDistrict, spotMarkers, onSelectSpot]);
 
   return (
     <section className="relative flex-1">

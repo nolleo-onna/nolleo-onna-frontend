@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { CalendarClock, List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
 import { useDistrictSpotMarkers } from "@/features/crowd/hooks/useDistrictSpotMarkers";
+import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import { getCrowdLevel, CROWD_STYLE, formatBaseYmd } from "@/features/crowd/utils/crowdUtils";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import DistrictPanel from "@/features/crowd/components/DistrictPanel";
@@ -29,6 +30,11 @@ export default function CrowdView() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  // 지도 스팟 칩 클릭 시 여는 장소 상세 모달 (별점·찜 없이 이미지·이름·상세만)
+  const [spotModal, setSpotModal] = useState<{
+    id: string;
+    placeType: "SPOT" | "FOOD";
+  } | null>(null);
   const [isListOpen, setIsListOpen] = useState(false);
 
   const filtered = useMemo(
@@ -176,7 +182,18 @@ export default function CrowdView() {
       <CrowdMap
         selectedDistrict={selectedDistrict}
         onSelectDistrict={handleSelectDistrict}
+        onSelectSpot={(marker) =>
+          setSpotModal({ id: marker.originalId, placeType: marker.placeType })
+        }
         spotMarkers={spotMarkers}
+      />
+
+      {/* mapPlaceId를 넘기지 않아 별점·찜 없이 이미지·이름·상세 정보만 보인다 */}
+      <SpotDetailModal
+        contentId={spotModal?.id ?? null}
+        placeType={spotModal?.placeType ?? null}
+        mapPlaceId={null}
+        onClose={() => setSpotModal(null)}
       />
 
       {/* 구 상세 패널 — 데스크톱은 지도 우측, 모바일은 하단 시트 */}

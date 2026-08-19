@@ -15,6 +15,9 @@ export interface DistrictSpotMarker {
   lng: number;
   rate: number;
   level: CrowdLevel;
+  /** 상세 모달 조회용 — SPOT은 contentId, FOOD는 내부 id */
+  originalId: string;
+  placeType: "SPOT" | "FOOD";
 }
 
 const PAGE_SIZE = 100;
@@ -71,6 +74,8 @@ export function useDistrictSpotMarkers(
         lng: place.longitude,
         rate: spot.rate,
         level: getCrowdLevel(spot.rate),
+        originalId: place.originalId,
+        placeType: place.placeType,
       });
     });
     return markers;
