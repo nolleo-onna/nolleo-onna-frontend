@@ -4,6 +4,13 @@ on:
   push:
     branches: [develop]
 
+# 동시에 두 배포가 서버에서 docker compose를 돌리면 컨테이너 이름 충돌로
+# 실패한다(실제 2회 발생). 배포는 한 번에 하나씩만, 진행 중인 건 취소하지
+# 않고 순서대로 실행한다.
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
