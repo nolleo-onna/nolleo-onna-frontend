@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
+import { useFavoriteStatus, useToggleFavorite } from "@/features/spot/hooks/useFavorites";
+import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { fetchFoodDetail, postReview, patchReview } from "@/features/spot/apis/spot";
 type Props = {
   contentId: string | null;
@@ -136,6 +138,20 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
 
   const isPending = placeType === "SPOT" ? spotPending : foodPending;
 
+  // 지도 마커 클릭 경로에서는 mapPlaceId가 0으로 올 수 있어, 유효한 id일 때만
+  // 찜 버튼을 노출한다.
+  const favoriteId = mapPlaceId !== null && mapPlaceId > 0 ? mapPlaceId : null;
+  const { data: isFavorite = false } = useFavoriteStatus(favoriteId);
+  const { mutate: toggleFavorite, isPending: isTogglingFavorite } = useToggleFavorite();
+
+  const handleToggleFavorite = (name: string, imageUrl: string | null) => {
+    if (favoriteId === null || placeType === null) return;
+    toggleFavorite({
+      mapPlaceId: favoriteId,
+      place: { name, placeType, imageUrl, originalId: contentId },
+    });
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -192,6 +208,16 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
+              {favoriteId !== null && (
+                <FavoriteButton
+                  isFavorite={isFavorite}
+                  disabled={isTogglingFavorite}
+                  onToggle={() =>
+                    handleToggleFavorite(spotData.title, spotData.firstImage ?? null)
+                  }
+                  className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 z-10"
+                />
+              )}
             </div>
             <div className="p-5 flex flex-col gap-4">
               <h2 className="text-xl font-bold text-gray-900">{spotData.title}</h2>
@@ -257,11 +283,19 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
+              {favoriteId !== null && (
+                <FavoriteButton
+                  isFavorite={isFavorite}
+                  disabled={isTogglingFavorite}
+                  onToggle={() => handleToggleFavorite(foodData.name, null)}
+                  className="absolute top-3 right-12 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60"
+                />
+              )}
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
                 🍽️
               </div>
               <div className="flex min-w-0 flex-col gap-1">
-                <h2 className="truncate text-xl font-bold text-gray-900 pr-8">{foodData.name}</h2>
+                <h2 className={`truncate text-xl font-bold text-gray-900 ${favoriteId !== null ? "pr-16" : "pr-8"}`}>{foodData.name}</h2>
                 {foodData.normalizedCategory && (
                   <span className="w-fit rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-amber-700">
                     {foodData.normalizedCategory}
