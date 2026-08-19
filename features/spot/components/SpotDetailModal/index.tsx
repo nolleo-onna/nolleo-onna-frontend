@@ -40,7 +40,7 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ocean-50 text-ocean-500">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-ocean-50/70 text-ocean-500">
         {icon}
       </span>
       <span className="min-w-0 pt-1.5 text-sm leading-relaxed text-gray-600">
@@ -88,7 +88,7 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+    <div className="flex flex-col gap-2 rounded-2xl border border-white/70 bg-white/55 p-4">
       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">내 별점</span>
 
       {submitted && !editing ? (
@@ -190,7 +190,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
       {contentId && (
         <>
           <motion.div
-            className="fixed inset-0 z-40 bg-navy-900/45 backdrop-blur-[2px]"
+            className="fixed inset-0 z-40 bg-navy-900/25 backdrop-blur-[3px]"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -198,7 +198,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
             transition={{ duration: 0.2, ease: "easeOut" }}
           />
           <motion.div
-            className="scrollbar-hide fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[28px] bg-white shadow-[0_32px_80px_-16px_rgba(13,48,128,0.45)]"
+            className="scrollbar-hide fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[32px] border border-white/60 bg-white/75 backdrop-blur-2xl shadow-[0_32px_80px_-20px_rgba(13,48,128,0.5)]"
             role="dialog"
             aria-modal="true"
             aria-label="장소 상세 정보"
@@ -268,13 +268,13 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
               {(spotData.parkingAvailable || spotData.intro?.restdate) && (
                 <div className="flex flex-wrap gap-2">
                   {spotData.parkingAvailable && (
-                    <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                    <span className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-xs font-semibold text-gray-700">
                       <ParkingSquare className="h-3.5 w-3.5 text-ocean-500" />
                       주차 가능
                     </span>
                   )}
                   {spotData.intro?.restdate && (
-                    <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                    <span className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-xs font-semibold text-gray-700">
                       <CalendarX className="h-3.5 w-3.5 text-ocean-500" />
                       휴무 {spotData.intro.restdate}
                     </span>
@@ -294,7 +294,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
               )}
 
               {spotData.overview && (
-                <p className="rounded-2xl bg-gradient-to-br from-ocean-50/60 to-lime-50/40 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
+                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-ocean-50/50 to-lime-50/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
                   {stripHtml(spotData.overview)}
                 </p>
               )}
@@ -322,7 +322,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
           <>
             {/* 음식점은 백엔드에서 이미지를 내려주지 않아, 빈 이미지 칸 대신
                 이름/카테고리를 바로 보여주는 헤더로 그 공간을 채운다. */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-white px-6 pb-5 pt-6">
+            <div className="relative overflow-hidden bg-gradient-to-br from-amber-100/50 via-orange-50/40 to-transparent px-6 pb-5 pt-6">
               <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-orange-100/70 blur-2xl" />
               <button
                 onClick={onClose}
@@ -360,7 +360,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
             <div className="flex flex-col gap-5 p-6">
               {foodData.parkingAvailable && (
                 <div className="flex flex-wrap gap-2">
-                  <span className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
+                  <span className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-xs font-semibold text-gray-700">
                     <ParkingSquare className="h-3.5 w-3.5 text-ocean-500" />
                     주차 가능
                   </span>
@@ -382,7 +382,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
               )}
 
               {foodData.description && (
-                <p className="rounded-2xl bg-gradient-to-br from-amber-50/70 to-orange-50/40 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
+                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-amber-50/60 to-orange-50/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
                   {stripHtml(foodData.description)}
                 </p>
               )}
@@ -396,7 +396,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
                       className={`flex items-center justify-between rounded-2xl p-3.5 text-sm ${
                         menu.representative
                           ? "bg-navy-900 text-white"
-                          : "border border-gray-100 bg-gray-50 text-gray-800"
+                          : "border border-white/70 bg-white/55 text-gray-800"
                       }`}
                     >
                       <span className="flex items-center gap-1.5 font-medium">
