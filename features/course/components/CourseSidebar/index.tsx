@@ -17,6 +17,7 @@ import {
   getCongestedPlaces,
   type PlaceCongestion,
 } from "@/features/course/utils/courseCongestion";
+import ShareButton from "@/features/course/components/CourseSidebar/ShareButton";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 
@@ -281,17 +282,18 @@ export default function CourseSidebar({
           <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
             부산 여행 코스
           </p>
-          {onToggleEdit && (
-            <div className="flex items-center gap-1.5">
-              {hasCustomization && (
-                <button
-                  onClick={onResetCustomization}
-                  className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  원래대로
-                </button>
-              )}
+          <div className="flex items-center gap-1.5">
+            {onToggleEdit && hasCustomization && (
+              <button
+                onClick={onResetCustomization}
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+              >
+                <RotateCcw className="h-3 w-3" />
+                원래대로
+              </button>
+            )}
+            <ShareButton title={course.title} />
+            {onToggleEdit && (
               <button
                 onClick={onToggleEdit}
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
@@ -303,8 +305,8 @@ export default function CourseSidebar({
                 <Pencil className="h-3 w-3" />
                 {isEditing ? "완료" : "편집"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
           {course.title}
