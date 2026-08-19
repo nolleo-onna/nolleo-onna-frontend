@@ -31,7 +31,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
   // 한끗 상세 등 다른 페이지에서 "?keyword=자갈치시장" 형태로 넘어오면
   // 그 검색어로 바로 필터링된 채 시작한다.
   const [search, setSearch] = useState(() => searchParams.get("keyword") ?? "");
-  const { data, isLoading, isError, freeOnly, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
   // 카드마다 status를 호출하지 않고, 찜 목록 한 번을 Set으로 만들어 판별한다.
   const favoriteIds = useFavoriteIds();
   const { mutate: toggleFavorite } = useToggleFavorite();
@@ -42,7 +42,6 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
 
   const places = useMemo(() => {
     let list = allPlaces;
-    if (freeOnly) list = list.filter((p) => p.free);
     if (search.trim()) {
       list = list.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase())
@@ -51,7 +50,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
     // 이미지 없는 항목(FOOD는 항상 이미지가 없음)이 먼저 보이면 밋밋해 보여서
     // 뒤로 밀어낸다. 정렬은 안정적이라 같은 그룹 안의 원래 순서는 유지된다.
     return [...list].sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl));
-  }, [allPlaces, freeOnly, search]);
+  }, [allPlaces, search]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });

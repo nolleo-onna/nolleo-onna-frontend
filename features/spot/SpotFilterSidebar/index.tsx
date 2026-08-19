@@ -3,7 +3,6 @@ import { MapPin } from "lucide-react";
 
 import BudgetFilter from "./BudgetFilter";
 import CategoryFilter from "./CategoryFilter";
-import OptionFilter from "./OptionFilter";
 import RegionFilter from "./RegionFilter";
 import TodayWeather from "./TodayWeather";
 
@@ -40,9 +39,6 @@ export default function SpotFilterSidebar({ onSelectRegion }: SpotFilterSidebarP
         </div>
         <div className="border-t border-gray-100 px-5 py-5">
           <BudgetFilter />
-        </div>
-        <div className="border-t border-gray-100 px-5 py-5">
-          <OptionFilter />
         </div>
       </Suspense>
 
