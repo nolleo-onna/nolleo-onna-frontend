@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import type { MapPlace } from "@/types/map";
 
 interface SpotListSidebarProps {
@@ -151,7 +152,7 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                     place.id
                   )}
                   className={`
-                    flex gap-3 cursor-pointer rounded-xl p-3 transition-all
+                    relative flex gap-3 cursor-pointer rounded-xl p-3 pr-9 transition-all
                     ${isSelected
                       ? "bg-white ring-2 ring-navy-400 shadow-sm"
                       : "bg-white hover:shadow-sm hover:ring-1 hover:ring-gray-200"
@@ -203,6 +204,11 @@ export default function SpotListSidebar({ selectedId, onSelectSpot }: SpotListSi
                       <div className="h-2 w-2 rounded-full bg-navy-400" />
                     </div>
                   )}
+                  <FavoriteButton
+                    mapPlaceId={place.id}
+                    size="sm"
+                    className="absolute top-2 right-2"
+                  />
                 </motion.li>
               );
             })}

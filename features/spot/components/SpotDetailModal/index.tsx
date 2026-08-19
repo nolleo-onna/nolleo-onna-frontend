@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
 import { fetchFoodDetail, postReview, patchReview } from "@/features/spot/apis/spot";
+import FavoriteButton from "@/features/spot/components/FavoriteButton";
 type Props = {
   contentId: string | null;
   placeType: "SPOT" | "FOOD" | null;
@@ -192,6 +193,9 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
+              {mapPlaceId != null && mapPlaceId > 0 && (
+                <FavoriteButton mapPlaceId={mapPlaceId} className="absolute top-3 left-3 z-10" />
+              )}
             </div>
             <div className="p-5 flex flex-col gap-4">
               <h2 className="text-xl font-bold text-gray-900">{spotData.title}</h2>
@@ -257,6 +261,9 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, onCl
               >
                 <X className="w-4 h-4" />
               </button>
+              {mapPlaceId != null && mapPlaceId > 0 && (
+                <FavoriteButton mapPlaceId={mapPlaceId} size="sm" className="absolute top-3 right-12" />
+              )}
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
                 🍽️
               </div>

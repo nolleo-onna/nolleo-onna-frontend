@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
 import { useSubscription } from "@/features/subscription/hooks/useSubscription";
+import FavoritePlacesSection from "@/features/mypage/components/FavoritePlacesSection";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import ProfileEditModal from "@/features/mypage/components/ProfileEditModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
@@ -456,6 +457,7 @@ export default function MyPageContent() {
           <RecentCoursesSection courses={courses} isLoading={isCoursesLoading} />
         </div>
         <div className="flex flex-col gap-6">
+          <FavoritePlacesSection />
           <SavedHankkutSection saved={savedHankkut} />
           <SettingsSection
             onOpenNotifications={() => setIsNotifOpen(true)}
