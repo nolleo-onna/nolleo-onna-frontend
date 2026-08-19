@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSpotMarkers } from "../hooks/useSpotMarkers";
 import { useFilteredMarkers } from "../hooks/useFilteredMarkers";
 import type { MapMarker } from "@/types/spot";
@@ -67,8 +68,21 @@ function groupByDistrict(spots: MapMarker[]): Map<string, number> {
 export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
+  const polygonsRef = useRef<kakao.maps.Polygon[]>([]);
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
+
+  // 구 경계 폴리곤 좌표 (혼잡도 지도와 같은 파일 공유, [lng, lat] 링 배열).
+  // 로드 전/실패 시에는 기존 원형 마커로 폴백한다.
+  const { data: districtPaths } = useQuery<Record<string, [number, number][][]>>({
+    queryKey: ["busanDistrictPolygons"],
+    queryFn: async () => {
+      const res = await fetch("/data/busan-districts.json");
+      if (!res.ok) throw new Error("Failed to load district polygons");
+      return res.json();
+    },
+    staleTime: Infinity,
+  });
 
   // 지금 뭘 보고 있는지(구 이름/장소 이름) 지도 위에 잠깐 떠서 알려주는 라벨.
   // 아이콘만 있는 마커라 클릭 결과가 바로 안 보일 수 있어 추가한다.
@@ -167,6 +181,83 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
   // 무관하게 전부 같은 크기로 통일한다.
   const DISTRICT_CIRCLE_SIZE = 56;
 
+  // 구 경계를 푸른색으로 칠한다. 스팟이 많은 구일수록 진하게(밀도 전달),
+  // 중심에는 구 이름 칩을 띄워 클릭 대상을 분명히 한다.
+  const renderDistrictPolygon = (
+    map: kakao.maps.Map,
+    district: string,
+    count: number,
+    maxCount: number,
+    rings: [number, number][][],
+  ) => {
+    const coords = DISTRICT_COORDS[district];
+    if (!coords) return;
+
+    const zoomToDistrict = () => {
+      showStatus(`${district.replace("구", "").replace("군", "")}에서 찾는 중...`);
+      map.setCenter(new kakao.maps.LatLng(coords.lat, coords.lng));
+      map.setLevel(DISTRICT_ZOOM_LEVEL);
+    };
+
+    const baseOpacity = 0.18 + (count / maxCount) * 0.32;
+    const polygon = new kakao.maps.Polygon({
+      path: rings.map((ring) =>
+        ring.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng)),
+      ),
+      strokeWeight: 1.5,
+      strokeColor: "#ffffff",
+      strokeOpacity: 0.9,
+      fillColor: "#0a84ff",
+      fillOpacity: baseOpacity,
+    });
+    polygon.setMap(map);
+    kakao.maps.event.addListener(polygon, "mouseover", () => {
+      polygon.setOptions({ fillOpacity: Math.min(baseOpacity + 0.15, 0.65) });
+    });
+    kakao.maps.event.addListener(polygon, "mouseout", () => {
+      polygon.setOptions({ fillOpacity: baseOpacity });
+    });
+    kakao.maps.event.addListener(polygon, "click", zoomToDistrict);
+    polygonsRef.current.push(polygon);
+
+    // 중심 라벨 칩
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <button type="button" aria-label="${district} 확대해서 보기" style="
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: 9999px;
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(10,132,255,0.35);
+        box-shadow: 0 2px 8px rgba(13,48,128,0.18);
+        color: #0d3080;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.15s ease;
+      ">${district}<span style="color:#0a84ff;font-size:11px;">${count}</span></button>
+    `;
+    const el = content.firstElementChild as HTMLElement;
+    el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.08)"; });
+    el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
+    el.addEventListener("click", zoomToDistrict);
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(coords.lat, coords.lng),
+      content,
+      yAnchor: 0.5,
+      zIndex: 3,
+    });
+    overlay.setMap(map);
+    overlaysRef.current.push(overlay);
+  };
+
   const renderDistrictCircle = (map: kakao.maps.Map, district: string) => {
     const coords = DISTRICT_COORDS[district];
     if (!coords) return;
@@ -264,11 +355,19 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     const render = () => {
       overlaysRef.current.forEach((o) => o.setMap(null));
       overlaysRef.current = [];
+      polygonsRef.current.forEach((p) => p.setMap(null));
+      polygonsRef.current = [];
 
       if (map.getLevel() >= DISTRICT_VIEW_MIN_LEVEL) {
         const counts = groupByDistrict(markers);
-        counts.forEach((_count, district) => {
-          renderDistrictCircle(map, district);
+        const maxCount = Math.max(1, ...counts.values());
+        counts.forEach((count, district) => {
+          const rings = districtPaths?.[district];
+          if (rings) {
+            renderDistrictPolygon(map, district, count, maxCount, rings);
+          } else {
+            renderDistrictCircle(map, district);
+          }
         });
         return;
       }
@@ -285,9 +384,11 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     kakao.maps.event.addListener(map, "zoom_changed", render);
     return () => {
       kakao.maps.event.removeListener(map, "zoom_changed", render);
+      polygonsRef.current.forEach((p) => p.setMap(null));
+      polygonsRef.current = [];
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markers, selectedId, mapInstanceRef]);
+  }, [markers, selectedId, mapInstanceRef, districtPaths]);
 
   return (
     <section className="relative flex-1">
