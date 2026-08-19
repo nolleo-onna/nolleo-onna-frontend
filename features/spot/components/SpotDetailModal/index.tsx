@@ -130,7 +130,7 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
             <button
               onClick={handleSubmit}
               disabled={selected === 0 || isPending}
-              className="flex-1 rounded-xl bg-navy-900 py-2.5 text-sm font-semibold text-lime-300 transition-transform active:scale-[0.98] disabled:opacity-40"
+              className="flex-1 rounded-xl bg-ocean-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ocean-600 active:scale-[0.98] disabled:opacity-40"
             >
               {isPending ? "저장 중..." : "등록"}
             </button>
@@ -294,7 +294,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
               )}
 
               {spotData.overview && (
-                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-ocean-50/50 to-lime-50/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
+                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-ocean-50/60 to-ocean-100/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
                   {stripHtml(spotData.overview)}
                 </p>
               )}
@@ -310,7 +310,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
                   href={extractUrl(spotData.homepage)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-navy-900 py-3.5 text-sm font-semibold text-lime-300 transition-transform active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-ocean-500 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-ocean-600 active:scale-[0.98]"
                 >
                   <ExternalLink className="h-4 w-4" />
                   홈페이지 바로가기
@@ -401,14 +401,14 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
                     >
                       <span className="flex items-center gap-1.5 font-medium">
                         {menu.representative && (
-                          <span className="rounded-full bg-lime-300 px-1.5 py-0.5 text-[10px] font-bold text-navy-900">
+                          <span className="rounded-full bg-ocean-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                             대표
                           </span>
                         )}
                         {menu.menuName}
                       </span>
                       {menu.price && (
-                        <span className={`font-bold ${menu.representative ? "text-lime-300" : "text-ocean-600"}`}>
+                        <span className={`font-bold ${menu.representative ? "text-ocean-100" : "text-ocean-600"}`}>
                           {menu.price.toLocaleString()}원
                         </span>
                       )}
