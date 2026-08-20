@@ -146,6 +146,7 @@ export default function SpotContainer() {
               handleSelectSpot(...args);
             }}
             onSearchResults={handleSearchResults}
+            onSelectRegion={handleSelectRegion}
           />
         </div>
 
