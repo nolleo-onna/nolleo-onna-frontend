@@ -44,10 +44,29 @@ function EmptyState() {
   );
 }
 
+/** 순위별 시상대 위치 — 1등은 가운데(가장 넓은 칸), 2등은 오른쪽, 3등은 왼쪽 */
+function podiumColStart(rank: number): string {
+  if (rank === 0) return "md:col-start-2";
+  if (rank === 1) return "md:col-start-3";
+  return "md:col-start-1";
+}
+
 export default function HankkutList({ list }: HankkutListProps) {
   if (list.length === 0) {
     return <EmptyState />;
   }
+
+  const podium = list.slice(0, 3);
+  const rest = list.slice(3);
+
+  // 인원수에 따라 시상대 칸 너비를 다르게: 3명이 모여야 올림픽 시상대(3-1-2)
+  // 모양이 나오고, 1~2명일 때는 1등이 넓은 단순 배치로 자연스럽게 줄인다.
+  const podiumColsClass =
+    podium.length >= 3
+      ? "md:grid-cols-[1fr_1.3fr_1fr]"
+      : podium.length === 2
+        ? "md:grid-cols-[1.3fr_1fr]"
+        : "md:grid-cols-1";
 
   return (
     <section>
@@ -57,21 +76,36 @@ export default function HankkutList({ list }: HankkutListProps) {
       </p>
 
       <motion.div
-        className="grid grid-cols-1 gap-5 md:grid-cols-3"
+        className={`grid grid-cols-1 gap-5 md:items-end ${podiumColsClass}`}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {list.map((hankkut, index) => (
+        {podium.map((hankkut, rank) => (
           <motion.div
             key={hankkut.id}
             variants={itemVariants}
-            className={index === 0 ? "md:col-span-2 md:row-span-2" : undefined}
+            className={podium.length >= 3 ? podiumColStart(rank) : undefined}
           >
-            <HankkutCard hankkut={hankkut} featured={index === 0} />
+            <HankkutCard hankkut={hankkut} featured={rank === 0} />
           </motion.div>
         ))}
       </motion.div>
+
+      {rest.length > 0 && (
+        <motion.div
+          className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {rest.map((hankkut) => (
+            <motion.div key={hankkut.id} variants={itemVariants}>
+              <HankkutCard hankkut={hankkut} />
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </section>
   );
 }

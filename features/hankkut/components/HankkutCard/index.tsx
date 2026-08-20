@@ -24,12 +24,9 @@ export default function HankkutCard({
       href={`/hankkut/${hankkut.id}`}
       className="group relative block h-full overflow-hidden rounded-2xl"
     >
-      {/* 이미지 */}
-      <div
-        className={`relative w-full overflow-hidden ${
-          featured ? "aspect-[16/10] md:h-full md:aspect-auto" : "aspect-[16/10]"
-        }`}
-      >
+      {/* 이미지 — 높이는 항상 16:10 비율로 고정하고, "더 커 보이는" 효과는
+          카드를 담는 그리드 쪽에서 폭을 넓게 줘서 만든다(시상대 레이아웃) */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
         <Image
           src={hankkut.imageUrl}
           alt={hankkut.title}
