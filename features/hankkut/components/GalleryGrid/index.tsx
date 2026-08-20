@@ -3,7 +3,7 @@
 import { type Variants, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, PenLine } from "lucide-react";
 
 import {
   HANKKUT_GALLERIES,
@@ -11,22 +11,24 @@ import {
 } from "@/features/hankkut/data/galleries";
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
+    transition: { duration: 0.3, ease: "easeOut" },
   },
 };
 
 const containerVariants: Variants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.06 },
+    transition: { staggerChildren: 0.04 },
   },
 };
 
-// 지역 갤러리 목록 — 카드마다 대표 이미지·글 수·이번 주 인기글 제목을 미리보기로 보여준다
+// 지역 갤러리 목록 — 카드마다 대표 이미지·글 수·이번 주 인기글 제목을 미리보기로 보여준다.
+// 아직 글이 없는 동네는 대표 이미지가 없어 밋밋해 보이기 쉬워서, 이모지를 크게
+// 띄우고 "첫 글의 주인공" 문구로 빈 자리를 채운다.
 export default function GalleryGrid() {
   return (
     <motion.div
@@ -37,12 +39,13 @@ export default function GalleryGrid() {
     >
       {HANKKUT_GALLERIES.map((gallery) => {
         const { postCount, coverImage, topPostTitle } = getGallerySummary(gallery.slug);
+        const isEmpty = postCount === 0;
 
         return (
           <motion.div key={gallery.slug} variants={itemVariants}>
             <Link
               href={`/hankkut/region/${gallery.slug}`}
-              className="group relative block h-56 overflow-hidden rounded-2xl"
+              className="group relative block h-56 overflow-hidden rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_rgba(10,132,255,0.25)]"
             >
               {coverImage ? (
                 <Image
@@ -53,7 +56,14 @@ export default function GalleryGrid() {
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-ocean-100 to-lime-100" />
+                <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-ocean-100 via-white to-lime-100">
+                  <span
+                    aria-hidden
+                    className="text-7xl opacity-40 transition-transform duration-300 group-hover:scale-110"
+                  >
+                    {gallery.emoji}
+                  </span>
+                </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
 
@@ -69,11 +79,18 @@ export default function GalleryGrid() {
                   {gallery.name} <span className="text-lime-300">한끗</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-white/70">{gallery.tagline}</p>
-                {topPostTitle && (
-                  <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
-                    <MessageSquareText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime-300" />
-                    <span className="line-clamp-1">{topPostTitle}</span>
+                {isEmpty ? (
+                  <p className="mt-2 flex items-center gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
+                    <PenLine className="h-3.5 w-3.5 shrink-0 text-lime-300" />
+                    첫 글의 주인공이 되어보세요
                   </p>
+                ) : (
+                  topPostTitle && (
+                    <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
+                      <MessageSquareText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime-300" />
+                      <span className="line-clamp-1">{topPostTitle}</span>
+                    </p>
+                  )
                 )}
               </div>
             </Link>
