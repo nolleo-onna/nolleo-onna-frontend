@@ -44,27 +44,28 @@ function EmptyState() {
   );
 }
 
-/** 순위별 시상대 위치 — 1등은 가운데(가장 넓은 칸), 2등은 오른쪽, 3등은 왼쪽 */
-function podiumColStart(rank: number): string {
-  if (rank === 0) return "md:col-start-2";
-  if (rank === 1) return "md:col-start-3";
-  return "md:col-start-1";
-}
+const TOP_N = 3;
 
 export default function HankkutList({ items }: HankkutListProps) {
   if (items.length === 0) {
     return <EmptyState />;
   }
 
-  const podium = items.slice(0, 3);
-  const rest = items.slice(3);
+  // "이번 주 베스트"는 시상대 개념이라 항상 최대 3개까지만 보여준다(4개 이상
+  // 늘어나면 그리드가 깨지는 문제가 있었다). 4위 이후는 자유게시판 목록에서
+  // 볼 수 있으니 여기서는 자른다.
+  const top = items.slice(0, TOP_N);
 
-  // 인원수에 따라 시상대 칸 너비를 다르게: 3명이 모여야 올림픽 시상대(3-1-2)
-  // 모양이 나오고, 1~2명일 때는 1등이 넓은 단순 배치로 자연스럽게 줄인다.
-  const podiumColsClass =
-    podium.length >= 3
+  // CSS col-start로 순서만 바꾸는 방식은 그리드 트랙 수가 바뀌는 타이밍에
+  // 깨지는 걸 확인해서, 배열 자체를 왼쪽부터 3위-1위-2위 순서로 재배치하는
+  // 더 단순한 방식으로 바꿨다. 1~2개일 때는 재배치 없이 그대로 둔다(1위가
+  // 먼저 나오고, 아래 너비 차이로 "더 크다"는 느낌은 유지된다).
+  const podiumOrder = top.length === 3 ? [top[2], top[0], top[1]] : top;
+
+  const gridColsClass =
+    top.length === 3
       ? "md:grid-cols-[1fr_1.3fr_1fr]"
-      : podium.length === 2
+      : top.length === 2
         ? "md:grid-cols-[1.3fr_1fr]"
         : "md:grid-cols-1";
 
@@ -72,40 +73,21 @@ export default function HankkutList({ items }: HankkutListProps) {
     <section>
       <p className="mb-5 text-sm text-gray-500">
         총 <span className="font-bold text-navy-900">{items.length}</span>개의
-        한끗
+        한끗 중 <span className="font-bold text-navy-900">TOP {top.length}</span>
       </p>
 
       <motion.div
-        className={`grid grid-cols-1 gap-5 md:items-end ${podiumColsClass}`}
+        className={`grid grid-cols-1 gap-5 md:items-end ${gridColsClass}`}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {podium.map((item, rank) => (
-          <motion.div
-            key={item.key}
-            variants={itemVariants}
-            className={podium.length >= 3 ? podiumColStart(rank) : undefined}
-          >
-            <HankkutCard item={item} featured={rank === 0} />
+        {podiumOrder.map((item) => (
+          <motion.div key={item.key} variants={itemVariants}>
+            <HankkutCard item={item} featured={item === top[0]} />
           </motion.div>
         ))}
       </motion.div>
-
-      {rest.length > 0 && (
-        <motion.div
-          className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {rest.map((item) => (
-            <motion.div key={item.key} variants={itemVariants}>
-              <HankkutCard item={item} />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
     </section>
   );
 }
