@@ -3,6 +3,8 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { HANKKUT_SEED_POSTS } from "@/features/hankkut/data/seedPosts";
+
 /**
  * 지역 갤러리 자유게시판 글 저장소.
  * 백엔드에 게시글 API가 아직 없어(Swagger 확인) localStorage에만 저장하는
@@ -28,7 +30,13 @@ const STORAGE_KEY = "hankkut:posts";
 function readPosts(): HankkutPost[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
+    // 진짜 첫 방문(키 자체가 없음)일 때만 데모 시드를 채운다. 사용자가 글을
+    // 전부 지워 배열이 []가 된 경우(raw === "[]")는 재시딩하지 않는다.
+    if (raw === null) {
+      writePosts(HANKKUT_SEED_POSTS);
+      return HANKKUT_SEED_POSTS;
+    }
+    const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
