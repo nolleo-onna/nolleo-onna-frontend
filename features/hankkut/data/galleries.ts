@@ -93,12 +93,3 @@ export function getGallerySummary(slug: string) {
     topPostTitle: top?.title,
   };
 }
-
-const WEEKLY_BEST_LIMIT = 9;
-
-/** 갤러리 상세 페이지의 "이번 주 베스트" — 조회수 기준 상위 N개 */
-export function getWeeklyBestForGallery(slug: string, limit = WEEKLY_BEST_LIMIT): Hankkut[] {
-  return [...getPostsForGallery(slug)]
-    .sort((a, b) => b.views - a.views)
-    .slice(0, limit);
-}

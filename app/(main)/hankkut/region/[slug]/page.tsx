@@ -7,7 +7,7 @@ import RegionBoardList from "@/features/hankkut/components/RegionBoardList";
 import RegionWeeklyBest from "@/features/hankkut/components/RegionWeeklyBest";
 import {
   getGalleryBySlug,
-  getWeeklyBestForGallery,
+  getPostsForGallery,
 } from "@/features/hankkut/data/galleries";
 
 interface RegionPageProps {
@@ -30,7 +30,7 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
     notFound();
   }
 
-  const weeklyBest = getWeeklyBestForGallery(slug);
+  const curatedPosts = getPostsForGallery(slug);
 
   return (
     <div className="pt-16">
@@ -73,7 +73,7 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
         </section>
 
         <div className="mt-10">
-          <RegionWeeklyBest gallery={gallery} posts={weeklyBest} />
+          <RegionWeeklyBest gallery={gallery} curatedPosts={curatedPosts} />
         </div>
 
         {/* 자유게시판 — 글은 localStorage 기반 프론트 MVP (useHankkutPosts) */}

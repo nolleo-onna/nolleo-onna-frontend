@@ -1,20 +1,29 @@
+"use client";
+
 import { Flame, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import HankkutList from "@/features/hankkut/components/HankkutList";
+import { selectRegionPosts, useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
+import { buildWeeklyBest } from "@/features/hankkut/utils/weeklyBestFeed";
 
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
 import type { HankkutGallery } from "@/features/hankkut/data/galleries";
 
 interface RegionWeeklyBestProps {
   gallery: HankkutGallery;
-  posts: Hankkut[];
+  /** 이 갤러리의 큐레이션 한끗 전체(정렬 전) — 자유게시판 글과 합쳐 조회수 순으로 재정렬한다 */
+  curatedPosts: Hankkut[];
 }
 
-// 갤러리(지역) 상세의 "이번 주 베스트" — 기존 한끗 홈 그리드(HankkutList/
-// HankkutCard)를 그대로 재사용해 디자인을 통일한다. 글이 아직 없는 동네는
-// HankkutList의 범용 빈 상태 대신, 그 동네만의 이모지 + 글쓰기 CTA로 채운다.
-export default function RegionWeeklyBest({ gallery, posts }: RegionWeeklyBestProps) {
+// 갤러리(지역) 상세의 "이번 주 베스트" — 큐레이션 한끗과 자유게시판 글을
+// 합쳐 조회수 순으로 보여준다. 큐레이션만 보던 예전 버전은 자유게시판에
+// 아무리 글이 쌓여도 베스트에 안 잡혀서 카드가 안 채워지는 문제가 있었다.
+export default function RegionWeeklyBest({ gallery, curatedPosts }: RegionWeeklyBestProps) {
+  const { posts: boardPosts } = useHankkutPosts();
+  const regionBoardPosts = selectRegionPosts(boardPosts, gallery.slug);
+  const items = buildWeeklyBest(curatedPosts, regionBoardPosts);
+
   return (
     <section>
       <div className="mb-4 flex items-center gap-2">
@@ -22,7 +31,7 @@ export default function RegionWeeklyBest({ gallery, posts }: RegionWeeklyBestPro
         <h2 className="text-lg font-bold text-navy-900">이번 주 베스트</h2>
       </div>
 
-      {posts.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[28px] border border-dashed border-gray-200 bg-gradient-to-br from-ocean-50/50 to-lime-50/40 px-6 py-16 text-center">
           <span aria-hidden className="text-5xl">
             {gallery.emoji}
@@ -44,7 +53,7 @@ export default function RegionWeeklyBest({ gallery, posts }: RegionWeeklyBestPro
           </Link>
         </div>
       ) : (
-        <HankkutList list={posts} />
+        <HankkutList items={items} />
       )}
     </section>
   );
