@@ -26,8 +26,8 @@ export default function HankkutPage() {
             </span>
           </h1>
           <p className="mt-3 max-w-md text-sm text-gray-600">
-            관심 있는 동네를 골라 그 동네 이번 주 인기글을 보고, 직접 글도
-            남겨보세요.
+            동네를 고르면 그 동네만의 한끗이 열려요. 이번 주 인기글도 보고,
+            직접 글도 남겨보세요.
           </p>
         </section>
 

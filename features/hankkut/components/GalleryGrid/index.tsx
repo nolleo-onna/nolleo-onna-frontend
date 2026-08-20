@@ -65,7 +65,9 @@ export default function GalleryGrid() {
               </div>
 
               <div className="absolute inset-x-0 bottom-0 p-5">
-                <h2 className="text-xl font-bold text-white">{gallery.name}</h2>
+                <h2 className="text-xl font-bold text-white">
+                  {gallery.name} <span className="text-lime-300">한끗</span>
+                </h2>
                 <p className="mt-0.5 text-xs text-white/70">{gallery.tagline}</p>
                 {topPostTitle && (
                   <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">

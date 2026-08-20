@@ -51,7 +51,14 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
                 {gallery.tagline}
               </p>
               <h1 className="mt-2 text-4xl font-bold text-navy-900 md:text-5xl">
-                {gallery.name}
+                {gallery.name}{" "}
+                <span className="relative inline-block">
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-1 -z-10 h-3 rounded-sm bg-lime-300 md:h-4"
+                  />
+                  한끗
+                </span>
               </h1>
             </div>
 
