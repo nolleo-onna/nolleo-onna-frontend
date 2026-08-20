@@ -9,6 +9,7 @@ import {
   HANKKUT_GALLERIES,
   getGallerySummary,
 } from "@/features/hankkut/data/galleries";
+import { selectRegionPosts, useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -30,6 +31,8 @@ const containerVariants: Variants = {
 // 아직 글이 없는 동네는 대표 이미지가 없어 밋밋해 보이기 쉬워서, 이모지를 크게
 // 띄우고 "첫 글의 주인공" 문구로 빈 자리를 채운다.
 export default function GalleryGrid() {
+  const { posts: communityPosts } = useHankkutPosts();
+
   return (
     <motion.div
       className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
@@ -38,8 +41,13 @@ export default function GalleryGrid() {
       animate="visible"
     >
       {HANKKUT_GALLERIES.map((gallery) => {
-        const { postCount, coverImage, topPostTitle } = getGallerySummary(gallery.slug);
-        const isEmpty = postCount === 0;
+        const { postCount: curatedCount, coverImage, topPostTitle } = getGallerySummary(
+          gallery.slug
+        );
+        const boardPosts = selectRegionPosts(communityPosts, gallery.slug);
+        const postCount = curatedCount + boardPosts.length;
+        // 큐레이션 인기글이 없으면 자유게시판 최신 글이라도 미리보기로 보여준다
+        const previewTitle = topPostTitle ?? boardPosts[0]?.title;
 
         return (
           <motion.div key={gallery.slug} variants={itemVariants}>
@@ -79,18 +87,16 @@ export default function GalleryGrid() {
                   {gallery.name} <span className="text-lime-300">한끗</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-white/70">{gallery.tagline}</p>
-                {isEmpty ? (
+                {previewTitle ? (
+                  <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
+                    <MessageSquareText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime-300" />
+                    <span className="line-clamp-1">{previewTitle}</span>
+                  </p>
+                ) : (
                   <p className="mt-2 flex items-center gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
                     <PenLine className="h-3.5 w-3.5 shrink-0 text-lime-300" />
                     첫 글의 주인공이 되어보세요
                   </p>
-                ) : (
-                  topPostTitle && (
-                    <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm">
-                      <MessageSquareText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-lime-300" />
-                      <span className="line-clamp-1">{topPostTitle}</span>
-                    </p>
-                  )
                 )}
               </div>
             </Link>
