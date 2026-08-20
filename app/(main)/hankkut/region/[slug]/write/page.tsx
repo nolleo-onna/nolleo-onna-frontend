@@ -25,7 +25,7 @@ export default async function HankkutWritePage({ params }: WritePageProps) {
             Community
           </p>
           <h1 className="mt-1 text-2xl font-bold text-navy-900">
-            {gallery.emoji} {gallery.name}에 글쓰기
+            {gallery.emoji} {gallery.name} 한끗에 글쓰기
           </h1>
           <p className="mt-1 text-sm text-gray-500">{gallery.tagline}</p>
         </header>
