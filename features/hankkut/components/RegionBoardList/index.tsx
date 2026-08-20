@@ -2,12 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Eye, ImageIcon, MessageSquarePlus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  ImageIcon,
+  MessageSquarePlus,
+  ThumbsUp,
+} from "lucide-react";
 
 import {
   selectRegionPosts,
   useHankkutPosts,
+  type HankkutPost,
 } from "@/features/hankkut/hooks/useHankkutPosts";
+import { useHankkutVotes } from "@/features/hankkut/hooks/useHankkutVotes";
+import { useAuth } from "@/hooks/useAuth";
+import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
 
 interface RegionBoardListProps {
   regionSlug: string;
@@ -26,6 +37,43 @@ function formatDate(iso: string): string {
     return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
   return `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function BoardRow({ post }: { post: HankkutPost }) {
+  const { user } = useAuth();
+  const { likeCount } = useHankkutVotes(post.id, user?.userId);
+
+  return (
+    <Link
+      href={`/hankkut/post/${post.id}`}
+      className="flex items-center gap-3 px-6 py-3.5 transition-colors hover:bg-gray-50/70"
+    >
+      <AuthorAvatar name={post.author} size={32} />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-gray-900">
+          <span className="truncate">{post.title}</span>
+          {post.imageDataUrl && (
+            <ImageIcon className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+          )}
+        </p>
+        <p className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
+          <span className="font-medium text-gray-500">{post.author}</span>
+          <span>{formatDate(post.createdAt)}</span>
+          <span className="flex items-center gap-0.5">
+            <Eye className="h-3 w-3" />
+            {post.views}
+          </span>
+          {likeCount > 0 && (
+            <span className="flex items-center gap-0.5 text-ocean-500">
+              <ThumbsUp className="h-3 w-3" />
+              {likeCount}
+            </span>
+          )}
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-gray-200" />
+    </Link>
+  );
 }
 
 /** 지역 갤러리 자유게시판 목록 — 글은 localStorage(useHankkutPosts)에 저장된다 */
@@ -70,28 +118,7 @@ export default function RegionBoardList({ regionSlug }: RegionBoardListProps) {
         <ul className="divide-y divide-gray-50">
           {visible.map((post) => (
             <li key={post.id}>
-              <Link
-                href={`/hankkut/post/${post.id}`}
-                className="flex items-center gap-3 px-6 py-3.5 transition-colors hover:bg-gray-50/70"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-gray-900">
-                    <span className="truncate">{post.title}</span>
-                    {post.imageDataUrl && (
-                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-gray-300" />
-                    )}
-                  </p>
-                  <p className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
-                    <span className="font-medium text-gray-500">{post.author}</span>
-                    <span>{formatDate(post.createdAt)}</span>
-                    <span className="flex items-center gap-0.5">
-                      <Eye className="h-3 w-3" />
-                      {post.views}
-                    </span>
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-200" />
-              </Link>
+              <BoardRow post={post} />
             </li>
           ))}
         </ul>

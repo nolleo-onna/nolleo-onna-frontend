@@ -4,10 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
+import { removeCommentsForPost } from "@/features/hankkut/hooks/useHankkutComments";
+import { useHankkutVotes } from "@/features/hankkut/hooks/useHankkutVotes";
+import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
+import CommentSection from "@/features/hankkut/components/CommentSection";
 
 interface PostDetailProps {
   postId: string;
@@ -27,6 +31,10 @@ export default function PostDetail({ postId }: PostDetailProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { posts, removePost, incrementViews } = useHankkutPosts();
+  const { likeCount, dislikeCount, myVote, toggleVote } = useHankkutVotes(
+    postId,
+    user?.userId,
+  );
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const post = posts.find((p) => p.id === postId);
@@ -60,6 +68,7 @@ export default function PostDetail({ postId }: PostDetailProps) {
   const isAuthor = user?.userId === post.authorId;
 
   const handleDelete = () => {
+    removeCommentsForPost(post.id);
     removePost(post.id);
     router.push(`/hankkut/region/${post.regionSlug}`);
   };
@@ -78,15 +87,34 @@ export default function PostDetail({ postId }: PostDetailProps) {
         {post.title}
       </h1>
 
-      <div className="mt-3 flex items-center gap-3 border-b border-gray-100 pb-4 text-xs text-gray-400">
-        <span className="font-semibold text-gray-600">{post.author}</span>
-        <span>{formatDateTime(post.createdAt)}</span>
-        <span className="flex items-center gap-1">
-          <Eye className="h-3.5 w-3.5" />
-          {post.views}
-        </span>
+      <div className="mt-3 flex items-center gap-2.5 border-b border-gray-100 pb-4">
+        <AuthorAvatar
+          name={post.author}
+          imageUrl={isAuthor ? user?.profileImageUrl : undefined}
+          size={32}
+        />
+        <div className="min-w-0 flex-1 text-xs text-gray-400">
+          <span className="font-semibold text-gray-700">{post.author}</span>
+          <div className="mt-0.5 flex items-center gap-2.5">
+            <span>
+              {formatDateTime(post.createdAt)}
+              {post.updatedAt && " (수정됨)"}
+            </span>
+            <span className="flex items-center gap-1">
+              <Eye className="h-3.5 w-3.5" />
+              {post.views}
+            </span>
+          </div>
+        </div>
         {isAuthor && (
-          <span className="ml-auto">
+          <div className="flex shrink-0 items-center gap-3 text-xs">
+            <Link
+              href={`/hankkut/post/${post.id}/edit`}
+              className="flex items-center gap-1 text-gray-400 transition-colors hover:text-ocean-600"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              수정
+            </Link>
             {confirmingDelete ? (
               <span className="flex items-center gap-2">
                 <span className="text-gray-500">정말 삭제할까요?</span>
@@ -112,7 +140,7 @@ export default function PostDetail({ postId }: PostDetailProps) {
                 삭제
               </button>
             )}
-          </span>
+          </div>
         )}
       </div>
 
@@ -130,6 +158,48 @@ export default function PostDetail({ postId }: PostDetailProps) {
       <p className="mt-5 whitespace-pre-wrap text-[15px] leading-relaxed text-gray-700">
         {post.content}
       </p>
+
+      {/* 좋아요/싫어요 */}
+      <div className="mt-6 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => toggleVote("like")}
+          disabled={!user}
+          aria-pressed={myVote === "like"}
+          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+            myVote === "like"
+              ? "border-ocean-400 bg-ocean-50 text-ocean-600"
+              : "border-gray-200 text-gray-500 hover:border-gray-300"
+          }`}
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+          좋아요 {likeCount}
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleVote("dislike")}
+          disabled={!user}
+          aria-pressed={myVote === "dislike"}
+          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+            myVote === "dislike"
+              ? "border-gray-400 bg-gray-100 text-gray-700"
+              : "border-gray-200 text-gray-500 hover:border-gray-300"
+          }`}
+        >
+          <ThumbsDown className="h-3.5 w-3.5" />
+          싫어요 {dislikeCount}
+        </button>
+        {!user && (
+          <span className="text-[11px] text-gray-400">
+            <Link href="/login" className="font-semibold text-ocean-600 hover:underline">
+              로그인
+            </Link>
+            하면 투표할 수 있어요
+          </span>
+        )}
+      </div>
+
+      <CommentSection postId={post.id} />
     </article>
   );
 }
