@@ -43,34 +43,32 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
           전체 동네 보기
         </Link>
 
-        <section className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-ocean-50 via-white to-lime-50 px-6 py-10 md:px-12 md:py-12">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-ocean-600">
-                <span aria-hidden>{gallery.emoji}</span>
-                {gallery.tagline}
-              </p>
-              <h1 className="mt-2 text-4xl font-bold text-navy-900 md:text-5xl">
-                {gallery.name}{" "}
-                <span className="relative inline-block">
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 bottom-1 -z-10 h-3 rounded-sm bg-lime-300 md:h-4"
-                  />
-                  한끗
-                </span>
-              </h1>
-            </div>
-
-            <Link
-              href={`/hankkut/region/${slug}/write`}
-              className="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy-900 px-5 py-3 text-sm font-semibold text-lime-300 transition-transform hover:-translate-y-0.5"
-            >
-              <PenLine className="h-4 w-4" />
-              글쓰기
-            </Link>
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-ocean-600">
+              <span aria-hidden>{gallery.emoji}</span>
+              {gallery.tagline}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold text-navy-900 md:text-4xl">
+              {gallery.name}{" "}
+              <span className="relative inline-block">
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-1 -z-10 h-3 rounded-sm bg-lime-300 md:h-4"
+                />
+                한끗
+              </span>
+            </h1>
           </div>
-        </section>
+
+          <Link
+            href={`/hankkut/region/${slug}/write`}
+            className="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy-900 px-5 py-3 text-sm font-semibold text-lime-300 transition-transform hover:-translate-y-0.5"
+          >
+            <PenLine className="h-4 w-4" />
+            글쓰기
+          </Link>
+        </div>
 
         <div className="mt-10">
           <RegionWeeklyBest gallery={gallery} curatedPosts={curatedPosts} />
