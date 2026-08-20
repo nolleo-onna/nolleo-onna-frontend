@@ -93,3 +93,8 @@ export function getGallerySummary(slug: string) {
     topPostTitle: top?.title,
   };
 }
+
+/** 큐레이션 글의 조회수 합 — 허브에서 가장 인기 있는 동네(대표 카드)를 고를 때 쓴다 */
+export function getCuratedTotalViews(slug: string): number {
+  return getPostsForGallery(slug).reduce((sum, post) => sum + post.views, 0);
+}
