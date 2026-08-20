@@ -4,10 +4,10 @@ import { MapPinned } from "lucide-react";
 import { type Variants, motion } from "motion/react";
 
 import HankkutCard from "@/features/hankkut/components/HankkutCard";
-import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
+import type { WeeklyBestItem } from "@/features/hankkut/utils/weeklyBestFeed";
 
 interface HankkutListProps {
-  list: Hankkut[];
+  items: WeeklyBestItem[];
 }
 
 const itemVariants: Variants = {
@@ -51,13 +51,13 @@ function podiumColStart(rank: number): string {
   return "md:col-start-1";
 }
 
-export default function HankkutList({ list }: HankkutListProps) {
-  if (list.length === 0) {
+export default function HankkutList({ items }: HankkutListProps) {
+  if (items.length === 0) {
     return <EmptyState />;
   }
 
-  const podium = list.slice(0, 3);
-  const rest = list.slice(3);
+  const podium = items.slice(0, 3);
+  const rest = items.slice(3);
 
   // 인원수에 따라 시상대 칸 너비를 다르게: 3명이 모여야 올림픽 시상대(3-1-2)
   // 모양이 나오고, 1~2명일 때는 1등이 넓은 단순 배치로 자연스럽게 줄인다.
@@ -71,7 +71,7 @@ export default function HankkutList({ list }: HankkutListProps) {
   return (
     <section>
       <p className="mb-5 text-sm text-gray-500">
-        총 <span className="font-bold text-navy-900">{list.length}</span>개의
+        총 <span className="font-bold text-navy-900">{items.length}</span>개의
         한끗
       </p>
 
@@ -81,13 +81,13 @@ export default function HankkutList({ list }: HankkutListProps) {
         initial="hidden"
         animate="visible"
       >
-        {podium.map((hankkut, rank) => (
+        {podium.map((item, rank) => (
           <motion.div
-            key={hankkut.id}
+            key={item.key}
             variants={itemVariants}
             className={podium.length >= 3 ? podiumColStart(rank) : undefined}
           >
-            <HankkutCard hankkut={hankkut} featured={rank === 0} />
+            <HankkutCard item={item} featured={rank === 0} />
           </motion.div>
         ))}
       </motion.div>
@@ -99,9 +99,9 @@ export default function HankkutList({ list }: HankkutListProps) {
           initial="hidden"
           animate="visible"
         >
-          {rest.map((hankkut) => (
-            <motion.div key={hankkut.id} variants={itemVariants}>
-              <HankkutCard hankkut={hankkut} />
+          {rest.map((item) => (
+            <motion.div key={item.key} variants={itemVariants}>
+              <HankkutCard item={item} />
             </motion.div>
           ))}
         </motion.div>
