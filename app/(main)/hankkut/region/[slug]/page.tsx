@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, PenLine } from "lucide-react";
 
+import RegionBoardList from "@/features/hankkut/components/RegionBoardList";
 import RegionWeeklyBest from "@/features/hankkut/components/RegionWeeklyBest";
 import {
   getGalleryBySlug,
@@ -69,7 +70,10 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
           <RegionWeeklyBest posts={weeklyBest} />
         </div>
 
-        {/* TODO(자유게시판): RegionBoardList — 구현담당1 담당, 머지되는 대로 여기 삽입 */}
+        {/* 자유게시판 — 글은 localStorage 기반 프론트 MVP (useHankkutPosts) */}
+        <div className="mt-10">
+          <RegionBoardList regionSlug={slug} />
+        </div>
         <div className="mt-14" />
       </div>
     </div>
