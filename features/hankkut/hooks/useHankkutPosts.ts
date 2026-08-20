@@ -22,6 +22,7 @@ export interface HankkutPost {
   author: string;
   authorId: number;
   createdAt: string; // ISO
+  updatedAt?: string; // ISO — 수정된 글에만 있음
   views: number;
 }
 
@@ -88,6 +89,25 @@ export function useHankkutPosts() {
     [refresh],
   );
 
+  /** 본인 글 제목/본문/이미지 수정. 성공 시 갱신된 글을, 실패 시 null을 반환 */
+  const updatePost = useCallback(
+    (
+      id: string,
+      patch: Pick<HankkutPost, "title" | "content" | "imageDataUrl">,
+    ): HankkutPost | null => {
+      let updated: HankkutPost | null = null;
+      const next = readPosts().map((p) => {
+        if (p.id !== id) return p;
+        updated = { ...p, ...patch, updatedAt: new Date().toISOString() };
+        return updated;
+      });
+      if (!updated || !writePosts(next)) return null;
+      refresh(next);
+      return updated;
+    },
+    [refresh],
+  );
+
   const removePost = useCallback(
     (id: string) => {
       const next = readPosts().filter((p) => p.id !== id);
@@ -109,7 +129,7 @@ export function useHankkutPosts() {
     [refresh],
   );
 
-  return { posts, createPost, removePost, incrementViews };
+  return { posts, createPost, updatePost, removePost, incrementViews };
 }
 
 /** 특정 갤러리의 글 목록 (최신순) */
