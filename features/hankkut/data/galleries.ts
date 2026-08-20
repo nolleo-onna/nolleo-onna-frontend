@@ -39,10 +39,17 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
   },
   {
     slug: "nampo",
-    name: "남포·원도심",
-    tagline: "자갈치·국제시장·근대 골목",
+    name: "남포",
+    tagline: "자갈치·국제시장·깡통야시장",
     emoji: "🐟",
-    regionKeywords: ["남포", "원도심", "자갈치", "센텀"],
+    regionKeywords: ["남포", "자갈치", "국제시장"],
+  },
+  {
+    slug: "wondosim",
+    name: "원도심",
+    tagline: "근대 골목·감천문화마을",
+    emoji: "🏛️",
+    regionKeywords: ["원도심"],
   },
   {
     slug: "yeongdo",
@@ -53,10 +60,17 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
   },
   {
     slug: "saha",
-    name: "사하·을숙도",
-    tagline: "낙동강 생태·미술관",
+    name: "사하",
+    tagline: "다대포·낙동강 하구",
     emoji: "🦆",
-    regionKeywords: ["사하", "을숙도", "다대포"],
+    regionKeywords: ["사하", "다대포"],
+  },
+  {
+    slug: "eulsukdo",
+    name: "을숙도",
+    tagline: "생태공원·현대미술관·철새",
+    emoji: "🕊️",
+    regionKeywords: ["을숙도"],
   },
   {
     slug: "gijang",

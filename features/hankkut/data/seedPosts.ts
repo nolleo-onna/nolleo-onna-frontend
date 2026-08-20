@@ -95,7 +95,7 @@ export const HANKKUT_SEED_POSTS: HankkutPost[] = [
   },
   {
     id: "seed-nampo-2",
-    regionSlug: "nampo",
+    regionSlug: "wondosim",
     title: "부산근대역사관 무료 관람 정보",
     content: "원도심 걷다가 우연히 들렀는데 무료였어요. 비 오는 날 코스로 괜찮은 것 같아요.",
     author: "산책좋아",
@@ -126,7 +126,7 @@ export const HANKKUT_SEED_POSTS: HankkutPost[] = [
   },
   {
     id: "seed-saha-1",
-    regionSlug: "saha",
+    regionSlug: "eulsukdo",
     title: "을숙도 AI 코스로 자전거 타고 왔어요",
     content:
       "무지출 코스로 부탁했더니 을숙도생태공원 자전거길 위주로 짜주더라고요. 노을 질 때 진짜 예뻤습니다. 자전거는 대여소에서 빌렸어요.",
