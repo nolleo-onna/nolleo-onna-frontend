@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 
 import { useMe } from '@/hooks/useMe';
 import { useSubscription } from '@/features/subscription/hooks/useSubscription';
+import { clientFetch } from '@/libs/clientFetch';
 
 export type MessageRole = 'user' | 'assistant';
 export type ChatStatus = 'NEED_MORE_INFO' | 'COMPLETED' | 'OFF_TOPIC' | 'LIMIT_EXCEEDED';
@@ -40,8 +41,6 @@ interface UseAIChatReturn {
 export const MAX_INPUT_LENGTH = 200;
 const COOLDOWN_MS = 800;
 const MAX_OFF_TOPIC_STREAK = 3;
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 
 export function useAIChat(): UseAIChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -108,13 +107,19 @@ export function useAIChat(): UseAIChatReturn {
       setIsLoading(true);
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/courses/chat`, {
+        // clientFetch가 401을 감지하면 returnUrl과 함께 로그인 페이지로
+        // 리다이렉트한다 — 로그인 안 된 채로 보낸 메시지가 "일시적인 오류"로
+        // 뭉뚱그려지지 않고, 로그인 후 이 페이지로 돌아오게 한다.
+        const res = await clientFetch('/api/v1/courses/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ message: trimmed, conversationId: conversationId ?? null }),
         });
 
+        if (res.status === 401) {
+          // clientFetch가 이미 로그인 페이지로 리다이렉트를 걸어놨다 — 곧
+          // 페이지가 이동하므로 여기서 별도 에러 메시지를 더 쌓지 않는다.
+          return false;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const data: ChatResponse = json.data ?? json;
