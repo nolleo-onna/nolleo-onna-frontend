@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 
 import GalleryGrid from "@/features/hankkut/components/GalleryGrid";
-import HankkutReportBanner from "@/features/hankkut/components/HankkutReportBanner";
 
 export const metadata: Metadata = {
   title: "한끗 | 놀러온나",
@@ -38,10 +37,6 @@ export default function HankkutPage() {
             <h2 className="text-lg font-bold text-navy-900">동네 고르기</h2>
           </div>
           <GalleryGrid />
-        </div>
-
-        <div className="mt-14">
-          <HankkutReportBanner />
         </div>
       </div>
     </div>
