@@ -43,23 +43,18 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
           전체 동네 보기
         </Link>
 
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="flex items-center gap-1.5 text-sm font-semibold text-ocean-600">
-              <span aria-hidden>{gallery.emoji}</span>
-              {gallery.tagline}
-            </p>
-            <h1 className="mt-1 text-3xl font-bold text-navy-900 md:text-4xl">
-              {gallery.name}{" "}
-              <span className="relative inline-block">
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-1 -z-10 h-3 rounded-sm bg-lime-300 md:h-4"
-                />
-                한끗
-              </span>
-            </h1>
-          </div>
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-navy-900 md:text-3xl">
+            <span aria-hidden>{gallery.emoji}</span>
+            {gallery.name}{" "}
+            <span className="relative inline-block">
+              <span
+                aria-hidden
+                className="absolute inset-x-0 bottom-1 -z-10 h-3 rounded-sm bg-lime-300 md:h-4"
+              />
+              한끗
+            </span>
+          </h1>
 
           <Link
             href={`/hankkut/region/${slug}/write`}
