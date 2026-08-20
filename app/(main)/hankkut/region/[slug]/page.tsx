@@ -62,7 +62,6 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
               </h1>
             </div>
 
-            {/* 글쓰기 폼은 구현담당1이 담당 (자유게시판 CRUD) */}
             <Link
               href={`/hankkut/region/${slug}/write`}
               className="inline-flex w-fit items-center gap-1.5 rounded-full bg-navy-900 px-5 py-3 text-sm font-semibold text-lime-300 transition-transform hover:-translate-y-0.5"
@@ -74,7 +73,7 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
         </section>
 
         <div className="mt-10">
-          <RegionWeeklyBest posts={weeklyBest} />
+          <RegionWeeklyBest gallery={gallery} posts={weeklyBest} />
         </div>
 
         {/* 자유게시판 — 글은 localStorage 기반 프론트 MVP (useHankkutPosts) */}
