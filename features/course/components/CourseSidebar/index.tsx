@@ -5,10 +5,11 @@ import { Reorder, useDragControls } from "motion/react";
 import {
   ChevronDown,
   ChevronUp,
+  Check,
   Footprints,
   GripVertical,
+  Loader2,
   Pencil,
-  RotateCcw,
   X,
 } from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
@@ -27,17 +28,22 @@ interface Props {
   selectedPlaceId: number | null;
   /** 사용자가 설정한 예산(원). 없으면 게이지를 표시하지 않는다. */
   budget?: number;
-  /** 편집 모드 여부. 편집 콜백들과 함께 넘어올 때만 편집 UI를 노출한다. */
+  /** 편집 모드 여부. onStartEdit이 넘어올 때만 편집 UI를 노출한다. */
   isEditing?: boolean;
-  hasCustomization?: boolean;
-  onToggleEdit?: () => void;
+  /** 초안이 서버 구성과 달라졌는지 — 저장 버튼 활성 조건 */
+  isDirty?: boolean;
+  isSaving?: boolean;
+  /** 저장 실패 안내. null이면 표시하지 않는다. */
+  saveError?: string | null;
+  onStartEdit?: () => void;
+  onSaveEdit?: () => void;
+  onCancelEdit?: () => void;
   onMovePlace?: (id: number, direction: -1 | 1) => void;
   /** 드래그로 순서를 바꿨을 때 전체 순서(id 배열)를 통째로 전달한다 */
   onReorderPlaces?: (orderedIds: number[]) => void;
   /** 장소별 "지금 혼잡도" (없으면 배지를 표시하지 않음) */
   congestionByPlaceId?: Map<number, PlaceCongestion>;
   onRemovePlace?: (id: number) => void;
-  onResetCustomization?: () => void;
   onSelectDay: (day: number) => void;
   onSelectPlace: (place: CoursePlace) => void;
 }
@@ -254,13 +260,16 @@ export default function CourseSidebar({
   selectedPlaceId,
   budget,
   isEditing = false,
-  hasCustomization = false,
-  onToggleEdit,
+  isDirty = false,
+  isSaving = false,
+  saveError = null,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
   onMovePlace,
   onReorderPlaces,
   congestionByPlaceId,
   onRemovePlace,
-  onResetCustomization,
   onSelectPlace,
 }: Props) {
   const congested = congestionByPlaceId
@@ -282,35 +291,58 @@ export default function CourseSidebar({
           <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
             부산 여행 코스
           </p>
+          {/* 편집 중에는 저장/취소만 노출한다 — 저장을 눌러야 서버에 반영된다 */}
           <div className="flex items-center gap-1.5">
-            {onToggleEdit && hasCustomization && (
-              <button
-                onClick={onResetCustomization}
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
-              >
-                <RotateCcw className="h-3 w-3" />
-                원래대로
-              </button>
-            )}
-            <ShareButton title={course.title} />
-            {onToggleEdit && (
-              <button
-                onClick={onToggleEdit}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                  isEditing
-                    ? "bg-ocean-500 text-white"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <Pencil className="h-3 w-3" />
-                {isEditing ? "완료" : "편집"}
-              </button>
+            {isEditing ? (
+              <>
+                <button
+                  onClick={onCancelEdit}
+                  disabled={isSaving}
+                  className="rounded-full px-2 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 disabled:opacity-40"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={onSaveEdit}
+                  disabled={!isDirty || isSaving}
+                  className="flex items-center gap-1 rounded-full bg-ocean-500 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-ocean-600 disabled:bg-gray-200 disabled:text-gray-400"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Check className="h-3 w-3" />
+                  )}
+                  {isSaving ? "저장 중" : "저장"}
+                </button>
+              </>
+            ) : (
+              <>
+                <ShareButton title={course.title} />
+                {onStartEdit && (
+                  <button
+                    onClick={onStartEdit}
+                    className="flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    편집
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
         <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
           {course.title}
         </h1>
+
+        {saveError && (
+          <p
+            role="alert"
+            className="mb-3 rounded-lg bg-pink-50 px-3 py-2 text-[11px] font-medium text-pink-600"
+          >
+            {saveError}
+          </p>
+        )}
 
         {/* 요약 통계 */}
         <div className={`mb-4 grid-cols-3 gap-2 lg:mb-5 lg:grid ${isEditing ? "hidden" : "grid"}`}>
@@ -360,9 +392,9 @@ export default function CourseSidebar({
                 ⚠️ 지금 {congested[0].name}
                 {congested.length > 1 && ` 외 ${congested.length - 1}곳`}이 붐벼요
               </p>
-              {onToggleEdit && !isEditing && (
+              {onStartEdit && !isEditing && (
                 <button
-                  onClick={onToggleEdit}
+                  onClick={onStartEdit}
                   className="mt-1 text-[11px] font-medium text-orange-600 underline underline-offset-2 hover:text-orange-800"
                 >
                   편집에서 여유로운 곳으로 바꿔보기
