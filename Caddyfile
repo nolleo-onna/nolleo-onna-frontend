@@ -1,0 +1,3 @@
+www.nolleo-onna.site {
+	reverse_proxy frontend:3000
+}
