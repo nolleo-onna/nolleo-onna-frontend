@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAIChat } from "@/hooks/useAIChat";
+import { saveCourseBudget } from "@/features/course/utils/budgetStorage";
 import { AIChatModal } from "@/components/ui/Chat/AIChatModal";
 import QuickGenerateOverlay from "@/components/ui/Chat/QuickGenerateOverlay";
 
@@ -13,7 +14,7 @@ interface AIChatContextValue {
   /** 대화형 채팅 모달을 연다 (FAB, 테마 카드 등 자유 입력 진입점용) */
   openChat: (initialMessage?: string) => void;
   /** 조건이 이미 확정된 요청을 채팅 UI 없이 바로 생성한다 (검색바 등) */
-  generateCourse: (prompt: string) => void;
+  generateCourse: (prompt: string, options?: { budget?: number }) => void;
 }
 
 const AIChatContext = createContext<AIChatContextValue | null>(null);
@@ -31,6 +32,8 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("chat");
   const [initialMessage, setInitialMessage] = useState("");
   const autoConfirmedRef = useRef(false);
+  // 검색바에서 확정한 예산 금액. 결과 페이지의 예산 게이지 기준값으로 URL에 실어 보낸다.
+  const budgetRef = useRef<number | undefined>(undefined);
 
   const chat = useAIChat();
   const { messages, isLoading, isAwaitingConfirmation, completedPairId, sendMessage, sendConfirmation, reset } =
@@ -48,13 +51,17 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
   const openChat = (message?: string) => {
     setViewMode("chat");
     setInitialMessage(message ?? "");
+    // 자유 대화로 만드는 코스는 확정된 예산값이 없다. 이전 quick 생성의 예산이
+    // 남아있으면 엉뚱한 게이지가 붙으므로 초기화한다.
+    budgetRef.current = undefined;
     setIsOpen(true);
   };
 
-  const generateCourse = (prompt: string) => {
+  const generateCourse = (prompt: string, options?: { budget?: number }) => {
     setViewMode("quick");
     setInitialMessage("");
     autoConfirmedRef.current = false;
+    budgetRef.current = options?.budget;
     setIsOpen(true);
     sendMessage(prompt);
   };
@@ -85,7 +92,14 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
     const delay = viewMode === "quick" ? 400 : 2000;
     const timer = setTimeout(() => {
       setIsOpen(false);
-      router.push(`/course/result?pairId=${completedPairId}`);
+      const budget = budgetRef.current;
+      if (budget !== undefined) {
+        // 코스 목록 등 budget 파라미터 없는 경로로 재진입해도 게이지를
+        // 복원할 수 있게 저장해둔다.
+        saveCourseBudget(completedPairId, budget);
+      }
+      const budgetParam = budget !== undefined ? `&budget=${budget}` : "";
+      router.push(`/course/result?pairId=${completedPairId}${budgetParam}`);
     }, delay);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps

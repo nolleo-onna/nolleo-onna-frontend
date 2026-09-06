@@ -1,30 +1,21 @@
-import HankkutHero from "@/features/hankkut/components/HankkutHero";
-import HankkutList from "@/features/hankkut/components/HankkutList";
-import HankkutReportBanner from "@/features/hankkut/components/HankkutReportBanner";
-import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
+import type { Metadata } from "next";
+import { MapPin } from "lucide-react";
 
-interface HankkutPageProps {
-  searchParams: Promise<{ category?: string }>;
-}
+import GalleryGrid from "@/features/hankkut/components/GalleryGrid";
 
-export default async function HankkutPage({ searchParams }: HankkutPageProps) {
-  const { category } = await searchParams;
+export const metadata: Metadata = {
+  title: "한끗 | 놀러온나",
+};
 
-  const filteredList =
-    !category || category === "전체"
-      ? MOCK_HANKKUT_LIST
-      : MOCK_HANKKUT_LIST.filter((item) => item.category === category);
-
+export default function HankkutPage() {
   return (
     <div className="pt-16">
       <div className="mx-auto w-full max-w-[1280px] px-5 py-8 md:px-10 lg:px-20">
-        <HankkutHero activeCategory={category ?? "전체"} />
-        <div className="mt-10">
-          <HankkutList list={filteredList} />
+        <div className="mb-4 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-ocean-500" />
+          <h2 className="text-lg font-bold text-navy-900">동네 고르기</h2>
         </div>
-        <div className="mt-14">
-          <HankkutReportBanner />
-        </div>
+        <GalleryGrid />
       </div>
     </div>
   );

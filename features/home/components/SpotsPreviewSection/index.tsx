@@ -81,6 +81,7 @@ function CrowdCard({ spot, rank }: { spot: Spot; rank?: number }) {
           src={spot.imageUrl}
           alt={spot.name}
           fill
+          quality={90}
           sizes="(max-width: 744px) 50vw, (max-width: 1280px) 33vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />

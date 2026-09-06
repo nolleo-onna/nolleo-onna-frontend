@@ -16,3 +16,13 @@ export const CROWD_STYLE: Record<CrowdLevel, { label: string; bg: string; text: 
   보통:   { label: "보통",   bg: "#fab219", text: "#0b0b0b" },
   여유:   { label: "여유",   bg: "#0ca30c", text: "#ffffff" },
 };
+
+// 혼잡도 API의 기준 일자(baseYmd, "YYYYMMDD")를 "8월 19일" 형태로 변환.
+// 형식이 예상과 다르면 null을 돌려 표시 자체를 생략한다(잘못된 날짜 노출 방지).
+export function formatBaseYmd(baseYmd: string): string | null {
+  if (!/^\d{8}$/.test(baseYmd)) return null;
+  const month = Number(baseYmd.slice(4, 6));
+  const day = Number(baseYmd.slice(6, 8));
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${month}월 ${day}일`;
+}

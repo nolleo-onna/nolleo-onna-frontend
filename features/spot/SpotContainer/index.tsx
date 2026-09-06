@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { SlidersHorizontal, List, X } from "lucide-react";
 import SpotFilterSidebar from "../SpotFilterSidebar";
 import SpotListSidebar from "../SpotListSidebar";
 import SpotDetailModal from "../components/SpotDetailModal";
 import SpotStatusBar from "../components/SpotStatusBar";
+import { usePlaceIdMap } from "../hooks/usePlaceIdMap";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 
@@ -20,11 +21,19 @@ export default function SpotContainer() {
   const [modalInfo, setModalInfo] = useState<{
     id: string;
     placeType: "SPOT" | "FOOD";
-    mapPlaceId: number;
+    // null이면 마커 클릭 경로 — 렌더 시점에 placeIdMap에서 해석한다.
+    // 클릭 시점 값으로 고정하면 매핑 로딩이 끝나도 모달에 반영이 안 된다.
+    mapPlaceId: number | null;
   } | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const mapRef = useRef<kakao.maps.Map | null>(null);
+  const { data: placeIdMap, isLoading: isPlaceIdMapLoading } = usePlaceIdMap();
+
+  const resolvedMapPlaceId =
+    modalInfo === null
+      ? null
+      : (modalInfo.mapPlaceId ?? placeIdMap?.get(modalInfo.id) ?? 0);
 
   const handleSelectSpot = (
     id: string,
@@ -40,6 +49,24 @@ export default function SpotContainer() {
       mapRef.current.setLevel(4);
     }
   };
+
+  // 오른쪽 사이드바 검색 결과 위치들로 지도 화면을 맞춘다.
+  // 사이드바 effect의 의존성으로 들어가므로 참조가 안정적이어야 한다(useCallback).
+  const handleSearchResults = useCallback(
+    (coords: { lat: number; lng: number }[]) => {
+      const map = mapRef.current;
+      if (!map || coords.length === 0) return;
+      if (coords.length === 1) {
+        map.setLevel(4);
+        map.panTo(new kakao.maps.LatLng(coords[0].lat, coords[0].lng));
+        return;
+      }
+      const bounds = new kakao.maps.LatLngBounds();
+      coords.forEach((c) => bounds.extend(new kakao.maps.LatLng(c.lat, c.lng)));
+      map.setBounds(bounds, 60, 60, 60, 60);
+    },
+    [],
+  );
 
   const handleSelectRegion = (region: string | null) => {
     setIsFilterOpen(false);
@@ -92,7 +119,8 @@ export default function SpotContainer() {
           selectedId={selectedId}
           onSelectMarker={(id, placeType) => {
             setSelectedId(id);
-            setModalInfo({ id, placeType, mapPlaceId: 0 }); // mapPlaceId: 0 문제 남아있음
+            // 마커 API는 mapPlaceId를 안 내려줘서 렌더 시점에 매핑에서 해석한다
+            setModalInfo({ id, placeType, mapPlaceId: null });
           }}
           mapInstanceRef={mapRef}
         />
@@ -117,13 +145,20 @@ export default function SpotContainer() {
               setIsListOpen(false);
               handleSelectSpot(...args);
             }}
+            onSearchResults={handleSearchResults}
+            onSelectRegion={handleSelectRegion}
           />
         </div>
 
         <SpotDetailModal
           contentId={modalInfo?.id ?? null}
           placeType={modalInfo?.placeType ?? null}
-          mapPlaceId={modalInfo?.mapPlaceId ?? null}
+          mapPlaceId={resolvedMapPlaceId}
+          isMapPlaceIdLoading={
+            modalInfo !== null &&
+            modalInfo.mapPlaceId === null &&
+            isPlaceIdMapLoading
+          }
           onClose={() => setModalInfo(null)}
         />
 

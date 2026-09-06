@@ -15,7 +15,6 @@ export const useMapPlaces = () => {
   const categories = searchParams.getAll("category");
   const budgetParam = searchParams.get("budget");
   const maxBudget = budgetParam ? Number(budgetParam) : undefined;
-  const freeOnly = searchParams.get("free_only") === "true";
 
   const district = regions.length === 1 ? regions[0] : undefined;
   const category = categories.length === 1 ? categories[0] : undefined;
@@ -46,5 +45,5 @@ export const useMapPlaces = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  return { ...query, freeOnly };
+  return query;
 };

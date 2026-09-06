@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run --config vitest.unit.config.ts",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -58,7 +59,7 @@
     "msw": "^2.14.6",
     "playwright": "^1.60.0",
     "prettier": "^3.8.3",
-    "storybook": "^10.3.6",
+    "storybook": "^10.4.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.0.14",

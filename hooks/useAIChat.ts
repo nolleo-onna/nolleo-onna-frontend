@@ -2,6 +2,10 @@
 
 import { useState, useCallback, useRef } from 'react';
 
+import { useMe } from '@/hooks/useMe';
+import { useSubscription } from '@/features/subscription/hooks/useSubscription';
+import { clientFetch } from '@/libs/clientFetch';
+
 export type MessageRole = 'user' | 'assistant';
 export type ChatStatus = 'NEED_MORE_INFO' | 'COMPLETED' | 'OFF_TOPIC' | 'LIMIT_EXCEEDED';
 
@@ -38,8 +42,6 @@ export const MAX_INPUT_LENGTH = 200;
 const COOLDOWN_MS = 800;
 const MAX_OFF_TOPIC_STREAK = 3;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-
 export function useAIChat(): UseAIChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -52,6 +54,9 @@ export function useAIChat(): UseAIChatReturn {
   const lastSentTextRef = useRef<string>('');
   const lastSentAtRef = useRef<number>(0);
   const offTopicStreakRef = useRef<number>(0);
+
+  const { data: me } = useMe();
+  const { plan, canUse, consume } = useSubscription(me?.userId);
 
   const addMessage = useCallback(
     (role: MessageRole, content: string, extra?: Partial<ChatMessage>) => {
@@ -83,6 +88,16 @@ export function useAIChat(): UseAIChatReturn {
         }
       }
 
+      // 구독 플랜별 하루 채팅 한도 (localStorage 기반 데모 — useSubscription 참고)
+      if (!canUse('chat')) {
+        addMessage(
+          'assistant',
+          `오늘 사용할 수 있는 AI 채팅 횟수를 모두 사용했어요 (${plan.name} 플랜: 하루 ${plan.limits.chat}회). 내일 다시 이용하시거나, 요금제 페이지에서 플랜을 올리면 바로 이어서 쓸 수 있어요. 💳 마이페이지 → 구독 관리`,
+          { status: 'LIMIT_EXCEEDED' },
+        );
+        return false;
+      }
+
       setInputError(null);
       setInputValue('');
       lastSentTextRef.current = trimmed;
@@ -92,16 +107,25 @@ export function useAIChat(): UseAIChatReturn {
       setIsLoading(true);
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/courses/chat`, {
+        // clientFetch가 401을 감지하면 returnUrl과 함께 로그인 페이지로
+        // 리다이렉트한다 — 로그인 안 된 채로 보낸 메시지가 "일시적인 오류"로
+        // 뭉뚱그려지지 않고, 로그인 후 이 페이지로 돌아오게 한다.
+        const res = await clientFetch('/api/v1/courses/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ message: trimmed, conversationId: conversationId ?? null }),
         });
 
+        if (res.status === 401) {
+          // clientFetch가 이미 로그인 페이지로 리다이렉트를 걸어놨다 — 곧
+          // 페이지가 이동하므로 여기서 별도 에러 메시지를 더 쌓지 않는다.
+          return false;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const data: ChatResponse = json.data ?? json;
+
+        // 성공한 요청만 채팅 1회로 집계 (네트워크 오류는 차감하지 않음)
+        consume('chat');
 
         if (data.conversationId) setConversationId(data.conversationId);
 
@@ -119,6 +143,8 @@ export function useAIChat(): UseAIChatReturn {
           offTopicStreakRef.current = 0;
           setCompletedPairId(data.pairId);
           setIsAwaitingConfirmation(false);
+          // 코스가 실제로 만들어진 시점에만 코스 생성 1회로 집계
+          consume('course');
           addMessage('assistant', data.reply, { status: 'COMPLETED', pairId: data.pairId });
         } else {
           offTopicStreakRef.current = 0;
@@ -135,14 +161,24 @@ export function useAIChat(): UseAIChatReturn {
 
       return true;
     },
-    [addMessage, conversationId, isLoading],
+    [addMessage, conversationId, isLoading, canUse, consume, plan],
   );
 
   const sendConfirmation = useCallback(async () => {
+    // 구독 플랜별 하루 코스 생성 한도 — 실제 생성이 시작되기 전에 막는다
+    if (!canUse('course')) {
+      addMessage(
+        'assistant',
+        `오늘 만들 수 있는 코스를 모두 만들었어요 (${plan.name} 플랜: 하루 ${plan.limits.course}회). 내일 다시 만들거나, 요금제 페이지에서 플랜을 올리면 바로 이어서 만들 수 있어요. 💳 마이페이지 → 구독 관리`,
+        { status: 'LIMIT_EXCEEDED' },
+      );
+      setIsAwaitingConfirmation(false);
+      return;
+    }
     lastSentTextRef.current = '';
     lastSentAtRef.current = 0;
     await sendMessage('코스 생성 시작');
-  }, [sendMessage]);
+  }, [sendMessage, canUse, addMessage, plan]);
 
   const reset = useCallback(() => {
     setMessages([]);

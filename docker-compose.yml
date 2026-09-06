@@ -3,9 +3,28 @@ services:
     build:
       context: .
       args:
-        NEXT_PUBLIC_API_BASE_URL: https://api-dev.nolleo-onna.site
+        NEXT_PUBLIC_API_BASE_URL: https://api.nolleo-onna.site
         NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY}
     container_name: onna-frontend
     restart: unless-stopped
+    expose:
+      - "3000"
+
+  # ── Caddy (reverse proxy / 자동 HTTPS) ──────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: onna-frontend-caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

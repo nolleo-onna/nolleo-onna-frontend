@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { type Variants, motion } from "motion/react";
 
-import TourCourseCard from "@/components/ui/Card/TourCourseCard";
+import RouteItineraryCard from "@/features/home/components/TourCourseSection/RouteItineraryCard";
 import { MOCK_OFFICIAL_COURSES } from "@/features/course/data/mockOfficialCourse";
 
 const itemVariants: Variants = {
@@ -50,13 +50,13 @@ export default function TourCourseSection() {
         {courses.map((course) => (
           <motion.div key={course.id} variants={itemVariants}>
             <Link href={`/course/official?courseId=${course.id}`}>
-              <TourCourseCard
+              <RouteItineraryCard
                 imageSrc={course.coverImageUrl}
                 title={course.title}
                 rating={course.rating}
                 reviewCount={course.reviewCount}
                 location={course.location}
-                regionTags={course.regionTags}
+                stops={course.days[0]?.places.map((place) => place.name) ?? []}
               />
             </Link>
           </motion.div>

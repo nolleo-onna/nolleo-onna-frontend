@@ -2,10 +2,13 @@
 
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { List, X } from "lucide-react";
+import { CalendarClock, List, X } from "lucide-react";
 import { useCrowd } from "@/features/crowd/hooks/useCrowd";
-import { getCrowdLevel, CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { useDistrictSpotMarkers } from "@/features/crowd/hooks/useDistrictSpotMarkers";
+import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
+import { getCrowdLevel, CROWD_STYLE, formatBaseYmd } from "@/features/crowd/utils/crowdUtils";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
+import DistrictPanel from "@/features/crowd/components/DistrictPanel";
 import type { CrowdLevel } from "@/types/crowd";
 
 const CrowdMap = dynamic(() => import("@/features/crowd/components/CrowdMap"), {
@@ -27,6 +30,11 @@ export default function CrowdView() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  // 지도 스팟 칩 클릭 시 여는 장소 상세 모달 (별점·찜 없이 이미지·이름·상세만)
+  const [spotModal, setSpotModal] = useState<{
+    id: string;
+    placeType: "SPOT" | "FOOD";
+  } | null>(null);
   const [isListOpen, setIsListOpen] = useState(false);
 
   const filtered = useMemo(
@@ -39,12 +47,22 @@ export default function CrowdView() {
     [data, filter, search]
   );
 
-  // 지도의 구 마커를 클릭하면 그 구로 목록을 좁혀서 보여준다.
+  // 지도의 구 마커를 클릭하면 지도 위에 그 구의 상세 패널을 띄운다.
   const handleSelectDistrict = useCallback((district: string) => {
-    setSelectedDistrict(district);
-    setSearch(district);
+    setSelectedDistrict((prev) => (prev === district ? null : district));
     setSelectedId(null);
   }, []);
+
+  const districtSpots = useMemo(
+    () => (data ?? []).filter((spot) => spot.district === selectedDistrict),
+    [data, selectedDistrict],
+  );
+
+  // 모든 구가 같은 기준 일자를 공유하므로 첫 항목 것을 쓴다
+  const baseDate = data?.[0]?.baseYmd ? formatBaseYmd(data[0].baseYmd) : null;
+
+  // 선택한 구의 관광지를 스팟 DB와 이름 매칭해 지도에 찍을 좌표를 얻는다
+  const spotMarkers = useDistrictSpotMarkers(selectedDistrict, districtSpots);
 
   return (
     <div className="relative flex h-screen pt-16">
@@ -75,6 +93,12 @@ export default function CrowdView() {
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-xs font-semibold text-ocean-600">오늘 붐빌 곳</span>
           <h1 className="text-lg font-bold text-gray-900 mt-1">오늘 혼잡도 지도</h1>
+          {baseDate && (
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400">
+              <CalendarClock className="h-3 w-3" />
+              {baseDate} 기준 · 하루 단위로 갱신돼요
+            </p>
+          )}
         </div>
 
         {/* 검색 */}
@@ -155,7 +179,43 @@ export default function CrowdView() {
         </div>
       </aside>
 
-      <CrowdMap selectedDistrict={selectedDistrict} onSelectDistrict={handleSelectDistrict} />
+      <CrowdMap
+        selectedDistrict={selectedDistrict}
+        onSelectDistrict={handleSelectDistrict}
+        onSelectSpot={(marker) =>
+          setSpotModal({ id: marker.originalId, placeType: marker.placeType })
+        }
+        spotMarkers={spotMarkers}
+      />
+
+      {/* mapPlaceId를 넘기지 않아 별점·찜 없이 이미지·이름·상세 정보만 보인다 */}
+      <SpotDetailModal
+        contentId={spotModal?.id ?? null}
+        placeType={spotModal?.placeType ?? null}
+        mapPlaceId={null}
+        onClose={() => setSpotModal(null)}
+      />
+
+      {/* 구 상세 패널 — 데스크톱은 지도 우측, 모바일은 하단 시트 */}
+      {selectedDistrict && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-20 z-30 flex max-h-[55vh] justify-center lg:inset-x-auto lg:right-4 lg:top-20 lg:bottom-6 lg:max-h-none lg:w-[320px]">
+          <DistrictPanel
+            district={selectedDistrict}
+            spots={districtSpots}
+            onClose={() => setSelectedDistrict(null)}
+          />
+        </div>
+      )}
+
+      {/* 모바일에서는 사이드바가 숨겨져 기준 일자를 못 보니 지도 위 칩으로 표시 */}
+      {baseDate && (
+        <div className="pointer-events-none absolute left-3 top-20 z-20 lg:hidden">
+          <span className="flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm backdrop-blur-sm">
+            <CalendarClock className="h-3 w-3" />
+            {baseDate} 기준
+          </span>
+        </div>
+      )}
 
       {/* 모바일 전용 목록 토글 버튼 */}
       <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 lg:hidden">

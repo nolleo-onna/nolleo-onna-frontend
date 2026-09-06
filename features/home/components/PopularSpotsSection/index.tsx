@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type Variants, motion } from "motion/react";
 
-import SpotCard from "@/components/ui/Card/SpotCard";
+import SpotTicketCard from "@/features/home/components/PopularSpotsSection/SpotTicketCard";
 import { usePopularSpots } from "@/features/home/hooks/usePopularSpots";
 
 const itemVariants: Variants = {
@@ -59,15 +59,15 @@ export default function PopularSpotsSection() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
-          {spots!.map((spot) => (
+          {spots!.map((spot, index) => (
             <motion.div key={spot.id} variants={itemVariants}>
-              <SpotCard
+              <SpotTicketCard
                 imageSrc={spot.imageUrl}
                 name={spot.name}
                 location={spot.district}
                 rating={spot.avgRating}
-                reviewCount={String(spot.reviewCount)}
                 price={spot.free ? null : spot.minPrice}
+                index={index}
                 onClick={() => router.push("/spot")}
               />
             </motion.div>

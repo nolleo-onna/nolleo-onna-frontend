@@ -134,7 +134,7 @@ export default function Header() {
                 height={44}
                 priority
               />
-              <span className="font-taenada text-2xl bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
+              <span className="font-taenada text-2xl translate-y-1 bg-gradient-to-r from-navy-700 via-ocean-600 to-ocean-400 bg-clip-text text-transparent">
                 놀러온나
               </span>
             </Link>

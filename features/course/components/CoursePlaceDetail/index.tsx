@@ -1,15 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { Wallet, Footprints, ArrowRight, ImageIcon } from "lucide-react";
+import { Wallet, Footprints, ArrowRight, ImageIcon, Navigation } from "lucide-react";
 import { useSpotDescription } from "@/features/course/hooks/useSpotDescription";
+import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
 import { formatDistance } from "@/features/course/utils/format";
+import { getKakaoMapDirectionsUrl } from "@/features/course/utils/kakaoMapLink";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 
 interface Props {
   course: Course;
   selectedDay: number;
   place: CoursePlace;
+  /** 지금 혼잡도 (없으면 칩을 표시하지 않음) */
+  congestion?: PlaceCongestion;
   onSelectDay: (day: number) => void;
   onPlaceClick: () => void;
 }
@@ -17,6 +22,7 @@ interface Props {
 export default function CoursePlaceDetail({
   course,
   place,
+  congestion,
   onPlaceClick,
 }: Props) {
   const places = course.days[0]?.places ?? [];
@@ -31,17 +37,27 @@ export default function CoursePlaceDetail({
   const overview = detail?.overview?.trim();
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-10">
-      <button
+    <div className="absolute bottom-2 left-2 right-2 z-10 lg:bottom-4 lg:left-4 lg:right-4">
+      {/* 길찾기 <a>를 품어야 해서 button 대신 role="button" div로 만든 카드
+          (button 안에 a를 중첩하면 HTML 유효성 위반) */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onPlaceClick}
-        className="w-full text-left rounded-2xl border border-gray-100 bg-white p-4
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onPlaceClick();
+          }
+        }}
+        className="w-full cursor-pointer text-left rounded-2xl border border-gray-100 bg-white p-3 lg:p-4
                    shadow-[0_8px_32px_rgba(13,48,128,0.12)]
                    hover:shadow-[0_10px_36px_rgba(13,48,128,0.16)]
                    active:scale-[0.995] transition-all duration-200"
       >
-        <div className="flex gap-4">
+        <div className="flex gap-3 lg:gap-4">
           {/* 썸네일 */}
-          <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-50">
+          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-gray-50 lg:h-24 lg:w-24">
             {place.imageUrl ? (
               <Image
                 src={place.imageUrl}
@@ -67,31 +83,45 @@ export default function CoursePlaceDetail({
               <span className="rounded-md bg-gray-50 px-2 py-[3px] text-[11px] text-gray-500">
                 {place.category}
               </span>
+              {congestion && (
+                <span
+                  className="rounded-md px-2 py-[3px] text-[11px] font-semibold"
+                  style={{
+                    backgroundColor: CROWD_STYLE[congestion.level].bg,
+                    color: CROWD_STYLE[congestion.level].text,
+                  }}
+                >
+                  지금 {CROWD_STYLE[congestion.level].label} · {Math.round(congestion.rate)}%
+                  {congestion.source === "district" && ` (${congestion.district})`}
+                </span>
+              )}
             </div>
 
             {/* 이름 */}
-            <p className="mb-1.5 truncate text-[17px] font-bold text-gray-800">
+            <p className="mb-1 truncate text-[15px] font-bold text-gray-800 lg:mb-1.5 lg:text-[17px]">
               {place.name}
             </p>
 
             {/* 설명글 */}
-            {isLoading ? (
-              <div className="mb-2.5 space-y-1.5">
-                <div className="h-3 w-full animate-shimmer rounded" />
-                <div className="h-3 w-4/5 animate-shimmer rounded" />
-              </div>
-            ) : overview ? (
-              <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
-                {overview}
-              </p>
-            ) : (
-              <p className="mb-2.5 text-[13px] text-gray-300">
-                상세 설명이 준비 중이에요
-              </p>
-            )}
+            <div className="hidden lg:block">
+              {isLoading ? (
+                <div className="mb-2.5 space-y-1.5">
+                  <div className="h-3 w-full animate-shimmer rounded" />
+                  <div className="h-3 w-4/5 animate-shimmer rounded" />
+                </div>
+              ) : overview ? (
+                <p className="mb-2.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
+                  {overview}
+                </p>
+              ) : (
+                <p className="mb-2.5 text-[13px] text-gray-300">
+                  상세 설명이 준비 중이에요
+                </p>
+              )}
+            </div>
 
             {/* 메타 정보 */}
-            <div className="flex items-center gap-4 border-t border-gray-50 pt-2.5">
+            <div className="flex items-center gap-3 border-t border-gray-50 pt-2 lg:gap-4 lg:pt-2.5">
               {place.expectedCost !== undefined && place.expectedCost > 0 && (
                 <span className="flex items-center gap-1 text-[12px] text-gray-500">
                   <Wallet className="h-3.5 w-3.5 text-green-600" />
@@ -104,14 +134,24 @@ export default function CoursePlaceDetail({
                   다음까지 {formatDistance(next.distanceFromPrevM)}
                 </span>
               )}
-              <span className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-ocean-600">
+              <a
+                href={getKakaoMapDirectionsUrl(place.name, place.lat, place.lng)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="ml-auto flex items-center gap-1 text-[12px] font-semibold text-gray-500 transition-colors hover:text-ocean-600"
+              >
+                <Navigation className="h-3 w-3" />
+                길찾기
+              </a>
+              <span className="flex items-center gap-1 text-[12px] font-semibold text-ocean-600">
                 상세보기
                 <ArrowRight className="h-3 w-3" />
               </span>
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { MapPin, Sparkles, ArrowUpRight, Compass } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Search,
+  Sparkles,
+  ArrowUpRight,
+  Compass,
+  SearchX,
+} from "lucide-react";
+import CourseListToolbar from "@/features/course/components/CourseListToolbar";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
+import {
+  COURSE_PAGE_SIZE,
+  applyCourseListControls,
+  filterCoursesBySearch,
+  parseCostFilter,
+  parseSortKey,
+} from "@/features/course/utils/courseListFilters";
 
 // ── 빈 상태 ───────────────────────────────────────────────────────────────────
 function EmptyState() {
@@ -130,13 +148,80 @@ function CourseCard({
   );
 }
 
+// ── 필터 결과 빈 상태 ─────────────────────────────────────────────────────────
+function FilteredEmptyState({ onReset }: { onReset: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
+        <SearchX className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+      </div>
+      <p className="text-[15px] text-gray-500">조건에 맞는 코스가 없어요</p>
+      <button
+        onClick={onReset}
+        className="text-[13px] font-semibold text-ocean-500 hover:underline"
+      >
+        필터 초기화
+      </button>
+    </div>
+  );
+}
+
 // ── 메인 뷰 ───────────────────────────────────────────────────────────────────
 export default function MyCourseListView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: courses, isLoading, isError } = useMyCourses();
+
+  const sort = parseSortKey(searchParams.get("sort"));
+  const cost = parseCostFilter(searchParams.get("cost"));
+
+  // 검색어: 입력은 즉시 반영하고, URL(q)에는 타이핑이 멈춘 뒤 동기화해
+  // 새로고침/공유 시에도 유지되게 한다.
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const current = params.get("q") ?? "";
+      if (current === search.trim()) return;
+      if (search.trim()) params.set("q", search.trim());
+      else params.delete("q");
+      params.delete("page"); // 검색이 바뀌면 1페이지부터
+      const query = params.toString();
+      router.replace(query ? `?${query}` : "?", { scroll: false });
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [search, router]);
+
+  const filteredCourses = courses
+    ? filterCoursesBySearch(applyCourseListControls(courses, sort, cost), search)
+    : [];
+
+  // 페이지네이션 — 9개씩
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / COURSE_PAGE_SIZE));
+  const pageParam = Number(searchParams.get("page") ?? 1);
+  const page = Number.isInteger(pageParam)
+    ? Math.min(Math.max(pageParam, 1), totalPages)
+    : 1;
+  const visibleCourses = filteredCourses.slice(
+    (page - 1) * COURSE_PAGE_SIZE,
+    page * COURSE_PAGE_SIZE,
+  );
+
+  const goToPage = (next: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next <= 1) params.delete("page");
+    else params.set("page", String(next));
+    const query = params.toString();
+    router.replace(query ? `?${query}` : "?", { scroll: false });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleCardClick = (pairId: string) => {
     router.push(`/course/result?pairId=${pairId}`);
+  };
+
+  const handleResetFilters = () => {
+    router.replace("?", { scroll: false });
   };
 
   return (
@@ -185,19 +270,88 @@ export default function MyCourseListView() {
       ) : !courses || courses.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <CourseCard
-              key={course.id}
-              pairId={course.pairId}
-              title={course.title}
-              description={course.description}
-              totalCost={course.totalCost}
-              spotTitles={course.spotTitles ?? []}
-              onClick={() => handleCardClick(course.pairId)}
+        <>
+          {/* 검색 */}
+          <div className="relative mb-4 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="코스 이름·장소로 검색 (예: 광안리)"
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-9 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-ocean-400"
             />
-          ))}
-        </div>
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="검색어 지우기"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <CourseListToolbar />
+          {visibleCourses.length === 0 ? (
+            <FilteredEmptyState onReset={handleResetFilters} />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    pairId={course.pairId}
+                    title={course.title}
+                    description={course.description}
+                    totalCost={course.totalCost}
+                    spotTitles={course.spotTitles ?? []}
+                    onClick={() => handleCardClick(course.pairId)}
+                  />
+                ))}
+              </div>
+
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <nav
+                  aria-label="코스 목록 페이지"
+                  className="mt-10 flex items-center justify-center gap-1.5"
+                >
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page <= 1}
+                    aria-label="이전 페이지"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => goToPage(n)}
+                      aria-current={n === page ? "page" : undefined}
+                      className={`h-9 w-9 rounded-full text-sm font-semibold transition-colors ${
+                        n === page
+                          ? "bg-navy-900 text-lime-300"
+                          : "text-gray-500 hover:bg-gray-50"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page >= totalPages}
+                    aria-label="다음 페이지"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              )}
+            </>
+          )}
+        </>
       )}
     </main>
   );

@@ -20,6 +20,9 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
+import { useSubscription } from "@/features/subscription/hooks/useSubscription";
+import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import ProfileEditModal from "@/features/mypage/components/ProfileEditModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
@@ -33,6 +36,7 @@ function toHttps(url?: string) {
 
 const RECENT_COURSES_LIMIT = 4;
 const SAVED_HANKKUT_LIMIT = 4;
+const FAVORITE_PLACES_LIMIT = 4;
 const HANKKUT_BOOKMARK_STORAGE_KEY = "hankkut:bookmarks";
 
 const CATEGORY_DOT_STYLES: Record<Hankkut["category"], string> = {
@@ -102,11 +106,12 @@ interface ProfileHeroProps {
   email: string;
   profileImageUrl?: string;
   isAdmin: boolean;
+  planName: string;
   stats: { label: string; value: string; icon: typeof Route }[];
   onEditProfile: () => void;
 }
 
-function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditProfile }: ProfileHeroProps) {
+function ProfileHero({ nickname, email, profileImageUrl, isAdmin, planName, stats, onEditProfile }: ProfileHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 p-6 md:p-10">
       {/* 장식용 배경 원 */}
@@ -149,6 +154,12 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditP
               >
                 <SquarePen className="h-4 w-4" />
               </button>
+              <Link
+                href="/pricing"
+                className="rounded-full bg-navy-900 px-2 py-0.5 text-[10px] font-bold uppercase text-lime-300 transition-transform hover:scale-105"
+              >
+                {planName}
+              </Link>
               {isAdmin && (
                 <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
                   ADMIN
@@ -340,6 +351,92 @@ function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
   );
 }
 
+// 서버에 저장된 찜한 장소 목록(스팟 페이지 하트와 같은 데이터).
+function FavoritePlacesSection() {
+  const { data: favorites, isLoading } = useFavoritesList();
+  const items = favorites ?? [];
+
+  return (
+    <section className="rounded-[28px] border border-gray-100 bg-white p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Heart className="h-4 w-4 text-pink-500" />
+          <h2 className="text-base font-bold text-navy-900">찜한 장소</h2>
+        </div>
+        <Link
+          href="/spot"
+          className="flex items-center gap-0.5 text-xs text-gray-500 transition-colors hover:text-navy-900"
+        >
+          전체보기 <ChevronRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <div className="mt-4 flex flex-col gap-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="animate-shimmer h-[76px] rounded-2xl" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl bg-gray-50 px-6 py-10 text-center">
+          <Heart className="h-5 w-5 text-gray-300" />
+          <p className="text-sm text-gray-500">아직 찜한 장소가 없어요</p>
+          <Link
+            href="/spot"
+            className="rounded-full bg-navy-900 px-5 py-2 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
+          >
+            스팟 구경하러 가기
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-col gap-3">
+          {items.slice(0, FAVORITE_PLACES_LIMIT).map((item) => {
+            const category =
+              item.category && item.category in CATEGORY_META
+                ? CATEGORY_META[item.category as keyof typeof CATEGORY_META]
+                : null;
+
+            return (
+              <Link
+                key={item.mapPlaceId}
+                href={`/spot?keyword=${encodeURIComponent(item.name)}`}
+                className="group flex items-center gap-3 rounded-2xl border border-gray-100 p-3 transition-all duration-300 ease-out hover:border-ocean-200 hover:shadow-[0_12px_24px_-12px_rgba(10,132,255,0.2)]"
+              >
+                <div className="relative flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ocean-50">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      sizes="80px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="text-2xl">{category?.emoji ?? "📍"}</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-pink-500" />
+                    <span className="truncate text-[11px] font-semibold text-gray-500">
+                      {[category?.label, item.district].filter(Boolean).join(" · ") ||
+                        "찜한 장소"}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-[13px] font-semibold text-navy-900">
+                    {item.name}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-ocean-500" />
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SettingsSection({
   onOpenNotifications,
   onLogout,
@@ -351,6 +448,13 @@ function SettingsSection({
 }) {
   return (
     <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
+      <Link
+        href="/pricing"
+        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
+      >
+        <span className="text-sm text-gray-700">구독 관리</span>
+        <ChevronRight className="h-4 w-4 text-gray-300" />
+      </Link>
       <button
         onClick={onOpenNotifications}
         className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
@@ -386,6 +490,7 @@ export default function MyPageContent() {
   });
   const savedHankkut = useSavedHankkut();
   const { customNickname, saveNickname } = useCustomNickname(user?.userId);
+  const { plan } = useSubscription(user?.userId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
@@ -396,7 +501,6 @@ export default function MyPageContent() {
 
   const totalSpots =
     courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
-  const totalCost = courses?.reduce((acc, c) => acc + c.totalCost, 0) ?? 0;
 
   const stats = [
     {
@@ -410,13 +514,9 @@ export default function MyPageContent() {
       icon: MapPin,
     },
     {
-      label: "코스 총 예산",
-      value: courses
-        ? totalCost > 0
-          ? `${Math.round(totalCost / 10000).toLocaleString()}만원`
-          : "0원"
-        : "-",
-      icon: Wallet,
+      label: "저장한 한끗",
+      value: String(savedHankkut.length),
+      icon: Bookmark,
     },
   ];
 
@@ -427,6 +527,7 @@ export default function MyPageContent() {
         email={user.email}
         profileImageUrl={user.profileImageUrl}
         isAdmin={user.role === "ADMIN"}
+        planName={plan.name}
         stats={stats}
         onEditProfile={() => setIsEditOpen(true)}
       />
@@ -444,6 +545,7 @@ export default function MyPageContent() {
           <RecentCoursesSection courses={courses} isLoading={isCoursesLoading} />
         </div>
         <div className="flex flex-col gap-6">
+          <FavoritePlacesSection />
           <SavedHankkutSection saved={savedHankkut} />
           <SettingsSection
             onOpenNotifications={() => setIsNotifOpen(true)}
