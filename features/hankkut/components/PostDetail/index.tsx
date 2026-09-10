@@ -161,14 +161,13 @@ export default function PostDetail({ postId }: PostDetailProps) {
       {post.imageUrls.length > 0 && (
         <div className="mt-5 flex flex-col gap-3">
           {post.imageUrls.map((url) => (
-            // 업로드 저장소 도메인이 next.config에 없어 최적화 없이 그대로 띄운다
             <Image
               key={url}
               src={url}
               alt=""
               width={800}
               height={600}
-              unoptimized
+              quality={90}
               className="h-auto w-full max-w-xl rounded-2xl border border-gray-100 object-contain"
             />
           ))}
