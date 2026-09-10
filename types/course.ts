@@ -5,6 +5,14 @@ export type ApiResponse<T> = {
   data: T;
 };
 
+// 검증 실패(400) 응답. 이때는 message 대신 errorList에 필드 단위 메시지가 담긴다.
+export interface ApiErrorResponse {
+  status: number;
+  errorCode: string;
+  message?: string;
+  errorList?: { field: string; message: string }[];
+}
+
 // GET /api/v1/courses/me — 내 코스 목록 아이템
 export interface MyCourseSummary {
   id: number;
@@ -16,11 +24,16 @@ export interface MyCourseSummary {
 }
 
 // ── 코스 조회/수정 응답 ────────────────────────────────────
-// GET /api/v1/courses/{pairId}, PUT /api/v1/courses/{courseId}/items 공통 형태.
+// GET /api/v1/courses/{pairId}, PUT /api/v1/courses/{courseId} 공통 형태.
 // 조회는 data가 배열, 수정은 data가 단일 객체로 온다.
+export type CoursePlaceType = "SPOT" | "FOOD";
+
 export interface CourseItemResponse {
   serialNum: number;
-  spotContentId: string;
+  /** 장소 타입. 코스 편집은 현재 SPOT만 허용된다. */
+  placeType: CoursePlaceType;
+  /** 원본 식별자 — SPOT이면 관광공사 contentId. Map API의 originalId와 같은 값 */
+  originalId: string;
   title: string;
   mapX: number;
   mapY: number;
@@ -36,14 +49,29 @@ export interface CourseResponse {
   pairId: string;
   generationMode: string;
   title: string;
-  description: string;
-  totalCost: number;
+  /** 소개가 없으면 null */
+  description: string | null;
+  /** 음식점이 하나도 없으면 null */
+  totalCost: number | null;
   items: CourseItemResponse[];
   createdAt: string;
 }
 
-// PUT /api/v1/courses/{courseId}/items 요청 바디.
-// 편집 후 최종 순서의 spotContentId만 보내면 서버가 serialNum·거리·비용을 재계산한다.
-export interface CourseItemsUpdateRequest {
-  spotContentIds: string[];
+// ── 코스 수정 ──────────────────────────────────────────────
+// 서버 검증 규칙과 같은 값. 초과분은 입력 단계에서 막고, 서버는 최종 방어선이다.
+export const COURSE_TITLE_MAX = 50;
+export const COURSE_DESCRIPTION_MAX = 200;
+
+export interface CourseUpdateItem {
+  placeType: CoursePlaceType;
+  originalId: string;
+}
+
+// PUT /api/v1/courses/{courseId} 요청 바디 — 전체 교체 방식.
+// 바뀌지 않은 필드도 현재 값을 담아 보내야 한다. description을 비우거나 빼면 소개가 지워진다.
+// items는 순번 없이 배열 순서가 곧 방문 순서이며, 서버가 serialNum·거리·비용을 재계산한다.
+export interface CourseUpdateRequest {
+  title: string;
+  description: string | null;
+  items: CourseUpdateItem[];
 }

@@ -11,7 +11,7 @@ import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import {
   useCourseResult,
-  useUpdateCourseItems,
+  useUpdateCourse,
 } from "@/features/course/hooks/useCourseResult";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
@@ -20,7 +20,12 @@ import CourseSpotPicker from "@/features/course/components/CourseSpotPicker";
 import { getDistance } from "@/features/course/data/mockCourse";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
-import type { CourseItemResponse, CourseResponse } from "@/types/course";
+import { CourseUpdateError } from "@/libs/api/course";
+import type {
+  CourseItemResponse,
+  CourseResponse,
+  CourseUpdateItem,
+} from "@/types/course";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import type { MapPlace } from "@/types/map";
 
@@ -40,7 +45,7 @@ function toPlace(item: CourseItemResponse): CoursePlace {
     description: "",
     rating: 0,
     reviewCount: 0,
-    originalId: item.spotContentId,
+    originalId: item.originalId,
     mapPlaceId: item.serialNum,
     // 무료·비용 미상 장소는 null로 오므로 합산·표시가 안전하도록 0으로 맞춘다
     expectedCost: item.expectedCost ?? 0,
@@ -49,13 +54,15 @@ function toPlace(item: CourseItemResponse): CoursePlace {
 }
 
 function toCourse(course: CourseResponse): Course {
+  const description = course.description ?? "";
   return {
     id: course.id,
     title: course.title,
+    description,
     days: [
       {
         day: 1,
-        title: course.description || "",
+        title: description,
         places: course.items.map(toPlace),
       },
     ],
@@ -73,6 +80,14 @@ function withPreviewDistances(places: CoursePlace[]): CoursePlace[] {
 
 const toIdKey = (places: CoursePlace[]) =>
   places.map((p) => p.originalId ?? "").join(",");
+
+// 편집 초안. 저장은 전체 교체(PUT)라 제목·소개도 장소와 함께 들고 있어야
+// 바뀌지 않은 값이 그대로 서버에 다시 실린다(소개를 빠뜨리면 지워진다).
+interface CourseDraft {
+  title: string;
+  description: string;
+  places: CoursePlace[];
+}
 
 export default function CourseResultView() {
   const searchParams = useSearchParams();
@@ -98,7 +113,7 @@ export default function CourseResultView() {
   const { data, isLoading, isError } = useCourseResult(pairId);
   // 코스 장소별 "지금 혼잡도" 배지용 — 실패해도 배지만 안 보일 뿐이라 로딩과 무관
   const { data: congestion } = useCongestion();
-  const updateItems = useUpdateCourseItems(pairId);
+  const updateCourse = useUpdateCourse(pairId);
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
@@ -108,7 +123,7 @@ export default function CourseResultView() {
   // 편집은 로컬 초안(draft)으로 하고 "저장"을 눌렀을 때 한 번만 PUT 한다.
   // 드래그 한 번에 요청이 나가면 느리고, 중간 상태가 서버에 남기 때문.
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState<CoursePlace[] | null>(null);
+  const [draft, setDraft] = useState<CourseDraft | null>(null);
 
   if (isError) {
     return (
@@ -133,17 +148,41 @@ export default function CourseResultView() {
   const serverCourse = toCourse(data[0]);
   const courseId = data[0].id;
   const serverPlaces = serverCourse.days[0].places;
-  const places = draft ? withPreviewDistances(draft) : serverPlaces;
+  const places = draft ? withPreviewDistances(draft.places) : serverPlaces;
   const course: Course = {
     ...serverCourse,
+    title: draft?.title ?? serverCourse.title,
+    description: draft ? draft.description : serverCourse.description,
     days: [{ ...serverCourse.days[0], places }],
   };
   const congestionByPlaceId = buildCourseCongestion(places, congestion);
   const resolvedPlaceId = selectedPlaceId ?? places[0]?.id ?? null;
   const selectedPlace = places.find((p) => p.id === resolvedPlaceId) ?? places[0];
 
-  // 저장 버튼 활성 조건 — 서버 구성과 실제로 달라졌을 때만
-  const isDirty = draft !== null && toIdKey(draft) !== toIdKey(serverPlaces);
+  // 저장 버튼 활성 조건 — 장소 구성·제목·소개 중 하나라도 서버 값과 달라졌을 때만
+  const isDirty =
+    draft !== null &&
+    (toIdKey(draft.places) !== toIdKey(serverPlaces) ||
+      draft.title.trim() !== serverCourse.title ||
+      draft.description.trim() !== (serverCourse.description ?? ""));
+
+  // 빈 제목은 서버가 400으로 거절하므로 보내기 전에 막는다. 길이 초과는 maxLength로 이미 막혀 있다.
+  const titleError =
+    draft !== null && draft.title.trim() === "" ? "코스 제목을 입력해주세요" : undefined;
+  const serverError =
+    updateCourse.error instanceof CourseUpdateError ? updateCourse.error : null;
+  const fieldErrors = {
+    title: titleError ?? serverError?.fieldErrors.title,
+    description: serverError?.fieldErrors.description,
+  };
+  // 필드에 붙일 수 있는 오류는 칸 아래에 보여주고, 그 외(장소 오류·충돌·네트워크)만 상단 배너로 낸다
+  const saveError = updateCourse.isError
+    ? (serverError?.fieldErrors.items ??
+      (serverError?.fieldErrors.title || serverError?.fieldErrors.description
+        ? null
+        : (updateCourse.error?.message ??
+          "코스를 저장하지 못했어요. 잠시 후 다시 시도해주세요.")))
+    : null;
 
   // 스팟 피커에서 "이미 담김" 표시용
   const existingIds = new Set(
@@ -159,31 +198,59 @@ export default function CourseResultView() {
         }
       : undefined;
 
-  const updateDraft = (next: CoursePlace[]) => setDraft(next);
+  const updateDraft = (next: CoursePlace[]) =>
+    setDraft((prev) => (prev ? { ...prev, places: next } : prev));
+
+  // 서버가 거절한 뒤 다시 고치기 시작하면 이전 오류 표시를 지운다
+  const clearServerError = () => {
+    if (updateCourse.isError) updateCourse.reset();
+  };
+
+  const handleChangeTitle = (title: string) => {
+    clearServerError();
+    setDraft((prev) => (prev ? { ...prev, title } : prev));
+  };
+
+  const handleChangeDescription = (description: string) => {
+    clearServerError();
+    setDraft((prev) => (prev ? { ...prev, description } : prev));
+  };
 
   const handleStartEdit = () => {
-    updateItems.reset();
-    setDraft(serverPlaces);
+    updateCourse.reset();
+    setDraft({
+      title: serverCourse.title,
+      description: serverCourse.description ?? "",
+      places: serverPlaces,
+    });
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
-    updateItems.reset();
+    updateCourse.reset();
     setDraft(null);
     setIsEditing(false);
     setSelectedPlaceId(null);
   };
 
   const handleSaveEdit = () => {
-    if (!draft || updateItems.isPending) return;
-    // 백엔드는 최종 순서의 spotContentId만 받는다. serialNum·거리·비용은 서버가 재계산.
-    const spotContentIds = draft
+    if (!draft || updateCourse.isPending || titleError) return;
+    // 전체 교체 방식 — 순번은 배열 순서로 전달하고 serialNum·거리·비용은 서버가 재계산한다.
+    // 코스 편집은 현재 SPOT만 허용된다.
+    const items = draft.places
       .map((p) => p.originalId)
-      .filter((v): v is string => !!v);
-    if (spotContentIds.length !== draft.length) return;
+      .filter((v): v is string => !!v)
+      .map<CourseUpdateItem>((originalId) => ({ placeType: "SPOT", originalId }));
+    if (items.length !== draft.places.length) return;
 
-    updateItems.mutate(
-      { courseId, spotContentIds },
+    updateCourse.mutate(
+      {
+        courseId,
+        title: draft.title.trim(),
+        // 비운 소개는 null로 보내 서버에서도 지워지게 한다
+        description: draft.description.trim() || null,
+        items,
+      },
       {
         onSuccess: () => {
           // 응답으로 캐시가 갱신되므로 초안을 버리고 서버 값으로 돌아간다
@@ -273,13 +340,11 @@ export default function CourseResultView() {
             budget={budget}
             isEditing={isEditing}
             isDirty={isDirty}
-            isSaving={updateItems.isPending}
-            saveError={
-              updateItems.isError
-                ? (updateItems.error?.message ??
-                  "코스를 저장하지 못했어요. 잠시 후 다시 시도해주세요.")
-                : null
-            }
+            isSaving={updateCourse.isPending}
+            saveError={saveError}
+            fieldErrors={fieldErrors}
+            onChangeTitle={handleChangeTitle}
+            onChangeDescription={handleChangeDescription}
             onStartEdit={handleStartEdit}
             onSaveEdit={handleSaveEdit}
             onCancelEdit={handleCancelEdit}
