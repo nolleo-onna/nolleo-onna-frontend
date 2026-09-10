@@ -4,7 +4,7 @@ import { Flame, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import HankkutList from "@/features/hankkut/components/HankkutList";
-import { selectRegionPosts, useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
+import { useRegionPosts } from "@/features/hankkut/hooks/usePosts";
 import { buildWeeklyBest } from "@/features/hankkut/utils/weeklyBestFeed";
 
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
@@ -20,9 +20,9 @@ interface RegionWeeklyBestProps {
 // 합쳐 조회수 순으로 보여준다. 큐레이션만 보던 예전 버전은 자유게시판에
 // 아무리 글이 쌓여도 베스트에 안 잡혀서 카드가 안 채워지는 문제가 있었다.
 export default function RegionWeeklyBest({ gallery, curatedPosts }: RegionWeeklyBestProps) {
-  const { posts: boardPosts } = useHankkutPosts();
-  const regionBoardPosts = selectRegionPosts(boardPosts, gallery.slug);
-  const items = buildWeeklyBest(curatedPosts, regionBoardPosts);
+  // 최근 글 30개만 후보로 — 베스트는 조회수 순 상위 9개라 그 이상은 필요 없다
+  const { data } = useRegionPosts(gallery.districtTag, 0, 30);
+  const items = buildWeeklyBest(curatedPosts, data?.content ?? []);
 
   return (
     <section>

@@ -10,8 +10,8 @@ interface PostPageProps {
   params: Promise<{ postId: string }>;
 }
 
-// 유저 작성 글 상세. 목데이터 한끗(/hankkut/[id], id: number)과 데이터 소스가
-// 달라(localStorage, uuid) 경로를 분리했다.
+// 유저 작성 글 상세(백엔드 게시글). 큐레이션 한끗(/hankkut/[id])과는 데이터 소스가 달라
+// 경로를 분리했다.
 export default async function HankkutPostPage({ params }: PostPageProps) {
   const { postId } = await params;
 

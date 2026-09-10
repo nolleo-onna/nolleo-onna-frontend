@@ -20,10 +20,13 @@ export async function clientFetch(
   options: RequestInit = {},
 ) {
   const { headers, ...rest } = options;
+  // multipart(FormData)는 브라우저가 boundary를 붙인 Content-Type을 직접 넣어야 해서
+  // 기본 JSON 헤더를 달지 않는다.
+  const isFormData = typeof FormData !== "undefined" && rest.body instanceof FormData;
 
   const res = await fetch(`${API_URL}${endpoint}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...headers,
     },
     credentials: "include",

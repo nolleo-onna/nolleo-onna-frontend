@@ -11,10 +11,13 @@ import {
   getCuratedTotalViews,
   getGallerySummary,
 } from "@/features/hankkut/data/galleries";
-import { selectRegionPosts, useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
+import { useDistrictPostStats } from "@/features/hankkut/hooks/usePosts";
 
 import type { HankkutGallery } from "@/features/hankkut/data/galleries";
-import type { HankkutPost } from "@/features/hankkut/hooks/useHankkutPosts";
+import type { PostDistrictTag } from "@/types/post";
+
+type BoardStats = Map<PostDistrictTag, { count: number; latest: { title: string } | undefined }>;
+const DISTRICTS = HANKKUT_GALLERIES.map((g) => g.districtTag);
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -32,14 +35,14 @@ const containerVariants: Variants = {
   },
 };
 
-/** 큐레이션+자유게시판 조회수를 합쳐 가장 인기 있는 동네를 고른다 */
-function pickFeaturedSlug(communityPosts: HankkutPost[]): string | null {
+/**
+ * 큐레이션 조회수 + 자유게시판 글 수로 가장 인기 있는 동네를 고른다.
+ * 서버 목록은 카드용으로 글 수만 가볍게 받아서, 글 하나를 조회수 10으로 쳐서 합산한다.
+ */
+function pickFeaturedSlug(boardStats: BoardStats): string | null {
   const totals = HANKKUT_GALLERIES.map((gallery) => {
-    const boardViews = selectRegionPosts(communityPosts, gallery.slug).reduce(
-      (sum, post) => sum + post.views,
-      0
-    );
-    return { slug: gallery.slug, views: getCuratedTotalViews(gallery.slug) + boardViews };
+    const boardCount = boardStats.get(gallery.districtTag)?.count ?? 0;
+    return { slug: gallery.slug, views: getCuratedTotalViews(gallery.slug) + boardCount * 10 };
   });
   const top = totals.reduce<{ slug: string; views: number } | null>(
     (best, current) => (!best || current.views > best.views ? current : best),
@@ -130,18 +133,18 @@ function GalleryCard({ gallery, postCount, coverImage, previewTitle, featured }:
 // 글 수·이번 주 인기글 제목을 미리보기로 보여준다. 아직 글이 없는 동네는
 // 이모지를 크게 띄우고 "첫 글의 주인공" 문구로 빈 자리를 채운다.
 export default function GalleryGrid() {
-  const { posts: communityPosts } = useHankkutPosts();
+  const boardStats = useDistrictPostStats(DISTRICTS);
 
   // 인기 동네를 배열 맨 앞으로 재배치한다. CSS만으로 순서를 바꾸면(col-start
   // 등) 아이템 수·그리드 트랙이 바뀌는 타이밍에 배치가 깨지는 걸 겪어서,
   // 배열 자체를 재배치하는 더 단순하고 안전한 방식을 쓴다.
   const orderedGalleries = useMemo(() => {
-    const featuredSlug = pickFeaturedSlug(communityPosts);
+    const featuredSlug = pickFeaturedSlug(boardStats);
     if (!featuredSlug) return HANKKUT_GALLERIES;
     const featured = HANKKUT_GALLERIES.find((g) => g.slug === featuredSlug);
     if (!featured) return HANKKUT_GALLERIES;
     return [featured, ...HANKKUT_GALLERIES.filter((g) => g.slug !== featuredSlug)];
-  }, [communityPosts]);
+  }, [boardStats]);
 
   return (
     <motion.div
@@ -154,10 +157,10 @@ export default function GalleryGrid() {
         const { postCount: curatedCount, coverImage, topPostTitle } = getGallerySummary(
           gallery.slug
         );
-        const boardPosts = selectRegionPosts(communityPosts, gallery.slug);
-        const postCount = curatedCount + boardPosts.length;
+        const board = boardStats.get(gallery.districtTag);
+        const postCount = curatedCount + (board?.count ?? 0);
         // 큐레이션 인기글이 없으면 자유게시판 최신 글이라도 미리보기로 보여준다
-        const previewTitle = topPostTitle ?? boardPosts[0]?.title;
+        const previewTitle = topPostTitle ?? board?.latest?.title;
         const featured = index === 0;
 
         return (

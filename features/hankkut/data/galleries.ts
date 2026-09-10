@@ -1,6 +1,7 @@
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
 
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
+import type { PostDistrictTag } from "@/types/post";
 
 export interface HankkutGallery {
   slug: string;
@@ -10,6 +11,12 @@ export interface HankkutGallery {
   emoji: string;
   /** 이 갤러리로 묶이는 게시글의 region 문자열들(부분 일치) */
   regionKeywords: string[];
+  /**
+   * 자유게시판 글을 서버에서 걸러 올 행정구. 백엔드 게시글 API는 구 단위(districtTag)만
+   * 받기 때문에, 놀거리 동네 단위인 갤러리를 구에 대응시킨다. 사하·을숙도는 둘 다
+   * 사하구라 같은 게시판을 공유한다.
+   */
+  districtTag: PostDistrictTag;
 }
 
 // 한끗 글의 region 필드는 자유 문자열("광안리", "센텀·남포" 등)이라, 행정구역이
@@ -22,6 +29,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "부산의 얼굴, 해변·야경·축제",
     emoji: "🏖️",
     regionKeywords: ["해운대"],
+    districtTag: "HAEUNDAE_GU",
   },
   {
     slug: "gwangalli",
@@ -29,6 +37,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "드론쇼·야시장·바다뷰 카페",
     emoji: "🌉",
     regionKeywords: ["광안리", "민락"],
+    districtTag: "SUYEONG_GU",
   },
   {
     slug: "seomyeon",
@@ -36,6 +45,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "쇼핑·맛집·번화가",
     emoji: "🏙️",
     regionKeywords: ["서면", "전포"],
+    districtTag: "BUSANJIN_GU",
   },
   {
     slug: "nampo",
@@ -43,6 +53,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "자갈치·국제시장·깡통야시장",
     emoji: "🐟",
     regionKeywords: ["남포", "자갈치", "국제시장"],
+    districtTag: "JUNG_GU",
   },
   {
     slug: "wondosim",
@@ -50,6 +61,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "근대 골목·감천문화마을",
     emoji: "🏛️",
     regionKeywords: ["원도심"],
+    districtTag: "DONG_GU",
   },
   {
     slug: "yeongdo",
@@ -57,6 +69,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "흰여울마을·카페거리",
     emoji: "🌊",
     regionKeywords: ["영도"],
+    districtTag: "YEONGDO_GU",
   },
   {
     slug: "saha",
@@ -64,6 +77,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "다대포·낙동강 하구",
     emoji: "🦆",
     regionKeywords: ["사하", "다대포"],
+    districtTag: "SAHA_GU",
   },
   {
     slug: "eulsukdo",
@@ -71,6 +85,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "생태공원·현대미술관·철새",
     emoji: "🕊️",
     regionKeywords: ["을숙도"],
+    districtTag: "SAHA_GU",
   },
   {
     slug: "gijang",
@@ -78,6 +93,7 @@ export const HANKKUT_GALLERIES: HankkutGallery[] = [
     tagline: "이기대·해변 드라이브",
     emoji: "🚗",
     regionKeywords: ["기장", "송정"],
+    districtTag: "GIJANG_GUN",
   },
 ];
 
@@ -91,6 +107,14 @@ export function matchGallerySlug(region: string): string | null {
 
 export function getGalleryBySlug(slug: string): HankkutGallery | undefined {
   return HANKKUT_GALLERIES.find((g) => g.slug === slug);
+}
+
+/** 글의 districtTag로 돌아갈 갤러리. 한 구를 여러 갤러리가 공유하면 먼저 정의된 쪽 */
+export function getGalleryByDistrict(
+  districtTag: PostDistrictTag | null | undefined,
+): HankkutGallery | undefined {
+  if (!districtTag) return undefined;
+  return HANKKUT_GALLERIES.find((g) => g.districtTag === districtTag);
 }
 
 export function getPostsForGallery(slug: string): Hankkut[] {
