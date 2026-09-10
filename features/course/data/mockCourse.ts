@@ -23,6 +23,8 @@ export interface CourseDay {
 export interface Course {
   id: number;
   title: string;
+  /** 코스 소개. 서버 코스는 편집 대상이라 정식 필드로 두고, 목업 코스는 없어도 된다. */
+  description?: string;
   days: CourseDay[];
 }
 
