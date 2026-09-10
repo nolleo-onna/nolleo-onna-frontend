@@ -9,7 +9,7 @@ import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
 import { useFavoriteStatus, useToggleFavorite } from "@/features/spot/hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
-import { fetchFoodDetail, postReview, patchReview } from "@/features/spot/apis/spot";
+import { fetchFoodDetail, fetchPlaceRating, postReview, patchReview } from "@/features/spot/apis/spot";
 type Props = {
   contentId: string | null;
   placeType: "SPOT" | "FOOD" | null;
@@ -62,6 +62,14 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   const [editing, setEditing] = useState(false);
   const queryClient = useQueryClient();
 
+  // 모두의 평균 — 내 별점을 등록·수정하면 다시 받아온다
+  const ratingKey = ["placeRating", mapPlaceId] as const;
+  const { data: rating } = useQuery({
+    queryKey: ratingKey,
+    queryFn: () => fetchPlaceRating(mapPlaceId),
+    staleTime: 1000 * 60,
+  });
+
   const { mutate, isPending } = useMutation({
   mutationFn: (rating: number) => {
     const already = Number(localStorage.getItem(storageKey) ?? 0) > 0;
@@ -72,6 +80,7 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
     setSubmitted(true);
     setEditing(false);
     queryClient.invalidateQueries({ queryKey: mapPlaceKeys.all });
+    queryClient.invalidateQueries({ queryKey: ratingKey });
   },
 });
 
@@ -89,7 +98,14 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
 
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-white/70 bg-white/55 p-4">
-      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">내 별점</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">내 별점</span>
+        {rating && rating.reviewCount > 0 && (
+          <span className="text-xs text-gray-500">
+            평균 <b className="text-gray-700">{rating.avgRating.toFixed(1)}</b> · 리뷰 {rating.reviewCount}
+          </span>
+        )}
+      </div>
 
       {submitted && !editing ? (
         <div className="flex items-center justify-between">
