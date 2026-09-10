@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { HANKKUT_GALLERIES } from "@/features/hankkut/data/galleries";
+import { getExamplePosts, type ExamplePost } from "@/features/hankkut/data/examplePosts";
 import { BOARD_PAGE_SIZE, useRegionPosts } from "@/features/hankkut/hooks/usePosts";
 import { maskName } from "@/features/hankkut/utils/maskName";
 import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
@@ -76,6 +77,37 @@ function BoardRow({ post }: { post: PostSummary }) {
   );
 }
 
+/** 서버에 글이 없을 때만 보여주는 예시 — 링크 없음, "예시" 배지로 구분 */
+function ExampleRow({ post }: { post: ExamplePost }) {
+  return (
+    <div className="flex items-center gap-3 px-6 py-3.5 opacity-70">
+      <AuthorAvatar name={post.author} size={32} />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-gray-800">
+          <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">
+            예시
+          </span>
+          <span className="truncate">{post.title}</span>
+        </p>
+        <p className="mt-0.5 flex items-center gap-2 text-[11px] text-gray-400">
+          <span className="font-medium text-gray-500">{post.author}</span>
+          <span>{formatDate(post.createdAt)}</span>
+          <span className="flex items-center gap-0.5">
+            <Eye className="h-3 w-3" />
+            {post.viewCount}
+          </span>
+          {post.likeCount > 0 && (
+            <span className="flex items-center gap-0.5 text-ocean-500">
+              <ThumbsUp className="h-3 w-3" />
+              {post.likeCount}
+            </span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** 페이지 버튼은 현재 페이지 주변 5개만 — 글이 많아져도 한 줄에 담기게 */
 function visiblePages(current: number, total: number, span = 5): number[] {
   const start = Math.max(0, Math.min(current - Math.floor(span / 2), total - span));
@@ -94,6 +126,8 @@ export default function RegionBoardList({ regionSlug, districtTag }: RegionBoard
   const sharedWith = HANKKUT_GALLERIES.filter(
     (g) => g.districtTag === districtTag && g.slug !== regionSlug,
   );
+  // 아직 글이 없는 동네는 텅 비어 보이지 않게 예시 글로 채운다 — 첫 글이 올라오면 사라진다
+  const examples = !isPending && !isError && totalElements === 0 ? getExamplePosts(districtTag) : [];
 
   return (
     <section className="rounded-[28px] border border-gray-100 bg-white">
@@ -137,13 +171,26 @@ export default function RegionBoardList({ regionSlug, districtTag }: RegionBoard
           <p className="text-[11px] text-gray-400">잠시 후 다시 시도해주세요</p>
         </div>
       ) : posts.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-          <span className="text-3xl">✍️</span>
-          <p className="text-sm text-gray-500">아직 글이 없어요. 첫 글을 남겨보세요!</p>
-          <p className="text-[11px] text-gray-400">
-            이 지역에서 발견한 꿀팁, 후기, 질문 무엇이든 좋아요
-          </p>
-        </div>
+        <>
+          <div className="flex flex-col items-center gap-2 px-6 py-8 text-center">
+            <span className="text-3xl">✍️</span>
+            <p className="text-sm text-gray-500">아직 글이 없어요. 첫 글을 남겨보세요!</p>
+            <p className="text-[11px] text-gray-400">
+              {examples.length > 0
+                ? "아래는 예시예요. 첫 글이 올라오면 사라져요"
+                : "이 지역에서 발견한 꿀팁, 후기, 질문 무엇이든 좋아요"}
+            </p>
+          </div>
+          {examples.length > 0 && (
+            <ul aria-label="예시 글" className="divide-y divide-gray-50 border-t border-dashed border-gray-100">
+              {examples.map((post) => (
+                <li key={post.title}>
+                  <ExampleRow post={post} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       ) : (
         <ul className={`divide-y divide-gray-50 ${isPlaceholderData ? "opacity-60" : ""}`}>
           {posts.map((post) => (
