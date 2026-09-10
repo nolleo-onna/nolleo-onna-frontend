@@ -1,5 +1,5 @@
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
-import type { HankkutPost } from "@/features/hankkut/hooks/useHankkutPosts";
+import type { PostSummary } from "@/types/post";
 
 /** 큐레이션 한끗과 자유게시판 글을 같은 카드로 보여주기 위한 공통 모양 */
 export interface WeeklyBestItem {
@@ -32,12 +32,11 @@ function formatBoardDate(iso: string): string {
 
 /**
  * "이번 주 베스트"는 큐레이션 한끗과 자유게시판 글을 합쳐 조회수 순으로 보여준다.
- * 이전엔 큐레이션 글만 대상이라, 자유게시판 글이 아무리 많아도(시드 데이터 포함)
- * 베스트에 안 잡혀서 카드 수가 안 채워지는 문제가 있었다.
+ * 자유게시판 글은 서버 목록(PostSummary)이라 본문·이미지 URL이 없어 제목 카드로만 나온다.
  */
 export function buildWeeklyBest(
   curated: Hankkut[],
-  board: HankkutPost[],
+  board: PostSummary[],
   limit = 9
 ): WeeklyBestItem[] {
   const curatedItems: WeeklyBestItem[] = curated.map((hankkut) => ({
@@ -56,12 +55,10 @@ export function buildWeeklyBest(
     key: `board-${post.id}`,
     href: `/hankkut/post/${post.id}`,
     title: post.title,
-    summary: post.content,
-    imageUrl: post.imageDataUrl,
     badgeLabel: "자유게시판",
     badgeClassName: BOARD_BADGE_CLASS,
     metaLabel: formatBoardDate(post.createdAt),
-    views: post.views,
+    views: post.viewCount,
   }));
 
   return [...curatedItems, ...boardItems]

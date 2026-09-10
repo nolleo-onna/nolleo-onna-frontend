@@ -69,9 +69,9 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
           <RegionWeeklyBest gallery={gallery} curatedPosts={curatedPosts} />
         </div>
 
-        {/* 자유게시판 — 글은 localStorage 기반 프론트 MVP (useHankkutPosts) */}
+        {/* 자유게시판 — 백엔드 게시글 API를 갤러리의 행정구(districtTag)로 걸러 보여준다 */}
         <div className="mt-10">
-          <RegionBoardList regionSlug={slug} />
+          <RegionBoardList regionSlug={slug} districtTag={gallery.districtTag} />
         </div>
         <div className="mt-14" />
       </div>

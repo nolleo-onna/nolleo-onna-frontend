@@ -10,8 +10,7 @@ interface EditPageProps {
   params: Promise<{ postId: string }>;
 }
 
-// 글 데이터가 localStorage에만 있어 서버에서 갤러리를 미리 알 수 없다 —
-// PostWriteForm이 postId로 글을 찾아 regionSlug/헤더까지 클라이언트에서 채운다.
+// PostWriteForm이 postId로 글을 받아 갤러리 헤더와 기존 값을 클라이언트에서 채운다.
 export default async function HankkutPostEditPage({ params }: EditPageProps) {
   const { postId } = await params;
 

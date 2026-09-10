@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
-import { useHankkutPosts } from "@/features/hankkut/hooks/useHankkutPosts";
+import { getGalleryByDistrict, getGalleryBySlug } from "@/features/hankkut/data/galleries";
+import { POST_CATEGORY_LABELS } from "@/features/hankkut/constants/postTags";
+import { useCreatePost, usePost, useUpdatePost } from "@/features/hankkut/hooks/usePosts";
 import { maskName } from "@/features/hankkut/utils/maskName";
-import { getGalleryBySlug } from "@/features/hankkut/data/galleries";
+import { PostApiError, uploadImages } from "@/libs/api/posts";
+import {
+  POST_CATEGORY_MAX,
+  POST_CATEGORY_TAGS,
+  POST_IMAGE_MAX,
+  POST_IMAGE_MAX_BYTES,
+} from "@/types/post";
+
+import type { HankkutGallery } from "@/features/hankkut/data/galleries";
+import type { PostCategoryTag, PostDetail } from "@/types/post";
 
 interface PostWriteFormProps {
   /** 새 글 작성 — 어느 갤러리에 올릴지 */
@@ -21,109 +31,74 @@ interface PostWriteFormProps {
 
 const TITLE_MAX = 60;
 const CONTENT_MAX = 2000;
-/** localStorage 용량(≈5MB) 보호 — 긴 변 기준 리사이즈 후 JPEG 저장 */
-const IMAGE_MAX_EDGE = 800;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-function resizeToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new window.Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, IMAGE_MAX_EDGE / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("canvas"));
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.8));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("load"));
-    };
-    img.src = url;
-  });
+function Notice({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-[28px] border border-gray-100 bg-white px-6 py-16 text-center">
+      <p className="text-[15px] font-semibold text-gray-700">{title}</p>
+      {description && <p className="text-sm text-gray-500">{description}</p>}
+    </div>
+  );
 }
 
-export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps) {
+interface PostEditorProps {
+  gallery: HankkutGallery | undefined;
+  /** 수정 모드면 기존 글 */
+  post?: PostDetail;
+  authorName: string;
+}
+
+function PostEditor({ gallery, post, authorName }: PostEditorProps) {
   const router = useRouter();
-  const { user, isLoading, isLoggedIn } = useAuth();
-  const { customNickname } = useCustomNickname(user?.userId);
-  const { posts, createPost, updatePost } = useHankkutPosts();
+  const createPost = useCreatePost();
+  const updatePost = useUpdatePost(post?.id ?? 0);
 
-  const editingPost = postId ? posts.find((p) => p.id === postId) : undefined;
-  const isEditMode = Boolean(postId);
-  const effectiveRegionSlug = editingPost?.regionSlug ?? regionSlug;
-  const gallery = effectiveRegionSlug ? getGalleryBySlug(effectiveRegionSlug) : undefined;
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined);
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [content, setContent] = useState(post?.content ?? "");
+  const [tags, setTags] = useState<PostCategoryTag[]>(post?.categoryTags ?? []);
+  const [existingUrls, setExistingUrls] = useState<string[]>(post?.imageUrls ?? []);
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 수정 모드: 글 로드가 끝나면 기존 값으로 한 번 채운다
-  const filledRef = useRef(false);
-  useEffect(() => {
-    if (!isEditMode || filledRef.current || !editingPost) return;
-    filledRef.current = true;
-    setTitle(editingPost.title);
-    setContent(editingPost.content);
-    setImageDataUrl(editingPost.imageDataUrl);
-  }, [isEditMode, editingPost]);
+  // 새로 고른 파일의 미리보기 URL — 파일 목록이 바뀔 때만 다시 만들고 이전 것은 해제한다
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((url) => URL.revokeObjectURL(url)), [previews]);
 
-  if (isLoading || (isEditMode && posts.length === 0)) {
-    return <div className="animate-shimmer h-80 rounded-[28px]" />;
-  }
+  const imageCount = existingUrls.length + files.length;
 
-  if (!isLoggedIn || !user) {
-    return (
-      <div className="flex flex-col items-center gap-4 rounded-[28px] border border-gray-100 bg-white px-6 py-16 text-center">
-        <p className="text-lg font-bold text-navy-900">로그인하고 글을 남겨보세요</p>
-        <p className="text-sm text-gray-500">
-          이 지역의 꿀팁과 후기를 다른 여행자들과 나눌 수 있어요
-        </p>
-        <Link
-          href="/login"
-          className="rounded-full bg-ocean-500 px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-ocean-600 active:scale-95"
-        >
-          로그인하러 가기
-        </Link>
-      </div>
-    );
-  }
-
-  if (isEditMode && !editingPost) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-[28px] border border-gray-100 bg-white px-6 py-16 text-center">
-        <p className="text-[15px] font-semibold text-gray-700">글을 찾을 수 없어요</p>
-      </div>
-    );
-  }
-
-  if (isEditMode && editingPost && editingPost.authorId !== user.userId) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-[28px] border border-gray-100 bg-white px-6 py-16 text-center">
-        <p className="text-[15px] font-semibold text-gray-700">본인 글만 수정할 수 있어요</p>
-      </div>
-    );
-  }
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    try {
-      setImageDataUrl(await resizeToDataUrl(file));
-      setError(null);
-    } catch {
-      setError("이미지를 불러오지 못했어요. 다른 파일로 시도해주세요.");
-    }
+  const toggleTag = (tag: PostCategoryTag) => {
+    setError(null);
+    setTags((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      if (prev.length >= POST_CATEGORY_MAX) return prev;
+      return [...prev, tag];
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (picked.length === 0) return;
+
+    const rejected = picked.find(
+      (f) => !ACCEPTED_TYPES.includes(f.type) || f.size > POST_IMAGE_MAX_BYTES,
+    );
+    if (rejected) {
+      setError("jpg·png·webp 이미지를 10MB 이하로 올려주세요.");
+      return;
+    }
+    if (imageCount + picked.length > POST_IMAGE_MAX) {
+      setError(`사진은 최대 ${POST_IMAGE_MAX}장까지 올릴 수 있어요.`);
+      return;
+    }
+    setError(null);
+    setFiles((prev) => [...prev, ...picked]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
@@ -131,35 +106,35 @@ export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps
       setError("제목과 내용을 모두 입력해주세요.");
       return;
     }
+    if (tags.length === 0) {
+      setError("태그를 하나 이상 골라주세요.");
+      return;
+    }
 
-    if (isEditMode && editingPost) {
-      const updated = updatePost(editingPost.id, {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      // 사진은 먼저 올려 URL을 받은 뒤 글에 담는다
+      const uploaded = files.length > 0 ? await uploadImages(files) : [];
+      const body = {
         title: trimmedTitle,
         content: trimmedContent,
-        imageDataUrl,
-      });
-      if (!updated) {
-        setError("저장 공간이 가득 찼어요. 이미지를 빼고 다시 시도해주세요.");
-        return;
-      }
-      router.push(`/hankkut/post/${updated.id}`);
-      return;
+        categoryTags: tags,
+        districtTag: gallery?.districtTag,
+        imageUrls: [...existingUrls, ...uploaded],
+      };
+      const saved = post
+        ? await updatePost.mutateAsync(body)
+        : await createPost.mutateAsync(body);
+      router.push(`/hankkut/post/${saved.id}`);
+    } catch (err) {
+      const message =
+        err instanceof PostApiError
+          ? (Object.values(err.fieldErrors)[0] ?? err.message)
+          : "글을 저장하지 못했어요. 잠시 후 다시 시도해주세요.";
+      setError(message);
+      setIsSubmitting(false);
     }
-
-    if (!effectiveRegionSlug) return; // regionSlug 없이 새 글 작성은 호출부 버그
-    const post = createPost({
-      regionSlug: effectiveRegionSlug,
-      title: trimmedTitle,
-      content: trimmedContent,
-      imageDataUrl,
-      author: customNickname ?? maskName(user.nickname),
-      authorId: user.userId,
-    });
-    if (!post) {
-      setError("저장 공간이 가득 찼어요. 이미지를 빼거나 오래된 글을 지운 뒤 다시 시도해주세요.");
-      return;
-    }
-    router.push(`/hankkut/post/${post.id}`);
   };
 
   return (
@@ -182,7 +157,7 @@ export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps
             Community
           </p>
           <h1 className="mt-1 text-2xl font-bold text-navy-900">
-            {gallery.emoji} {gallery.name} 한끗에 {isEditMode ? "글 수정" : "글쓰기"}
+            {gallery.emoji} {gallery.name} 한끗에 {post ? "글 수정" : "글쓰기"}
           </h1>
         </div>
       )}
@@ -201,6 +176,33 @@ export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps
         </p>
       </div>
 
+      {/* 태그 — 서버가 1개 이상을 요구한다 */}
+      <div>
+        <p className="mb-2 text-xs font-semibold text-gray-600">
+          태그 <span className="font-normal text-gray-400">(1~{POST_CATEGORY_MAX}개)</span>
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {POST_CATEGORY_TAGS.map((tag) => {
+            const selected = tags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                aria-pressed={selected}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  selected
+                    ? "border-navy-900 bg-navy-900 text-lime-300"
+                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                {POST_CATEGORY_LABELS[tag]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div>
         <textarea
           value={content}
@@ -215,63 +217,137 @@ export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps
         </p>
       </div>
 
-      {/* 이미지 첨부 */}
-      {imageDataUrl ? (
-        <div className="relative w-fit">
-          {/* dataURL 미리보기라 next/image 최적화 대상이 아님 */}
-          <Image
-            src={imageDataUrl}
-            alt="첨부 이미지 미리보기"
-            width={160}
-            height={120}
-            unoptimized
-            className="h-28 w-auto rounded-xl border border-gray-100 object-cover"
-          />
+      {/* 사진 — 기존 URL + 새 파일 미리보기 */}
+      <div className="flex flex-wrap items-center gap-3">
+        {existingUrls.map((url) => (
+          <div key={url} className="relative">
+            <Image
+              src={url}
+              alt="첨부 이미지"
+              width={160}
+              height={120}
+              unoptimized
+              className="h-24 w-auto rounded-xl border border-gray-100 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => setExistingUrls((prev) => prev.filter((u) => u !== url))}
+              aria-label="이미지 제거"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-900/80 text-white transition-colors hover:bg-gray-900"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+        {previews.map((url, i) => (
+          <div key={url} className="relative">
+            <Image
+              src={url}
+              alt="첨부 이미지 미리보기"
+              width={160}
+              height={120}
+              unoptimized
+              className="h-24 w-auto rounded-xl border border-gray-100 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
+              aria-label="이미지 제거"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-900/80 text-white transition-colors hover:bg-gray-900"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+        {imageCount < POST_IMAGE_MAX && (
           <button
             type="button"
-            onClick={() => setImageDataUrl(undefined)}
-            aria-label="이미지 제거"
-            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-900/80 text-white transition-colors hover:bg-gray-900"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-xs font-medium text-gray-500 transition-colors hover:border-ocean-300 hover:text-ocean-600"
           >
-            <X className="h-3.5 w-3.5" />
+            <ImagePlus className="h-4 w-4" />
+            사진 추가 ({imageCount}/{POST_IMAGE_MAX})
           </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex w-fit items-center gap-1.5 rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-xs font-medium text-gray-500 transition-colors hover:border-ocean-300 hover:text-ocean-600"
-        >
-          <ImagePlus className="h-4 w-4" />
-          사진 추가 (선택)
-        </button>
-      )}
+        )}
+      </div>
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
-        onChange={handleImageChange}
+        accept={ACCEPTED_TYPES.join(",")}
+        multiple
+        onChange={handleFilesChange}
         className="hidden"
       />
 
       {error && (
-        <p className="rounded-xl bg-red-50 px-4 py-2.5 text-xs font-medium text-red-500">
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-2.5 text-xs font-medium text-red-500">
           {error}
         </p>
       )}
 
       <div className="flex items-center justify-between border-t border-gray-50 pt-4">
-        <p className="text-[11px] text-gray-400">
-          {customNickname ?? maskName(user.nickname)} 이름으로 게시돼요 · 이 브라우저에
-          저장됩니다
-        </p>
+        <p className="text-[11px] text-gray-400">{authorName} 이름으로 게시돼요</p>
         <button
           type="submit"
-          className="rounded-full bg-navy-900 px-6 py-2.5 text-sm font-semibold text-lime-300 transition-transform hover:-translate-y-0.5 active:scale-95"
+          disabled={isSubmitting}
+          className="rounded-full bg-navy-900 px-6 py-2.5 text-sm font-semibold text-lime-300 transition-transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          {isEditMode ? "수정 완료" : "게시하기"}
+          {isSubmitting ? "저장 중..." : post ? "수정 완료" : "게시하기"}
         </button>
       </div>
     </form>
+  );
+}
+
+// 로그인·글 로드·권한 확인만 하고, 입력 상태는 PostEditor가 초기값으로 받는다
+export default function PostWriteForm({ regionSlug, postId }: PostWriteFormProps) {
+  const { user, isLoading, isLoggedIn } = useAuth();
+  const numericId = postId && /^\d+$/.test(postId) ? Number(postId) : null;
+  const isEditMode = Boolean(postId);
+  const { data: editingPost, isPending: isPostPending, isError } = usePost(numericId);
+
+  if (isLoading || (isEditMode && numericId !== null && isPostPending)) {
+    return <div className="animate-shimmer h-80 rounded-[28px]" />;
+  }
+
+  if (!isLoggedIn || !user) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-[28px] border border-gray-100 bg-white px-6 py-16 text-center">
+        <p className="text-lg font-bold text-navy-900">로그인하고 글을 남겨보세요</p>
+        <p className="text-sm text-gray-500">
+          이 지역의 꿀팁과 후기를 다른 여행자들과 나눌 수 있어요
+        </p>
+        <Link
+          href="/login"
+          className="rounded-full bg-ocean-500 px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-ocean-600 active:scale-95"
+        >
+          로그인하러 가기
+        </Link>
+      </div>
+    );
+  }
+
+  if (isEditMode && (numericId === null || isError || !editingPost)) {
+    return <Notice title="글을 찾을 수 없어요" />;
+  }
+
+  if (editingPost && editingPost.author.nickname !== user.nickname) {
+    return <Notice title="본인 글만 수정할 수 있어요" />;
+  }
+
+  const gallery = editingPost
+    ? (getGalleryByDistrict(editingPost.districtTag) ??
+      (regionSlug ? getGalleryBySlug(regionSlug) : undefined))
+    : regionSlug
+      ? getGalleryBySlug(regionSlug)
+      : undefined;
+
+  return (
+    <PostEditor
+      key={editingPost?.id ?? "new"}
+      gallery={gallery}
+      post={editingPost}
+      authorName={maskName(user.nickname)}
+    />
   );
 }
