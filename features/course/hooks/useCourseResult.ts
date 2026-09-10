@@ -2,11 +2,15 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { updateCourseItems } from "@/libs/api/course";
+import { updateCourse } from "@/libs/api/course";
 import { clientFetch } from "@/libs/clientFetch";
 import { myCoursesKeys } from "@/features/course/hooks/useMyCourses";
 
-import type { CourseItemResponse, CourseResponse } from "@/types/course";
+import type {
+  CourseItemResponse,
+  CourseResponse,
+  CourseUpdateRequest,
+} from "@/types/course";
 
 // 타입은 types/course.ts로 옮겼지만, 기존 import 경로를 쓰는 화면들을 위해 재노출한다.
 export type { CourseItemResponse, CourseResponse };
@@ -35,26 +39,25 @@ export function useCourseResult(pairId: string | null) {
   });
 }
 
-interface UpdateCourseItemsVariables {
+interface UpdateCourseVariables extends CourseUpdateRequest {
   courseId: number;
-  spotContentIds: string[];
 }
 
 /**
  * 코스 편집 저장. 응답이 수정된 코스 전체라 재조회 없이 캐시를 갈아끼운다.
  * 조회 쿼리는 data가 배열이라 같은 형태(단일 원소 배열)로 맞춰 넣는다.
  */
-export function useUpdateCourseItems(pairId: string | null) {
+export function useUpdateCourse(pairId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, spotContentIds }: UpdateCourseItemsVariables) =>
-      updateCourseItems(courseId, spotContentIds),
+    mutationFn: ({ courseId, ...body }: UpdateCourseVariables) =>
+      updateCourse(courseId, body),
     onSuccess: (updated) => {
       if (pairId) {
         queryClient.setQueryData(courseResultKeys.detail(pairId), [updated]);
       }
-      // 코스 목록에 보이는 총비용·장소 이름이 함께 바뀌므로 다시 받아온다
+      // 코스 목록에 보이는 제목·총비용·장소 이름이 함께 바뀌므로 다시 받아온다
       queryClient.invalidateQueries({ queryKey: myCoursesKeys.all });
     },
   });

@@ -21,6 +21,7 @@ import {
 import ShareButton from "@/features/course/components/CourseSidebar/ShareButton";
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
+import { COURSE_DESCRIPTION_MAX, COURSE_TITLE_MAX } from "@/types/course";
 
 interface Props {
   course: Course;
@@ -35,6 +36,11 @@ interface Props {
   isSaving?: boolean;
   /** 저장 실패 안내. null이면 표시하지 않는다. */
   saveError?: string | null;
+  /** 제목·소개 입력 오류(빈 제목, 서버 400). 있으면 저장 버튼을 막고 칸 아래에 보여준다. */
+  fieldErrors?: { title?: string; description?: string };
+  /** 편집 모드에서 제목·소개를 바꿀 때. 둘 다 넘어와야 입력칸을 노출한다. */
+  onChangeTitle?: (title: string) => void;
+  onChangeDescription?: (description: string) => void;
   onStartEdit?: () => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
@@ -263,6 +269,9 @@ export default function CourseSidebar({
   isDirty = false,
   isSaving = false,
   saveError = null,
+  fieldErrors = {},
+  onChangeTitle,
+  onChangeDescription,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -282,6 +291,10 @@ export default function CourseSidebar({
     0
   );
   const totalCost = places.reduce((sum, p) => sum + (p.expectedCost ?? 0), 0);
+  // 서버 코스는 description, 목업(관광공사) 코스는 일차 제목을 소개 자리에 쓴다
+  const description = course.description ?? course.days[0]?.title ?? "";
+  const canEditText = isEditing && !!onChangeTitle && !!onChangeDescription;
+  const hasFieldError = !!fieldErrors.title || !!fieldErrors.description;
 
   return (
     <aside className="min-h-0 w-full flex-1 overflow-y-auto border-t border-gray-100 bg-white lg:w-[340px] lg:flex-none lg:border-t-0 lg:border-r">
@@ -304,7 +317,7 @@ export default function CourseSidebar({
                 </button>
                 <button
                   onClick={onSaveEdit}
-                  disabled={!isDirty || isSaving}
+                  disabled={!isDirty || isSaving || hasFieldError}
                   className="flex items-center gap-1 rounded-full bg-ocean-500 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-ocean-600 disabled:bg-gray-200 disabled:text-gray-400"
                 >
                   {isSaving ? (
@@ -331,9 +344,35 @@ export default function CourseSidebar({
             )}
           </div>
         </div>
-        <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
-          {course.title}
-        </h1>
+        {canEditText ? (
+          <div className="mb-3 lg:mb-4">
+            <label htmlFor="course-title" className="sr-only">
+              코스 제목
+            </label>
+            <input
+              id="course-title"
+              type="text"
+              value={course.title}
+              maxLength={COURSE_TITLE_MAX}
+              placeholder="코스 제목"
+              aria-invalid={!!fieldErrors.title}
+              onChange={(e) => onChangeTitle?.(e.target.value)}
+              className={`w-full rounded-lg border bg-white px-3 py-2 text-[16px] font-bold leading-snug text-gray-800 outline-none transition-colors focus:border-ocean-500 lg:text-[19px] ${
+                fieldErrors.title ? "border-pink-300" : "border-gray-200"
+              }`}
+            />
+            <div className="mt-1 flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-pink-600">{fieldErrors.title}</span>
+              <span className="shrink-0 tabular-nums text-gray-400">
+                {course.title.length}/{COURSE_TITLE_MAX}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
+            {course.title}
+          </h1>
+        )}
 
         {saveError && (
           <p
@@ -371,17 +410,43 @@ export default function CourseSidebar({
           </div>
         )}
 
-        {/* 코스 설명 */}
-        {course.days[0]?.title && (
-          <div
-            className={`mb-4 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3 lg:mb-5 ${
-              isEditing ? "hidden lg:block" : ""
-            }`}
-          >
-            <p className="text-[12px] leading-relaxed text-gray-600">
-              {course.days[0].title}
-            </p>
+        {/* 코스 소개 — 편집 모드에서는 입력칸, 비우고 저장하면 소개가 지워진다 */}
+        {canEditText ? (
+          <div className="mb-4 lg:mb-5">
+            <label htmlFor="course-description" className="sr-only">
+              코스 소개
+            </label>
+            <textarea
+              id="course-description"
+              value={description}
+              rows={3}
+              maxLength={COURSE_DESCRIPTION_MAX}
+              placeholder="코스 소개 (선택)"
+              aria-invalid={!!fieldErrors.description}
+              onChange={(e) => onChangeDescription?.(e.target.value)}
+              className={`w-full resize-none rounded-xl border bg-white px-3.5 py-3 text-[12px] leading-relaxed text-gray-600 outline-none transition-colors focus:border-ocean-500 ${
+                fieldErrors.description ? "border-pink-300" : "border-gray-200"
+              }`}
+            />
+            <div className="mt-1 flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-pink-600">{fieldErrors.description}</span>
+              <span className="shrink-0 tabular-nums text-gray-400">
+                {description.length}/{COURSE_DESCRIPTION_MAX}
+              </span>
+            </div>
           </div>
+        ) : (
+          description && (
+            <div
+              className={`mb-4 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3 lg:mb-5 ${
+                isEditing ? "hidden lg:block" : ""
+              }`}
+            >
+              <p className="text-[12px] leading-relaxed text-gray-600">
+                {description}
+              </p>
+            </div>
+          )
         )}
 
         {/* 지금 혼잡도 요약 — 혼잡한 곳이 있으면 경고, 데이터가 있고 모두 원활하면 안심 문구 */}
