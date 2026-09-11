@@ -2,8 +2,6 @@
 
 import { useState, useCallback, useRef } from 'react';
 
-import { useMe } from '@/hooks/useMe';
-import { useSubscription } from '@/features/subscription/hooks/useSubscription';
 import { clientFetch } from '@/libs/clientFetch';
 
 export type MessageRole = 'user' | 'assistant';
@@ -55,9 +53,6 @@ export function useAIChat(): UseAIChatReturn {
   const lastSentAtRef = useRef<number>(0);
   const offTopicStreakRef = useRef<number>(0);
 
-  const { data: me } = useMe();
-  const { plan, canUse, consume } = useSubscription(me?.userId);
-
   const addMessage = useCallback(
     (role: MessageRole, content: string, extra?: Partial<ChatMessage>) => {
       const msg: ChatMessage = { id: `${Date.now()}-${Math.random()}`, role, content, ...extra };
@@ -88,16 +83,6 @@ export function useAIChat(): UseAIChatReturn {
         }
       }
 
-      // 구독 플랜별 하루 채팅 한도 (localStorage 기반 데모 — useSubscription 참고)
-      if (!canUse('chat')) {
-        addMessage(
-          'assistant',
-          `오늘 사용할 수 있는 AI 채팅 횟수를 모두 사용했어요 (${plan.name} 플랜: 하루 ${plan.limits.chat}회). 내일 다시 이용하시거나, 요금제 페이지에서 플랜을 올리면 바로 이어서 쓸 수 있어요. 💳 마이페이지 → 구독 관리`,
-          { status: 'LIMIT_EXCEEDED' },
-        );
-        return false;
-      }
-
       setInputError(null);
       setInputValue('');
       lastSentTextRef.current = trimmed;
@@ -124,9 +109,6 @@ export function useAIChat(): UseAIChatReturn {
         const json = await res.json();
         const data: ChatResponse = json.data ?? json;
 
-        // 성공한 요청만 채팅 1회로 집계 (네트워크 오류는 차감하지 않음)
-        consume('chat');
-
         if (data.conversationId) setConversationId(data.conversationId);
 
         if (data.status === 'OFF_TOPIC') {
@@ -143,8 +125,6 @@ export function useAIChat(): UseAIChatReturn {
           offTopicStreakRef.current = 0;
           setCompletedPairId(data.pairId);
           setIsAwaitingConfirmation(false);
-          // 코스가 실제로 만들어진 시점에만 코스 생성 1회로 집계
-          consume('course');
           addMessage('assistant', data.reply, { status: 'COMPLETED', pairId: data.pairId });
         } else {
           offTopicStreakRef.current = 0;
@@ -161,24 +141,14 @@ export function useAIChat(): UseAIChatReturn {
 
       return true;
     },
-    [addMessage, conversationId, isLoading, canUse, consume, plan],
+    [addMessage, conversationId, isLoading],
   );
 
   const sendConfirmation = useCallback(async () => {
-    // 구독 플랜별 하루 코스 생성 한도 — 실제 생성이 시작되기 전에 막는다
-    if (!canUse('course')) {
-      addMessage(
-        'assistant',
-        `오늘 만들 수 있는 코스를 모두 만들었어요 (${plan.name} 플랜: 하루 ${plan.limits.course}회). 내일 다시 만들거나, 요금제 페이지에서 플랜을 올리면 바로 이어서 만들 수 있어요. 💳 마이페이지 → 구독 관리`,
-        { status: 'LIMIT_EXCEEDED' },
-      );
-      setIsAwaitingConfirmation(false);
-      return;
-    }
     lastSentTextRef.current = '';
     lastSentAtRef.current = 0;
     await sendMessage('코스 생성 시작');
-  }, [sendMessage, canUse, addMessage, plan]);
+  }, [sendMessage]);
 
   const reset = useCallback(() => {
     setMessages([]);
