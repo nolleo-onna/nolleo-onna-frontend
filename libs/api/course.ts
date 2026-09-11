@@ -5,6 +5,7 @@ import type {
   CourseResponse,
   CourseUpdateRequest,
   MyCourseSummary,
+  PopularCourse,
   SharedCourse,
 } from "@/types/course";
 
@@ -121,4 +122,13 @@ export async function fetchSharedCourse(shareToken: string): Promise<SharedCours
   if (!res.ok) throw new CourseUpdateError("코스를 찾을 수 없어요", res.status);
   const json: ApiResponse<SharedCourse> = await res.json();
   return json.data;
+}
+
+// 인기 공개 코스 — 로그인 불필요. 백엔드 API가 아직 없으면(404) 빈 목록으로 다뤄 홈이 깨지지 않게 한다.
+export async function fetchPopularCourses(size = 6): Promise<PopularCourse[]> {
+  const res = await clientFetch(`/api/v1/courses/popular?size=${size}`);
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error("인기 코스를 불러오지 못했어요");
+  const json: ApiResponse<PopularCourse[]> = await res.json();
+  return json.data ?? [];
 }

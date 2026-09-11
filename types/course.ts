@@ -101,3 +101,22 @@ export interface CourseUpdateRequest {
   description: string | null;
   items: CourseUpdateItem[];
 }
+
+// GET /api/v1/courses/popular — 홈 "지금 인기 있는 코스" 카드.
+// 백엔드 합의안(2026-09-11): 공개 코스만, 조회수 → 최신순. 로그인 불필요.
+// 카드 클릭은 shareToken으로 /course/shared/{token}에 연결한다.
+export interface PopularCourse {
+  shareToken: string;
+  title: string;
+  description: string | null;
+  totalCost: number | null;
+  /** 방문 순서대로의 스팟 이름 */
+  spotTitles: string[];
+  /** 첫 스팟 대표 이미지. 없으면 null */
+  thumbnailImageUrl: string | null;
+  authorNickname: string | null;
+  authorProfileImageUrl: string | null;
+  viewCount: number;
+  likeCount: number;
+  createdAt: string;
+}

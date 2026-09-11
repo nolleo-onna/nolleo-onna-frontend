@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CourseUpdateError, fetchSharedCourse, updateCourse, updateCourseVisibility } from "./course";
+import {
+  CourseUpdateError,
+  fetchPopularCourses,
+  fetchSharedCourse,
+  updateCourse,
+  updateCourseVisibility,
+} from "./course";
 
 import type { CourseUpdateRequest } from "@/types/course";
 
@@ -96,5 +102,21 @@ describe("updateCourseVisibility / fetchSharedCourse", () => {
     mockFetch(404, { status: 404, errorCode: "COURSE_NOT_FOUND", message: "코스를 찾을 수 없습니다." });
 
     await expect(fetchSharedCourse("nope")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("fetchPopularCourses", () => {
+  it("size를 붙여 조회하고 data 배열을 돌려준다", async () => {
+    const list = [{ shareToken: "t1", title: "코스", viewCount: 10 }];
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: list });
+
+    await expect(fetchPopularCourses(6)).resolves.toEqual(list);
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.test.local/api/v1/courses/popular?size=6");
+  });
+
+  it("백엔드에 아직 API가 없어 404면 빈 목록으로 다룬다", async () => {
+    mockFetch(404, { status: 404, errorCode: "NO_HANDLER_FOUND" });
+
+    await expect(fetchPopularCourses()).resolves.toEqual([]);
   });
 });

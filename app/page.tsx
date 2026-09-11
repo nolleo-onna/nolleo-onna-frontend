@@ -2,7 +2,7 @@ import HeroSection from "@/features/home/components/HeroSection";
 import CourseCarousel from "@/features/home/components/CourseSection";
 import WeatherSection from "@/features/home/components/WeatherSection";
 import SpotsPreviewSection from "@/features/home/components/SpotsPreviewSection";
-import TourCourseSection from "@/features/home/components/TourCourseSection";
+import PopularCourseSection from "@/features/home/components/PopularCourseSection";
 import PopularSpotsSection from "@/features/home/components/PopularSpotsSection";
 import ServiceIntroSection from "@/features/home/components/ServiceIntroSection";
 import AIChatFAB from "@/components/ui/Chat/AIChatFAB";
@@ -20,7 +20,7 @@ export default function HomePage() {
           <WeatherSection />
           <SpotsPreviewSection type="crowd" />
           <SpotsPreviewSection type="relaxed" />
-          <TourCourseSection />
+          <PopularCourseSection />
           <PopularSpotsSection />
           <ServiceIntroSection />
         </Container>
