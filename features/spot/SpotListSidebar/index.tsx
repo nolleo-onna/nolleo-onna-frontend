@@ -16,6 +16,7 @@ import {
   getMapCoords,
   parseSearch,
   suggestPlaceName,
+  toServerFilter,
 } from "@/features/spot/utils/spotSearch";
 import type { MapPlace } from "@/types/map";
 
@@ -62,7 +63,7 @@ export default function SpotListSidebar({
   onSelectRegion,
 }: SpotListSidebarProps) {
   const selectedRef = useRef<HTMLLIElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLLIElement | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   // 한끗 상세 등 다른 페이지에서 "?keyword=자갈치시장" 형태로 넘어오면
@@ -70,7 +71,12 @@ export default function SpotListSidebar({
   const [search, setSearch] = useState(() => searchParams.get("keyword") ?? "");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useMapPlaces();
+  // 지역(구/동네)·카테고리·무료·이름/초성을 한 번에 해석하는 검색 파이프라인.
+  // 서버가 받는 조건(구·카테고리·이름)은 서버로 보내고, 나머지는 받은 결과에서 마저 거른다.
+  const parsed = useMemo(() => parseSearch(search), [search]);
+  const serverFilter = useMemo(() => toServerFilter(parsed), [parsed]);
+  const { data, isLoading, isError, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useMapPlaces(serverFilter);
   // 카드마다 status를 호출하지 않고, 찜 목록 한 번을 Set으로 만들어 판별한다.
   const favoriteIds = useFavoriteIds();
   const { mutate: toggleFavorite } = useToggleFavorite();
@@ -96,9 +102,6 @@ export default function SpotListSidebar({
   const allPlaces = useMemo(() => {
     return data?.pages.flatMap((page) => page.content) ?? [];
   }, [data]);
-
-  // 지역(구/동네)·카테고리·무료·이름/초성을 한 번에 해석하는 검색 파이프라인
-  const parsed = useMemo(() => parseSearch(search), [search]);
 
   const places = useMemo(() => {
     let list = filterPlaces(allPlaces, parsed);
@@ -136,7 +139,7 @@ export default function SpotListSidebar({
   useEffect(() => {
     const el = bottomRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(handleObserver, { threshold: 0.5 });
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0, rootMargin: "200px" });
     observer.observe(el);
     return () => observer.disconnect();
   }, [handleObserver]);
@@ -288,7 +291,12 @@ export default function SpotListSidebar({
       </div>
 
       <ul className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-        {places.length === 0 ? (
+        {places.length === 0 && (isFetching || hasNextPage) ? (
+          <li className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <div className="mb-3 h-5 w-5 animate-spin rounded-full border-2 border-navy-400 border-t-transparent" />
+            <p className="text-sm">찾는 중이에요…</p>
+          </li>
+        ) : places.length === 0 ? (
           <li className="flex flex-col items-center justify-center py-16 text-gray-400">
             <span className="text-3xl mb-2">{favoritesOnly ? "🤍" : "🔍"}</span>
             <p className="text-sm">
@@ -401,13 +409,14 @@ export default function SpotListSidebar({
                 </motion.li>
               );
             })}
-            <div ref={bottomRef} className="py-2 flex justify-center">
-              {isFetchingNextPage && (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-navy-400 border-t-transparent" />
-              )}
-            </div>
           </>
         )}
+        {/* 다음 페이지 감지용 — 결과가 0건이어도 남겨둬야 뒤 페이지를 계속 받는다 */}
+        <li ref={bottomRef} aria-hidden className="flex justify-center py-2">
+          {isFetchingNextPage && (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-navy-400 border-t-transparent" />
+          )}
+        </li>
       </ul>
     </aside>
   );
