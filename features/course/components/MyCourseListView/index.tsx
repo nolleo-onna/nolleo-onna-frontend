@@ -11,6 +11,7 @@ import {
   Sparkles,
   ArrowUpRight,
   Compass,
+  Globe,
   SearchX,
 } from "lucide-react";
 import CourseListToolbar from "@/features/course/components/CourseListToolbar";
@@ -80,6 +81,8 @@ function CourseCard({
   description,
   totalCost,
   spotTitles,
+  isPublic,
+  likeCount,
   onClick,
 }: {
   pairId: string;
@@ -87,6 +90,8 @@ function CourseCard({
   description: string;
   totalCost: number;
   spotTitles: string[];
+  isPublic?: boolean;
+  likeCount?: number;
   onClick: () => void;
 }) {
   const visibleSpots = spotTitles.slice(0, 3);
@@ -101,6 +106,14 @@ function CourseCard({
                  transition-all duration-300 ease-out"
       aria-label={`${title} 코스 상세 보기`}
     >
+      {/* 공개 뱃지 — 공유 링크가 살아 있는 코스 */}
+      {isPublic && (
+        <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-lime-50 px-2 py-0.5 text-[10px] font-bold text-lime-700">
+          <Globe className="h-2.5 w-2.5" />
+          공개 중{likeCount ? ` · 좋아요 ${likeCount}` : ""}
+        </span>
+      )}
+
       {/* 제목 */}
       <div className="flex items-start justify-between gap-3 mb-2.5">
         <h3 className="text-[17px] font-semibold text-gray-900 tracking-tight leading-snug line-clamp-2 flex-1">
@@ -306,6 +319,8 @@ export default function MyCourseListView() {
                     description={course.description}
                     totalCost={course.totalCost}
                     spotTitles={course.spotTitles ?? []}
+                    isPublic={course.isPublic}
+                    likeCount={course.likeCount}
                     onClick={() => handleCardClick(course.pairId)}
                   />
                 ))}

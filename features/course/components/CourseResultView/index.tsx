@@ -12,6 +12,7 @@ import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import {
   useCourseResult,
   useUpdateCourse,
+  useUpdateCourseVisibility,
 } from "@/features/course/hooks/useCourseResult";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
@@ -114,6 +115,7 @@ export default function CourseResultView() {
   // 코스 장소별 "지금 혼잡도" 배지용 — 실패해도 배지만 안 보일 뿐이라 로딩과 무관
   const { data: congestion } = useCongestion();
   const updateCourse = useUpdateCourse(pairId);
+  const updateVisibility = useUpdateCourseVisibility(pairId);
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
@@ -182,7 +184,9 @@ export default function CourseResultView() {
         ? null
         : (updateCourse.error?.message ??
           "코스를 저장하지 못했어요. 잠시 후 다시 시도해주세요.")))
-    : null;
+    : updateVisibility.isError
+      ? (updateVisibility.error?.message ?? "공개 상태를 바꾸지 못했어요")
+      : null;
 
   // 스팟 피커에서 "이미 담김" 표시용
   const existingIds = new Set(
@@ -315,6 +319,20 @@ export default function CourseResultView() {
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
 
+  // 공유 버튼이 비공개 코스를 공개로 바꿀 때 — 발급된 토큰을 돌려준다
+  const handlePublish = async (): Promise<string | null> => {
+    try {
+      const updated = await updateVisibility.mutateAsync({ courseId, isPublic: true });
+      return updated.share.shareToken;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleUnpublish = () => {
+    updateVisibility.mutate({ courseId, isPublic: false });
+  };
+
   const handlePlaceClick = () => {
     if (!selectedPlace) return;
     setModalContentId(selectedPlace.originalId ?? null);
@@ -345,6 +363,10 @@ export default function CourseResultView() {
             fieldErrors={fieldErrors}
             onChangeTitle={handleChangeTitle}
             onChangeDescription={handleChangeDescription}
+            share={data[0].share}
+            onPublish={handlePublish}
+            onUnpublish={handleUnpublish}
+            isVisibilityPending={updateVisibility.isPending}
             onStartEdit={handleStartEdit}
             onSaveEdit={handleSaveEdit}
             onCancelEdit={handleCancelEdit}

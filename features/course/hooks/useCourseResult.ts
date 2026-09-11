@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { updateCourse } from "@/libs/api/course";
+import { updateCourse, updateCourseVisibility } from "@/libs/api/course";
 import { clientFetch } from "@/libs/clientFetch";
 import { myCoursesKeys } from "@/features/course/hooks/useMyCourses";
 
@@ -58,6 +58,25 @@ export function useUpdateCourse(pairId: string | null) {
         queryClient.setQueryData(courseResultKeys.detail(pairId), [updated]);
       }
       // 코스 목록에 보이는 제목·총비용·장소 이름이 함께 바뀌므로 다시 받아온다
+      queryClient.invalidateQueries({ queryKey: myCoursesKeys.all });
+    },
+  });
+}
+
+/**
+ * 코스 공개/비공개 전환. 응답이 코스 전체(share 포함)라 상세 캐시를 갈아끼우고,
+ * 목록의 isPublic 뱃지도 바뀌므로 목록은 다시 받아온다.
+ */
+export function useUpdateCourseVisibility(pairId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ courseId, isPublic }: { courseId: number; isPublic: boolean }) =>
+      updateCourseVisibility(courseId, isPublic),
+    onSuccess: (updated) => {
+      if (pairId) {
+        queryClient.setQueryData(courseResultKeys.detail(pairId), [updated]);
+      }
       queryClient.invalidateQueries({ queryKey: myCoursesKeys.all });
     },
   });
