@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "tong.visitkorea.or.kr",
       },
+      // 한끗 게시글 첨부 이미지 (GCS 버킷, 백엔드 AWS_S3_PUBLIC_BASE_URL)
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        pathname: "/nolleo-onna-images/**",
+      },
     ],
   },
 };
