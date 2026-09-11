@@ -21,7 +21,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
 import { useFavoriteStats } from "@/features/mypage/hooks/useFavoriteStats";
-import { useSubscription } from "@/features/subscription/hooks/useSubscription";
 import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
@@ -107,12 +106,11 @@ interface ProfileHeroProps {
   email: string;
   profileImageUrl?: string;
   isAdmin: boolean;
-  planName: string;
   stats: { label: string; value: string; icon: typeof Route }[];
   onEditProfile: () => void;
 }
 
-function ProfileHero({ nickname, email, profileImageUrl, isAdmin, planName, stats, onEditProfile }: ProfileHeroProps) {
+function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditProfile }: ProfileHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 p-6 md:p-10">
       {/* 장식용 배경 원 */}
@@ -155,12 +153,6 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, planName, stat
               >
                 <SquarePen className="h-4 w-4" />
               </button>
-              <Link
-                href="/pricing"
-                className="rounded-full bg-navy-900 px-2 py-0.5 text-[10px] font-bold uppercase text-lime-300 transition-transform hover:scale-105"
-              >
-                {planName}
-              </Link>
               {isAdmin && (
                 <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
                   ADMIN
@@ -458,13 +450,6 @@ function SettingsSection({
 }) {
   return (
     <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-      <Link
-        href="/pricing"
-        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
-      >
-        <span className="text-sm text-gray-700">구독 관리</span>
-        <ChevronRight className="h-4 w-4 text-gray-300" />
-      </Link>
       <button
         onClick={onOpenNotifications}
         className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
@@ -501,7 +486,6 @@ export default function MyPageContent() {
   const savedHankkut = useSavedHankkut();
   const { data: favorites } = useFavoritesList();
   const { customNickname, saveNickname } = useCustomNickname(user?.userId);
-  const { plan } = useSubscription(user?.userId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
@@ -538,7 +522,6 @@ export default function MyPageContent() {
         email={user.email}
         profileImageUrl={user.profileImageUrl}
         isAdmin={user.role === "ADMIN"}
-        planName={plan.name}
         stats={stats}
         onEditProfile={() => setIsEditOpen(true)}
       />
