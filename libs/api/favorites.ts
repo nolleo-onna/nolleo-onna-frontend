@@ -57,7 +57,8 @@ function extractFavoriteFlag(data: unknown): boolean | null {
 
 // 찜한 장소 목록 조회
 export async function fetchFavorites(): Promise<FavoritePlace[]> {
-  const res = await clientFetch("/api/v1/favorites");
+  // 서버 기본 페이지 크기(20)에 잘리지 않게 넉넉히 받는다 — 마이페이지 "찜한 장소" 수에 쓰인다
+  const res = await clientFetch("/api/v1/favorites?size=200&sort=createdAt,desc");
   if (!res.ok) throw new Error("찜 목록을 불러오지 못했어요");
 
   const json: ApiResponse<unknown> = await res.json();
