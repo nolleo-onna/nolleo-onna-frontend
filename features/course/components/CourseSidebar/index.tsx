@@ -6,9 +6,13 @@ import {
   ChevronDown,
   ChevronUp,
   Check,
+  Eye,
   Footprints,
+  Globe,
   GripVertical,
+  Heart,
   Loader2,
+  Lock,
   Pencil,
   X,
 } from "lucide-react";
@@ -22,6 +26,7 @@ import ShareButton from "@/features/course/components/CourseSidebar/ShareButton"
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import { formatDistance, formatCost } from "@/features/course/utils/format";
 import { COURSE_DESCRIPTION_MAX, COURSE_TITLE_MAX } from "@/types/course";
+import type { CourseShareInfo } from "@/types/course";
 
 interface Props {
   course: Course;
@@ -41,6 +46,13 @@ interface Props {
   /** 편집 모드에서 제목·소개를 바꿀 때. 둘 다 넘어와야 입력칸을 노출한다. */
   onChangeTitle?: (title: string) => void;
   onChangeDescription?: (description: string) => void;
+  /** 서버 코스의 공개 상태. 목업 코스는 없다 */
+  share?: CourseShareInfo;
+  /** 공유 버튼이 비공개 코스를 공개로 바꿀 때. 발급된 토큰을 돌려준다 */
+  onPublish?: () => Promise<string | null>;
+  /** 공개 중인 코스를 비공개로 되돌릴 때 */
+  onUnpublish?: () => void;
+  isVisibilityPending?: boolean;
   onStartEdit?: () => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
@@ -272,6 +284,10 @@ export default function CourseSidebar({
   fieldErrors = {},
   onChangeTitle,
   onChangeDescription,
+  share,
+  onPublish,
+  onUnpublish,
+  isVisibilityPending = false,
   onStartEdit,
   onSaveEdit,
   onCancelEdit,
@@ -330,7 +346,7 @@ export default function CourseSidebar({
               </>
             ) : (
               <>
-                <ShareButton title={course.title} />
+                <ShareButton title={course.title} share={share} onPublish={onPublish} />
                 {onStartEdit && (
                   <button
                     onClick={onStartEdit}
@@ -372,6 +388,33 @@ export default function CourseSidebar({
           <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
             {course.title}
           </h1>
+        )}
+
+        {/* 공개 상태 — 공유 링크가 살아 있는 동안 조회수·좋아요와 비공개 버튼을 보여준다 */}
+        {share?.isPublic && !isEditing && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg bg-lime-50 px-3 py-2 text-[11px]">
+            <Globe className="h-3.5 w-3.5 shrink-0 text-lime-700" />
+            <span className="font-semibold text-lime-800">공개 중</span>
+            <span className="flex items-center gap-0.5 text-gray-500">
+              <Eye className="h-3 w-3" />
+              {share.viewCount}
+            </span>
+            <span className="flex items-center gap-0.5 text-gray-500">
+              <Heart className="h-3 w-3" />
+              {share.likeCount}
+            </span>
+            {onUnpublish && (
+              <button
+                type="button"
+                onClick={onUnpublish}
+                disabled={isVisibilityPending}
+                className="ml-auto flex items-center gap-0.5 text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
+              >
+                <Lock className="h-3 w-3" />
+                비공개로
+              </button>
+            )}
+          </div>
         )}
 
         {saveError && (

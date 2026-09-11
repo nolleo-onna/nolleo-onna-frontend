@@ -226,7 +226,6 @@ function PostEditor({ gallery, post, authorName }: PostEditorProps) {
               alt="첨부 이미지"
               width={160}
               height={120}
-              unoptimized
               className="h-24 w-auto rounded-xl border border-gray-100 object-cover"
             />
             <button

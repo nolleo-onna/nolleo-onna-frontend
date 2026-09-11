@@ -20,7 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
-import { useSubscription } from "@/features/subscription/hooks/useSubscription";
+import { useFavoriteStats } from "@/features/mypage/hooks/useFavoriteStats";
 import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
@@ -106,12 +106,11 @@ interface ProfileHeroProps {
   email: string;
   profileImageUrl?: string;
   isAdmin: boolean;
-  planName: string;
   stats: { label: string; value: string; icon: typeof Route }[];
   onEditProfile: () => void;
 }
 
-function ProfileHero({ nickname, email, profileImageUrl, isAdmin, planName, stats, onEditProfile }: ProfileHeroProps) {
+function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditProfile }: ProfileHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 p-6 md:p-10">
       {/* 장식용 배경 원 */}
@@ -154,12 +153,6 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, planName, stat
               >
                 <SquarePen className="h-4 w-4" />
               </button>
-              <Link
-                href="/pricing"
-                className="rounded-full bg-navy-900 px-2 py-0.5 text-[10px] font-bold uppercase text-lime-300 transition-transform hover:scale-105"
-              >
-                {planName}
-              </Link>
               {isAdmin && (
                 <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
                   ADMIN
@@ -352,8 +345,10 @@ function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
 }
 
 // 서버에 저장된 찜한 장소 목록(스팟 페이지 하트와 같은 데이터).
+// 헤더 아래 한 줄은 GET /users/me/favorite-stats — "오늘/이번 주/이번 달 N개 찜했어요" 문장.
 function FavoritePlacesSection() {
   const { data: favorites, isLoading } = useFavoritesList();
+  const { data: stats } = useFavoriteStats();
   const items = favorites ?? [];
 
   return (
@@ -370,6 +365,13 @@ function FavoritePlacesSection() {
           전체보기 <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
+
+      {stats && stats.count > 0 && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1 text-[11px] font-semibold text-pink-600">
+          <Sparkles className="h-3 w-3" />
+          {stats.message}
+        </p>
+      )}
 
       {isLoading ? (
         <div className="mt-4 flex flex-col gap-3">
@@ -448,13 +450,6 @@ function SettingsSection({
 }) {
   return (
     <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-      <Link
-        href="/pricing"
-        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
-      >
-        <span className="text-sm text-gray-700">구독 관리</span>
-        <ChevronRight className="h-4 w-4 text-gray-300" />
-      </Link>
       <button
         onClick={onOpenNotifications}
         className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
@@ -489,8 +484,8 @@ export default function MyPageContent() {
     enabled: isLoggedIn,
   });
   const savedHankkut = useSavedHankkut();
+  const { data: favorites } = useFavoritesList();
   const { customNickname, saveNickname } = useCustomNickname(user?.userId);
-  const { plan } = useSubscription(user?.userId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
@@ -514,9 +509,9 @@ export default function MyPageContent() {
       icon: MapPin,
     },
     {
-      label: "저장한 한끗",
-      value: String(savedHankkut.length),
-      icon: Bookmark,
+      label: "찜한 장소",
+      value: favorites ? String(favorites.length) : "-",
+      icon: Heart,
     },
   ];
 
@@ -527,7 +522,6 @@ export default function MyPageContent() {
         email={user.email}
         profileImageUrl={user.profileImageUrl}
         isAdmin={user.role === "ADMIN"}
-        planName={plan.name}
         stats={stats}
         onEditProfile={() => setIsEditOpen(true)}
       />

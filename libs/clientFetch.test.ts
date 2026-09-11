@@ -56,6 +56,39 @@ describe("clientFetch", () => {
     expect(win.location.href).toBe("");
   });
 
+  it("401이면 refresh를 한 번 호출하고 성공 시 원래 요청을 다시 보낸다", async () => {
+    const win = stubWindow("/mypage");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 401, ok: false }) // 원래 요청
+      .mockResolvedValueOnce({ status: 200, ok: true }) // refresh
+      .mockResolvedValueOnce({ status: 200, ok: true }); // 재시도
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await clientFetch("/api/v1/courses/me");
+
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toBe("https://api.test.local/api/v1/auth/refresh");
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: "POST", credentials: "include" });
+    expect(fetchMock.mock.calls[2][0]).toBe("https://api.test.local/api/v1/courses/me");
+    expect(win.location.href).toBe("");
+  });
+
+  it("refresh까지 실패하면 재시도 없이 로그인 페이지로 보낸다", async () => {
+    const win = stubWindow("/mypage");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 401, ok: false })
+      .mockResolvedValueOnce({ status: 401, ok: false });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await clientFetch("/api/v1/courses/me");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(win.location.href).toBe("/login?notice=session&returnUrl=%2Fmypage");
+  });
+
   it("401이 아니면 리다이렉트하지 않는다", async () => {
     const win = stubWindow("/spot");
     mockFetch(200);

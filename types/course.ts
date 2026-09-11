@@ -20,7 +20,18 @@ export interface MyCourseSummary {
   title: string;
   description: string;
   totalCost: number;
+  isPublic: boolean;
+  likeCount: number;
   spotTitles: string[];
+}
+
+// 코스 공개 공유 상태 — 소유자 조회(GET /courses/{pairId}, PUT, PATCH visibility)에서만 내려온다
+export interface CourseShareInfo {
+  isPublic: boolean;
+  /** 공유 링크 토큰. 한 번도 공개한 적 없으면 null. 비공개로 돌려도 유지된다 */
+  shareToken: string | null;
+  viewCount: number;
+  likeCount: number;
 }
 
 // ── 코스 조회/수정 응답 ────────────────────────────────────
@@ -54,6 +65,21 @@ export interface CourseResponse {
   /** 음식점이 하나도 없으면 null */
   totalCost: number | null;
   items: CourseItemResponse[];
+  share: CourseShareInfo;
+  createdAt: string;
+}
+
+// GET /api/v1/courses/shared/{shareToken} — 로그인 없이 보는 공개 코스.
+// id·pairId·토큰은 담기지 않고 작성자는 닉네임으로만 노출된다.
+export interface SharedCourse {
+  title: string;
+  description: string | null;
+  totalCost: number | null;
+  items: CourseItemResponse[];
+  authorNickname: string | null;
+  authorProfileImageUrl: string | null;
+  viewCount: number;
+  likeCount: number;
   createdAt: string;
 }
 
@@ -74,4 +100,23 @@ export interface CourseUpdateRequest {
   title: string;
   description: string | null;
   items: CourseUpdateItem[];
+}
+
+// GET /api/v1/courses/popular — 홈 "지금 인기 있는 코스" 카드.
+// 백엔드 합의안(2026-09-11): 공개 코스만, 조회수 → 최신순. 로그인 불필요.
+// 카드 클릭은 shareToken으로 /course/shared/{token}에 연결한다.
+export interface PopularCourse {
+  shareToken: string;
+  title: string;
+  description: string | null;
+  totalCost: number | null;
+  /** 방문 순서대로의 스팟 이름 */
+  spotTitles: string[];
+  /** 첫 스팟 대표 이미지. 없으면 null */
+  thumbnailImageUrl: string | null;
+  authorNickname: string | null;
+  authorProfileImageUrl: string | null;
+  viewCount: number;
+  likeCount: number;
+  createdAt: string;
 }

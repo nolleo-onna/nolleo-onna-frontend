@@ -38,3 +38,15 @@ export const patchReview = async (mapPlaceId: number, rating: number): Promise<v
   });
   if (!res.ok) throw new Error("Failed to patch review");
 };
+export interface PlaceRating {
+  avgRating: number;
+  reviewCount: number;
+}
+
+// 장소 평균 평점·리뷰 수 (공개 API, 서버가 Redis 캐시 우선)
+export const fetchPlaceRating = async (mapPlaceId: number): Promise<PlaceRating> => {
+  const res = await clientFetch(`/api/v1/map/places/${mapPlaceId}/rating`);
+  if (!res.ok) throw new Error("Failed to fetch place rating");
+  const json: ApiResponse<PlaceRating> = await res.json();
+  return json.data ?? { avgRating: 0, reviewCount: 0 };
+};

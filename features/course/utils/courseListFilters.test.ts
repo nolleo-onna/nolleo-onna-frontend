@@ -16,6 +16,8 @@ function course(overrides: Partial<MyCourseSummary>): MyCourseSummary {
     title: "코스",
     description: "",
     totalCost: 0,
+    isPublic: false,
+    likeCount: 0,
     spotTitles: [],
     ...overrides,
   };
