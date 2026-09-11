@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
+import { useFavoriteStats } from "@/features/mypage/hooks/useFavoriteStats";
 import { useSubscription } from "@/features/subscription/hooks/useSubscription";
 import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
@@ -352,8 +353,10 @@ function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
 }
 
 // 서버에 저장된 찜한 장소 목록(스팟 페이지 하트와 같은 데이터).
+// 헤더 아래 한 줄은 GET /users/me/favorite-stats — "오늘/이번 주/이번 달 N개 찜했어요" 문장.
 function FavoritePlacesSection() {
   const { data: favorites, isLoading } = useFavoritesList();
+  const { data: stats } = useFavoriteStats();
   const items = favorites ?? [];
 
   return (
@@ -370,6 +373,13 @@ function FavoritePlacesSection() {
           전체보기 <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
+
+      {stats && stats.count > 0 && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1 text-[11px] font-semibold text-pink-600">
+          <Sparkles className="h-3 w-3" />
+          {stats.message}
+        </p>
+      )}
 
       {isLoading ? (
         <div className="mt-4 flex flex-col gap-3">
@@ -489,6 +499,7 @@ export default function MyPageContent() {
     enabled: isLoggedIn,
   });
   const savedHankkut = useSavedHankkut();
+  const { data: favorites } = useFavoritesList();
   const { customNickname, saveNickname } = useCustomNickname(user?.userId);
   const { plan } = useSubscription(user?.userId);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -514,9 +525,9 @@ export default function MyPageContent() {
       icon: MapPin,
     },
     {
-      label: "저장한 한끗",
-      value: String(savedHankkut.length),
-      icon: Bookmark,
+      label: "찜한 장소",
+      value: favorites ? String(favorites.length) : "-",
+      icon: Heart,
     },
   ];
 
