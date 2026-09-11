@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CourseUpdateError, updateCourse } from "./course";
+import { CourseUpdateError, fetchSharedCourse, updateCourse, updateCourseVisibility } from "./course";
 
 import type { CourseUpdateRequest } from "@/types/course";
 
@@ -77,5 +77,24 @@ describe("updateCourse", () => {
     await expect(updateCourse(7, body)).rejects.toThrow(
       "코스에 넣을 수 없는 장소가 있습니다.",
     );
+  });
+});
+
+describe("updateCourseVisibility / fetchSharedCourse", () => {
+  it("PATCH /courses/{id}/visibility 에 목표 상태를 보내고 share가 담긴 코스를 돌려준다", async () => {
+    const updated = { id: 7, share: { isPublic: true, shareToken: "abc", viewCount: 0, likeCount: 0 } };
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: updated });
+
+    await expect(updateCourseVisibility(7, true)).resolves.toEqual(updated);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.test.local/api/v1/courses/7/visibility");
+    expect(init.method).toBe("PATCH");
+    expect(JSON.parse(init.body)).toEqual({ isPublic: true });
+  });
+
+  it("공유 토큰 조회는 404면 코스를 찾을 수 없다는 오류를 던진다", async () => {
+    mockFetch(404, { status: 404, errorCode: "COURSE_NOT_FOUND", message: "코스를 찾을 수 없습니다." });
+
+    await expect(fetchSharedCourse("nope")).rejects.toMatchObject({ status: 404 });
   });
 });
