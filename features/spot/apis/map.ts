@@ -7,6 +7,7 @@ const buildParams = (p: MapPlacesParams): string => {
   if (p.district) sp.set("district", p.district);
   if (p.category) sp.set("category", p.category);
   if (p.maxBudget !== undefined) sp.set("maxBudget", String(p.maxBudget));
+  if (p.keyword) sp.set("keyword", p.keyword);
   if (p.sort) sp.set("sort", p.sort);
   sp.set("page", String(p.page ?? 0));
   sp.set("size", String(p.size ?? 20));

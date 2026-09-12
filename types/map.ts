@@ -26,6 +26,8 @@ export interface MapPlacesParams {
   district?: string;
   category?: string;
   maxBudget?: number;
+  /** 장소명 부분 일치 검색 (서버) */
+  keyword?: string;
   page?: number;
   size?: number;
   sort?: string;

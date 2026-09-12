@@ -118,16 +118,19 @@ export async function updateCourseVisibility(
 
 // 공유 링크로 공개 코스 조회 — 로그인 불필요. 없거나 비공개면 404
 export async function fetchSharedCourse(shareToken: string): Promise<SharedCourse> {
-  const res = await clientFetch(`/api/v1/courses/shared/${encodeURIComponent(shareToken)}`);
+  const res = await clientFetch(`/api/v1/courses/shared/${encodeURIComponent(shareToken)}`, {
+    publicEndpoint: true,
+  });
   if (!res.ok) throw new CourseUpdateError("코스를 찾을 수 없어요", res.status);
   const json: ApiResponse<SharedCourse> = await res.json();
   return json.data;
 }
 
-// 인기 공개 코스 — 로그인 불필요. 백엔드 API가 아직 없으면(404) 빈 목록으로 다뤄 홈이 깨지지 않게 한다.
+// 인기 공개 코스 — 로그인 불필요. 백엔드 API가 아직 없으면 빈 목록으로 다뤄 홈이 깨지지 않게 한다.
+// 없는 엔드포인트는 시큐리티가 먼저 막아 404가 아니라 401/403으로 오므로 셋 다 빈 목록으로 본다.
 export async function fetchPopularCourses(size = 6): Promise<PopularCourse[]> {
-  const res = await clientFetch(`/api/v1/courses/popular?size=${size}`);
-  if (res.status === 404) return [];
+  const res = await clientFetch(`/api/v1/courses/popular?size=${size}`, { publicEndpoint: true });
+  if (res.status === 401 || res.status === 403 || res.status === 404) return [];
   if (!res.ok) throw new Error("인기 코스를 불러오지 못했어요");
   const json: ApiResponse<PopularCourse[]> = await res.json();
   return json.data ?? [];
