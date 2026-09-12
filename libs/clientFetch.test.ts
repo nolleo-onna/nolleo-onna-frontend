@@ -89,6 +89,17 @@ describe("clientFetch", () => {
     expect(win.location.href).toBe("/login?notice=session&returnUrl=%2Fmypage");
   });
 
+  it("publicEndpoint 요청은 401이어도 재발급·리다이렉트 없이 응답을 그대로 돌려준다", async () => {
+    const win = stubWindow("/");
+    const fetchMock = mockFetch(401);
+
+    const res = await clientFetch("/api/v1/courses/popular", { publicEndpoint: true });
+
+    expect(res.status).toBe(401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(win.location.href).toBe("");
+  });
+
   it("401이 아니면 리다이렉트하지 않는다", async () => {
     const win = stubWindow("/spot");
     mockFetch(200);

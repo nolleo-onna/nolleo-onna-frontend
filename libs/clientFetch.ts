@@ -36,11 +36,21 @@ export function refreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
+export interface ClientFetchOptions extends RequestInit {
+  /**
+   * 로그인 없이도 보여야 하는 화면(홈·공유 코스 등)에서 쓰는 요청.
+   * 401이 와도 재발급·로그인 리다이렉트를 하지 않고 응답을 그대로 돌려준다.
+   * 백엔드에 아직 없는 엔드포인트는 404가 아니라 401로 오기도 해서, 이 옵션이 없으면
+   * 홈에 들어온 비로그인 방문자를 로그인 페이지로 쫓아낸다.
+   */
+  publicEndpoint?: boolean;
+}
+
 export async function clientFetch(
   endpoint: string,
-  options: RequestInit = {},
+  options: ClientFetchOptions = {},
 ) {
-  const { headers, ...rest } = options;
+  const { headers, publicEndpoint = false, ...rest } = options;
   // multipart(FormData)는 브라우저가 boundary를 붙인 Content-Type을 직접 넣어야 해서
   // 기본 JSON 헤더를 달지 않는다.
   const isFormData = typeof FormData !== "undefined" && rest.body instanceof FormData;
@@ -56,6 +66,7 @@ export async function clientFetch(
     });
 
   let res = await request();
+  if (publicEndpoint) return res;
 
   // 만료된 access 토큰이면 조용히 재발급하고 원래 요청을 한 번만 다시 보낸다.
   // 그래도 401이면 진짜 로그아웃 상태라 로그인 페이지로 보낸다.
