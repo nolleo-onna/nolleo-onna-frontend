@@ -211,3 +211,24 @@ export function suggestPlaceName(raw: string): string | null {
 
 /** 검색창이 비어있을 때 보여줄 추천 검색어 */
 export const SEARCH_SUGGESTIONS = ["광안리", "해운대 카페", "무료", "박물관", "서면 맛집"];
+
+/**
+ * 해석된 검색에서 서버 필터로 보낼 수 있는 부분.
+ * - 구/동네 → district, 카테고리(한 종류일 때) → category
+ * - 이름 검색어 중 초성이 아닌 첫 단어 → keyword (초성·나머지 단어·무료는 클라이언트에서 마저 거른다)
+ */
+export function toServerFilter(parsed: ParsedSearch): {
+  district?: string;
+  category?: string;
+  keyword?: string;
+} {
+  if (parsed.isEmpty) return {};
+  const district = parsed.district ?? parsed.neighborhood?.district ?? undefined;
+  const category = parsed.categories.size === 1 ? [...parsed.categories][0] : undefined;
+  const keyword = parsed.nameTerms.find((t) => !isChoseongQuery(t));
+  return {
+    ...(district && { district }),
+    ...(category && { category }),
+    ...(keyword && { keyword }),
+  };
+}
