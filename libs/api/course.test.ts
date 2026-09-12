@@ -114,9 +114,12 @@ describe("fetchPopularCourses", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("https://api.test.local/api/v1/courses/popular?size=6");
   });
 
-  it("백엔드에 아직 API가 없어 404면 빈 목록으로 다룬다", async () => {
-    mockFetch(404, { status: 404, errorCode: "NO_HANDLER_FOUND" });
-
-    await expect(fetchPopularCourses()).resolves.toEqual([]);
+  it("백엔드에 아직 API가 없어 404·401·403이면 빈 목록으로 다룬다", async () => {
+    for (const status of [404, 401, 403]) {
+      const fetchMock = mockFetch(status, { status, errorCode: "UNAUTHORIZED" });
+      await expect(fetchPopularCourses()).resolves.toEqual([]);
+      // 로그인 리다이렉트도, 재발급 호출도 없어야 한다
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
   });
 });
