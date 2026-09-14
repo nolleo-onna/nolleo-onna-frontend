@@ -11,6 +11,7 @@ import { getGalleryByDistrict } from "@/features/hankkut/data/galleries";
 import { POST_CATEGORY_LABELS, POST_DISTRICT_LABELS } from "@/features/hankkut/constants/postTags";
 import { useDeletePost, usePost, useTogglePostLike } from "@/features/hankkut/hooks/usePosts";
 import { maskName } from "@/features/hankkut/utils/maskName";
+import { isEdited } from "@/features/hankkut/utils/isEdited";
 import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
 import CommentSection from "@/features/hankkut/components/CommentSection";
 
@@ -105,7 +106,7 @@ export default function PostDetail({ postId }: PostDetailProps) {
           <div className="mt-0.5 flex items-center gap-2.5">
             <span>
               {formatDateTime(post.createdAt)}
-              {post.updatedAt && post.updatedAt !== post.createdAt && " (수정됨)"}
+              {isEdited(post.createdAt, post.updatedAt) && " (수정됨)"}
             </span>
             <span className="flex items-center gap-1">
               <Eye className="h-3.5 w-3.5" />

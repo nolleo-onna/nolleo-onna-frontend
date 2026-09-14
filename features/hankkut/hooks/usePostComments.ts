@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createComment, deleteComment, fetchComments } from "@/libs/api/posts";
+import { createComment, deleteComment, fetchComments, updateComment } from "@/libs/api/posts";
 import { postKeys } from "@/features/hankkut/hooks/usePosts";
 
 import type { CommentCreateRequest } from "@/types/post";
@@ -39,6 +39,16 @@ export function useCreateComment(postId: number) {
     mutationFn: (input: Omit<CommentCreateRequest, "postId">) =>
       createComment({ postId, ...input }),
     onSuccess: invalidate,
+  });
+}
+
+export function useUpdateComment(postId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, content }: { commentId: number; content: string }) =>
+      updateComment(commentId, content),
+    // 댓글 수는 그대로라 목록만 다시 받는다
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: commentKeys.list(postId) }),
   });
 }
 

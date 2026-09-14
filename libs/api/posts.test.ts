@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PostApiError, createPost, fetchPosts, uploadImages } from "./posts";
+import { PostApiError, createPost, fetchPosts, updateComment, uploadImages } from "./posts";
 
 function mockFetch(status: number, json: unknown) {
   const fetchMock = vi
@@ -64,5 +64,28 @@ describe("uploadImages", () => {
     expect(init.body).toBeInstanceOf(FormData);
     expect(init.headers).not.toHaveProperty("Content-Type");
     expect(init.body.getAll("images")).toHaveLength(1);
+  });
+});
+
+describe("updateComment", () => {
+  it("PATCH /comments/{id} 로 내용만 보내고 수정된 댓글을 돌려준다", async () => {
+    const updated = { id: 5, content: "고친 내용" };
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: updated });
+
+    await expect(updateComment(5, "고친 내용")).resolves.toEqual(updated);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.test.local/api/v1/comments/5");
+    expect(init.method).toBe("PATCH");
+    expect(JSON.parse(init.body)).toEqual({ content: "고친 내용" });
+  });
+
+  it("이미 삭제된 댓글(CM004)은 서버 메시지로 실패한다", async () => {
+    mockFetch(400, { status: 400, errorCode: "CM004", message: "이미 삭제된 댓글입니다." });
+
+    await expect(updateComment(5, "x")).rejects.toMatchObject({
+      status: 400,
+      errorCode: "CM004",
+      message: "이미 삭제된 댓글입니다.",
+    });
   });
 });

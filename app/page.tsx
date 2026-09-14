@@ -2,6 +2,7 @@ import HeroSection from "@/features/home/components/HeroSection";
 import CourseCarousel from "@/features/home/components/CourseSection";
 import WeatherSection from "@/features/home/components/WeatherSection";
 import SpotsPreviewSection from "@/features/home/components/SpotsPreviewSection";
+import EventSection from "@/features/home/components/EventSection";
 import PopularCourseSection from "@/features/home/components/PopularCourseSection";
 import PopularSpotsSection from "@/features/home/components/PopularSpotsSection";
 import ServiceIntroSection from "@/features/home/components/ServiceIntroSection";
@@ -20,6 +21,7 @@ export default function HomePage() {
           <WeatherSection />
           <SpotsPreviewSection type="crowd" />
           <SpotsPreviewSection type="relaxed" />
+          <EventSection />
           <PopularCourseSection />
           <PopularSpotsSection />
           <ServiceIntroSection />
