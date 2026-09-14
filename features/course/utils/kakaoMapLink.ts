@@ -15,5 +15,8 @@ export function getKakaoMapDirectionsUrl(
  * 받는 사람이 로그인 없이 장소를 바로 찾을 수 있게 장소마다 붙인다.
  */
 export function getKakaoMapPlaceUrl(name: string, lat: number, lng: number): string {
-  return `https://map.kakao.com/link/map/${encodeURIComponent(name)},${lat},${lng}`;
+  // 카톡에 붙였을 때 한글 이름이 %EC%.. 로 길게 깨져 보이지 않게 한글은 그대로 두고,
+  // 링크를 끊는 공백과 "이름,위도,경도" 구분자와 겹치는 쉼표만 바꾼다 (카카오 공식 예시도 한글 그대로 쓴다)
+  const label = name.trim().replace(/,/g, " ").replace(/\s+/g, "%20");
+  return `https://map.kakao.com/link/map/${label},${lat},${lng}`;
 }

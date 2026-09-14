@@ -8,6 +8,14 @@ const places = [
 ];
 
 describe("buildCourseShareText", () => {
+  it("카카오맵 링크는 한글 이름을 그대로 두고 공백·쉼표만 바꾼다", () => {
+    const text = buildCourseShareText({
+      title: "t",
+      places: [{ name: "영도 카페, 거리", lat: 35.1, lng: 129.1 }],
+    });
+    expect(text).toContain("   https://map.kakao.com/link/map/영도%20카페%20거리,35.1,129.1");
+  });
+
   it("제목 · 소개 · 요약 · 장소별 비용과 카카오맵 링크를 담는다", () => {
     expect(buildCourseShareText({ title: "영도 바다 산책", description: "조용한 오후 코스", places })).toBe(
       [
@@ -16,9 +24,9 @@ describe("buildCourseShareText", () => {
         "",
         "2곳 · 총 4.2km · 예상 비용 15,000원",
         "1. 흰여울문화마을 · 무료",
-        `   https://map.kakao.com/link/map/${encodeURIComponent("흰여울문화마을")},35.0781,129.0452`,
+        "   https://map.kakao.com/link/map/흰여울문화마을,35.0781,129.0452",
         "2. 태종대 · 15,000원",
-        `   https://map.kakao.com/link/map/${encodeURIComponent("태종대")},35.0531,129.0874`,
+        "   https://map.kakao.com/link/map/태종대,35.0531,129.0874",
       ].join("\n"),
     );
   });
