@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateCourse, updateCourseVisibility } from "@/libs/api/course";
 import { clientFetch } from "@/libs/clientFetch";
 import { myCoursesKeys } from "@/features/course/hooks/useMyCourses";
+import { popularCoursesKey } from "@/features/home/hooks/usePopularCourses";
 
 import type {
   CourseItemResponse,
@@ -59,6 +60,8 @@ export function useUpdateCourse(pairId: string | null) {
       }
       // 코스 목록에 보이는 제목·총비용·장소 이름이 함께 바뀌므로 다시 받아온다
       queryClient.invalidateQueries({ queryKey: myCoursesKeys.all });
+      // 홈 인기 코스 카드(제목·공개 여부)도 함께 바뀐다
+      queryClient.invalidateQueries({ queryKey: popularCoursesKey });
     },
   });
 }
@@ -78,6 +81,8 @@ export function useUpdateCourseVisibility(pairId: string | null) {
         queryClient.setQueryData(courseResultKeys.detail(pairId), [updated]);
       }
       queryClient.invalidateQueries({ queryKey: myCoursesKeys.all });
+      // 홈 인기 코스 카드(제목·공개 여부)도 함께 바뀐다
+      queryClient.invalidateQueries({ queryKey: popularCoursesKey });
     },
   });
 }
