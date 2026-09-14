@@ -13,13 +13,13 @@ import {
 import type { MotionValue } from "motion/react";
 
 /** 누른 채 끌 때 최대 기울기(도) — 좌우는 크게, 위아래는 조금 */
-const MAX_DRAG_TILT_Y = 28;
-const MAX_DRAG_TILT_X = 16;
+const MAX_DRAG_TILT_Y = 40;
+const MAX_DRAG_TILT_X = 24;
 /** 누르지 않고 올려만 뒀을 때 기울기 */
-const HOVER_TILT = 5;
+const HOVER_TILT = 9;
 /** 이만큼(px) 넘게 끌면 드래그로 보고, 손을 뗐을 때 링크 이동(클릭)을 막는다 */
 const CLICK_SLOP = 6;
-const HOVER_GLARE = 0.3;
+const HOVER_GLARE = 0.45;
 
 interface GlareValues {
   x: MotionValue<number>;
@@ -50,8 +50,8 @@ export default function HoloCard({ children, className = "" }: HoloCardProps) {
   const rotateXTarget = useMotionValue(0);
   const rotateYTarget = useMotionValue(0);
   // 감쇠를 낮게 둬서 손을 뗄 때 한두 번 흔들리며 멈춘다
-  const rotateX = useSpring(rotateXTarget, { stiffness: 170, damping: 13, mass: 0.7 });
-  const rotateY = useSpring(rotateYTarget, { stiffness: 170, damping: 13, mass: 0.7 });
+  const rotateX = useSpring(rotateXTarget, { stiffness: 150, damping: 11, mass: 0.8 });
+  const rotateY = useSpring(rotateYTarget, { stiffness: 150, damping: 11, mass: 0.8 });
   const scale = useSpring(1, { stiffness: 320, damping: 22 });
   const lift = useSpring(0, { stiffness: 320, damping: 24 });
   const glareX = useMotionValue(50);
@@ -81,8 +81,8 @@ export default function HoloCard({ children, className = "" }: HoloCardProps) {
       // 캡처를 못 해도 카드 위에서는 그대로 동작한다
     }
     trackGlare(e);
-    scale.set(1.06);
-    lift.set(-8);
+    scale.set(1.1);
+    lift.set(-18);
     glareOpacity.set(1);
     setLifted(true);
   };
@@ -95,8 +95,8 @@ export default function HoloCard({ children, className = "" }: HoloCardProps) {
       const dy = e.clientY - press.current.y;
       if (Math.hypot(dx, dy) > CLICK_SLOP) press.current.moved = true;
       // 끈 방향 쪽 모서리가 눌려 들어가도록 — 카드 폭만큼 끌면 최대 기울기
-      rotateYTarget.set(clamp((dx / rect.width) * MAX_DRAG_TILT_Y * 1.6, MAX_DRAG_TILT_Y));
-      rotateXTarget.set(clamp((-dy / rect.height) * MAX_DRAG_TILT_X * 1.6, MAX_DRAG_TILT_X));
+      rotateYTarget.set(clamp((dx / rect.width) * MAX_DRAG_TILT_Y * 2.2, MAX_DRAG_TILT_Y));
+      rotateXTarget.set(clamp((-dy / rect.height) * MAX_DRAG_TILT_X * 2.2, MAX_DRAG_TILT_X));
       return;
     }
     rotateYTarget.set((px - 0.5) * 2 * HOVER_TILT);
@@ -141,7 +141,7 @@ export default function HoloCard({ children, className = "" }: HoloCardProps) {
       <motion.div
         data-lifted={lifted}
         className={`${lifted ? "cursor-grabbing" : "cursor-grab"} select-none ${className}`}
-        style={{ rotateX, rotateY, scale, y: lift, transformPerspective: 900 }}
+        style={{ rotateX, rotateY, scale, y: lift, transformPerspective: 650 }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={(e) => release(e, true)}
@@ -170,9 +170,9 @@ export function HoloGlare() {
   const y = glare?.y ?? fallbackY;
   const opacity = glare?.opacity ?? fallbackOpacity;
 
-  const specular = useMotionTemplate`radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.18) 28%, rgba(255,255,255,0) 58%)`;
+  const specular = useMotionTemplate`radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.18) 28%, rgba(255,255,255,0) 58%)`;
   const holoPosition = useMotionTemplate`${x}% ${y}%`;
-  const holoOpacity = useTransform(opacity, (v) => v * 0.5);
+  const holoOpacity = useTransform(opacity, (v) => v * 0.8);
 
   if (!glare) return null;
 

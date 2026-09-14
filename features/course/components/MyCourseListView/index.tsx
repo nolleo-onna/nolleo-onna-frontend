@@ -119,7 +119,7 @@ function CourseCard({
     >
       <div className="flex items-center gap-1.5">
         {isPublic ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-lime-100 px-2 py-0.5 text-[10px] font-bold text-lime-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-ocean-50 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
             <Globe className="h-2.5 w-2.5" />
             홈에 공개 중{likeCount ? ` · 좋아요 ${likeCount}` : ""}
           </span>
@@ -144,7 +144,7 @@ function CourseCard({
               <div className="flex flex-col items-center">
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                    i === 0 ? "bg-navy-900 text-lime-300" : "bg-white text-gray-500 ring-1 ring-gray-200"
+                    i === 0 ? "bg-navy-900 text-ocean-400" : "bg-white text-gray-500 ring-1 ring-gray-200"
                   }`}
                 >
                   {i + 1}
@@ -170,7 +170,7 @@ function CourseCard({
             {totalCost > 0 ? `${totalCost.toLocaleString()}원` : "무료"}
           </p>
         </div>
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-navy-900 group-hover:text-lime-300">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-navy-900 group-hover:text-ocean-400">
           <ArrowUpRight className="h-4 w-4" />
         </span>
       </div>
@@ -349,11 +349,11 @@ export default function MyCourseListView() {
               variants={heroRise}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 ring-1 ring-inset ring-white/15"
             >
-              <Sparkles className="h-3.5 w-3.5 text-lime-300" />
+              <Sparkles className="h-3.5 w-3.5 text-ocean-400" />
               {ASSISTANT_NAME}와 함께 만든 나만의 부산 여행
             </motion.p>
             <motion.h1 variants={heroRise} className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">
-              내가 만든 <span className="text-lime-300">코스</span>
+              내가 만든 <span className="text-ocean-400">코스</span>
             </motion.h1>
             <motion.dl variants={heroRise} className="mt-7 flex flex-wrap gap-x-8 gap-y-3">
               <HeroStat label="만든 코스" value={isLoading ? "–" : `${courses?.length ?? 0}개`} />
@@ -463,7 +463,7 @@ export default function MyCourseListView() {
                       aria-current={n === page ? "page" : undefined}
                       className={`h-9 w-9 rounded-full text-sm font-semibold transition-colors ${
                         n === page
-                          ? "bg-navy-900 text-lime-300"
+                          ? "bg-navy-900 text-ocean-400"
                           : "text-gray-500 hover:bg-gray-50"
                       }`}
                     >
