@@ -39,7 +39,7 @@ export default function RouteItineraryCard({
   const authorName = authorNickname ? maskName(authorNickname) : "놀러온나 여행자";
 
   return (
-    <div className="group overflow-hidden rounded-[20px] bg-white ring-1 ring-gray-100 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_32px_-14px_rgba(13,48,128,0.2)]">
+    <div className="group flex h-full w-full flex-col overflow-hidden rounded-[20px] bg-white ring-1 ring-gray-100 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_32px_-14px_rgba(13,48,128,0.2)]">
       {/* 대표 사진 — 첫 스팟 이미지, 없으면 그라데이션 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
         {imageSrc ? (
@@ -64,7 +64,7 @@ export default function RouteItineraryCard({
       </div>
 
       {/* 방문 동선 타임라인 */}
-      <div className="px-4 pt-3.5">
+      <div className="flex-1 px-4 pt-3.5">
         {visibleStops.map((stop, index) => (
           <div key={`${stop}-${index}`} className="flex items-stretch gap-2.5">
             <div className="flex flex-col items-center">
