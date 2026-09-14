@@ -88,10 +88,12 @@ export default function CourseMap({
       const isSelected = place.id === selectedPlaceId;
       const content = document.createElement("button");
       content.type = "button";
+      // 기본은 흰 테두리 네이비 원, 선택된 곳은 라임 원에 네이비 테두리로 크게 — 사이드바 번호 배지와 같은 색
       content.className = [
-        "flex h-8 w-8 items-center justify-center rounded-full",
-        "text-sm font-bold text-white shadow-md transition-transform",
-        isSelected ? "bg-ocean-500 scale-125" : "bg-navy-900 hover:scale-110",
+        "flex items-center justify-center rounded-full font-bold transition-transform",
+        isSelected
+          ? "h-10 w-10 bg-lime-300 text-[15px] text-navy-900 ring-4 ring-navy-900 shadow-[0_8px_20px_rgba(5,12,26,0.45)]"
+          : "h-8 w-8 bg-navy-900 text-sm text-white ring-[3px] ring-white shadow-[0_4px_12px_rgba(5,12,26,0.35)] hover:scale-110",
       ].join(" ");
       content.textContent = String(index + 1);
       content.addEventListener("click", () => onSelectPlace(place));
@@ -108,10 +110,10 @@ export default function CourseMap({
 
     polylineRef.current = new window.kakao.maps.Polyline({
       path: places.map((p) => new window.kakao.maps.LatLng(p.lat, p.lng)),
-      strokeWeight: 2,
-      strokeColor: "#1B2A4A",
-      strokeOpacity: 0.8,
-      strokeStyle: "shortdash",
+      strokeWeight: 4,
+      strokeColor: "#0a84ff",
+      strokeOpacity: 0.75,
+      strokeStyle: "solid",
     });
     polylineRef.current.setMap(map);
 
