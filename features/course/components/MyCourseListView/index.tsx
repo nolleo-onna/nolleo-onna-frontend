@@ -106,11 +106,11 @@ function CourseCard({
                  transition-all duration-300 ease-out"
       aria-label={`${title} 코스 상세 보기`}
     >
-      {/* 공개 뱃지 — 공유 링크가 살아 있는 코스 */}
+      {/* 홈 공개 뱃지 — 홈 인기 코스에 올라가 있고 공유 링크도 열리는 코스 */}
       {isPublic && (
         <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-lime-50 px-2 py-0.5 text-[10px] font-bold text-lime-700">
           <Globe className="h-2.5 w-2.5" />
-          공개 중{likeCount ? ` · 좋아요 ${likeCount}` : ""}
+          홈에 공개 중{likeCount ? ` · 좋아요 ${likeCount}` : ""}
         </span>
       )}
 
