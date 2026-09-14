@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MotionConfig, motion, useReducedMotion, useSpring } from "motion/react";
+import { MotionConfig, motion, useReducedMotion } from "motion/react";
 import {
   ArrowLeft,
   Building2,
@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 
+import TiltCard from "@/components/ui/TiltCard";
 import EventCard, { eventBadgeClass } from "@/features/event/components/EventCard";
 import EventLocationMap from "@/features/event/components/EventLocationMap";
 import { useEvent, useEvents } from "@/features/event/hooks/useEvents";
@@ -76,32 +77,6 @@ function directionsUrl(event: BusanEvent): string | null {
 // ─────────────────────────── 히어로 ───────────────────────────
 
 /** 마우스를 따라 포스터가 살짝 기울어진다 — 터치·움직임 줄이기 설정에서는 가만히 */
-function TiltPoster({ children, disabled }: { children: React.ReactNode; disabled: boolean }) {
-  const rotateX = useSpring(0, { stiffness: 160, damping: 16 });
-  const rotateY = useSpring(0, { stiffness: 160, damping: 16 });
-
-  const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (disabled || e.pointerType !== "mouse") return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    rotateY.set(((e.clientX - rect.left) / rect.width - 0.5) * 12);
-    rotateX.set(-((e.clientY - rect.top) / rect.height - 0.5) * 12);
-  };
-  const handleLeave = () => {
-    rotateX.set(0);
-    rotateY.set(0);
-  };
-
-  return (
-    <motion.div
-      style={{ rotateX, rotateY, transformPerspective: 900 }}
-      onPointerMove={handleMove}
-      onPointerLeave={handleLeave}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 function HeroFact({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex min-w-0 gap-3">
@@ -277,7 +252,7 @@ function Hero({ event, today }: { event: BusanEvent; today: string }) {
             transition={{ type: "spring", stiffness: 110, damping: 18, delay: 0.05 }}
             className="mx-auto w-full max-w-[240px] md:max-w-none"
           >
-            <TiltPoster disabled={!!reduceMotion}>
+            <TiltCard>
               <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] bg-navy-800 shadow-[0_40px_80px_-24px_rgba(0,0,0,0.75)] ring-1 ring-white/10">
                 {event.firstImage ? (
                   <>
@@ -311,7 +286,7 @@ function Hero({ event, today }: { event: BusanEvent; today: string }) {
                   className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/10"
                 />
               </div>
-            </TiltPoster>
+            </TiltCard>
           </motion.div>
 
           <motion.div variants={heroStagger} initial="hidden" animate="show" className="min-w-0">

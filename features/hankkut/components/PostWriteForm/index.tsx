@@ -153,11 +153,11 @@ function PostEditor({ gallery, post, authorName }: PostEditorProps) {
 
       {gallery && (
         <div>
-          <p className="text-xs font-semibold tracking-widest text-ocean-600 uppercase">
-            Community
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-navy-900">
-            {gallery.emoji} {gallery.name} 한끗에 {post ? "글 수정" : "글쓰기"}
+          <span className="inline-flex rounded-full bg-navy-900 px-2.5 py-1 text-[11px] font-bold text-lime-300">
+            {gallery.name} 한끗
+          </span>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-navy-900">
+            {post ? "글 수정하기" : "동네 이야기 남기기"}
           </h1>
         </div>
       )}

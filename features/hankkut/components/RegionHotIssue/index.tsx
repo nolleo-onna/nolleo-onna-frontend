@@ -2,11 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, Eye, Flame, MessageSquare } from "lucide-react";
+import { MotionConfig, motion } from "motion/react";
+import { ArrowRight, CalendarDays, Eye, Flame, MessageSquare, Sparkles } from "lucide-react";
 
+import TiltCard from "@/components/ui/TiltCard";
 import { eventBadgeClass } from "@/features/event/components/EventCard";
 import { useEvents } from "@/features/event/hooks/useEvents";
 import { toDateKey } from "@/features/event/utils/eventSchedule";
+import { getPostsForGallery } from "@/features/hankkut/data/galleries";
 import { useRecentRegionPosts } from "@/features/hankkut/hooks/usePosts";
 import { HOT_ISSUE_LIMIT, buildHotIssues } from "@/features/hankkut/utils/hotIssues";
 import { filterEventsByDistrict } from "@/features/hankkut/utils/regionEvents";
@@ -14,56 +17,71 @@ import { filterEventsByDistrict } from "@/features/hankkut/utils/regionEvents";
 import type { HankkutGallery } from "@/features/hankkut/data/galleries";
 import type { HotIssueItem } from "@/features/hankkut/utils/hotIssues";
 
-// 카드 수만큼만 칸을 나눠 한 장이 덩그러니 남지 않게 한다
-const GRID_COLS = ["md:grid-cols-1", "md:grid-cols-1", "md:grid-cols-2", "md:grid-cols-3"];
+const CARD =
+  "group relative block aspect-[3/4] overflow-hidden rounded-[20px] shadow-[0_18px_40px_-24px_rgba(5,12,26,0.6)] transition-shadow duration-300 hover:shadow-[0_28px_56px_-20px_rgba(5,12,26,0.55)]";
+const CARD_SIZES = "(max-width: 640px) 50vw, 280px";
 
-function HotIssueCard({ item, wide }: { item: HotIssueItem; wide: boolean }) {
-  const shape = wide ? "aspect-[4/3] md:aspect-[21/9]" : "aspect-[4/3]";
-
+function HotIssueCard({ item }: { item: HotIssueItem }) {
   if (item.kind === "event") {
     return (
-      <Link
-        href={item.href}
-        className={`group relative block overflow-hidden rounded-2xl bg-navy-900 ${shape}`}
-      >
+      <Link href={item.href} className={`${CARD} bg-navy-900`}>
         {item.imageUrl && (
-          <Image
-            src={item.imageUrl}
-            alt={item.title}
-            fill
-            quality={90}
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <>
+            {/* 포스터가 잘리지 않게 원본은 contain, 빈 곳은 같은 이미지를 흐려 채운다 */}
+            <Image src={item.imageUrl} alt="" aria-hidden fill quality={30} sizes="280px" className="scale-110 object-cover opacity-60 blur-xl" />
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              fill
+              quality={90}
+              sizes={CARD_SIZES}
+              className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/30" />
-        <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold text-navy-900">
-            행사
-          </span>
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${eventBadgeClass(item.badge)}`}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
+        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold text-navy-900">행사</span>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset ring-white/20 ${eventBadgeClass(item.badge)}`}>
             {item.badge.label}
           </span>
         </div>
         <div className="absolute inset-x-3 bottom-3">
-          <p className="line-clamp-2 text-base font-bold leading-snug text-white">{item.title}</p>
-          <p className="mt-1 flex items-center gap-1 truncate text-[11px] text-white/75">
+          <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white break-keep">{item.title}</p>
+          <p className="mt-1.5 flex items-center gap-1 text-[11px] text-white/70">
             <CalendarDays className="h-3 w-3 shrink-0" />
-            <span className="truncate">
-              {item.period}
-              {item.place && ` · ${item.place}`}
-            </span>
+            <span className="truncate">{item.period}</span>
           </p>
         </div>
       </Link>
     );
   }
 
+  if (item.kind === "curated") {
+    return (
+      <Link href={item.href} className={`${CARD} bg-navy-800`}>
+        <Image
+          src={item.imageUrl}
+          alt={item.title}
+          fill
+          quality={90}
+          sizes={CARD_SIZES}
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
+        <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-lime-300 px-2 py-0.5 text-[11px] font-bold text-navy-900">
+          <Sparkles className="h-3 w-3" />
+          {item.category}
+        </span>
+        <p className="absolute inset-x-3 bottom-3 line-clamp-3 text-[15px] font-bold leading-snug text-white break-keep">
+          {item.title}
+        </p>
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href={item.href}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-navy-900 to-ocean-600 p-4 ${shape}`}
-    >
+    <Link href={item.href} className={`${CARD} flex flex-col justify-between bg-gradient-to-br from-navy-900 to-ocean-600 p-4`}>
       <span
         aria-hidden
         className="pointer-events-none absolute -right-1 -top-8 select-none text-[140px] font-bold leading-none text-white/10"
@@ -71,17 +89,13 @@ function HotIssueCard({ item, wide }: { item: HotIssueItem; wide: boolean }) {
         &rdquo;
       </span>
       <div className="relative flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold text-white">
-          by {item.authorName}
-        </span>
+        <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-bold text-white">by {item.authorName}</span>
         {item.tagLabel && (
-          <span className="rounded-full bg-lime-300 px-2 py-0.5 text-[11px] font-bold text-navy-900">
-            {item.tagLabel}
-          </span>
+          <span className="rounded-full bg-lime-300 px-2 py-0.5 text-[11px] font-bold text-navy-900">{item.tagLabel}</span>
         )}
       </div>
       <div className="relative">
-        <p className="line-clamp-3 text-base font-bold leading-snug text-white underline-offset-4 group-hover:underline">
+        <p className="line-clamp-4 text-base font-bold leading-snug text-white break-keep underline-offset-4 group-hover:underline">
           {item.title}
         </p>
         <p className="mt-2 flex items-center gap-2.5 text-[11px] text-white/70">
@@ -99,7 +113,10 @@ function HotIssueCard({ item, wide }: { item: HotIssueItem; wide: boolean }) {
   );
 }
 
-/** 동네 핫이슈 — 이 동네에서 지금 갈 수 있는 행사(포스터)와 인기글. 둘 다 없으면 줄을 숨긴다 */
+/**
+ * 동네 핫이슈 — 이 동네에서 지금 갈 수 있는 행사(포스터)와 인기글. 모자란 칸은 큐레이션 한끗으로 채운다.
+ * 카드는 행사 상세의 포스터처럼 기울어진 채로 떠올라 제자리에 앉는다. 보여줄 게 하나도 없으면 줄을 숨긴다.
+ */
 export default function RegionHotIssue({ gallery }: { gallery: HankkutGallery }) {
   const events = useEvents();
   const posts = useRecentRegionPosts(gallery.districtTag);
@@ -110,31 +127,55 @@ export default function RegionHotIssue({ gallery }: { gallery: HankkutGallery })
     filterEventsByDistrict(events.data ?? [], gallery.districtTag),
     posts.data?.content ?? [],
     today,
+    getPostsForGallery(gallery.slug),
   );
 
   if (!isPending && items.length === 0) return null;
 
   return (
-    <section>
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-navy-900">
-        <Flame className="h-5 w-5 text-pink-500" />
-        {gallery.name} 핫이슈
-      </h2>
-      <div className="rounded-[24px] border border-gray-100 bg-white p-3 md:p-4">
+    <MotionConfig reducedMotion="user">
+      <section className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+        <div className="lg:pt-2">
+          <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-navy-900 break-keep">
+            <Flame className="h-6 w-6 text-pink-500" />
+            {gallery.name} 핫이슈
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-gray-500 break-keep">
+            이 동네에서 지금 갈 수 있는 행사와 많이 본 이야기를 모았어요.
+          </p>
+          <Link
+            href="/event"
+            className="mt-4 hidden items-center gap-1 text-sm font-semibold text-ocean-600 hover:underline lg:inline-flex"
+          >
+            부산 행사 전체보기
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
         {isPending ? (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5">
             {Array.from({ length: HOT_ISSUE_LIMIT }, (_, i) => (
-              <div key={i} className="animate-shimmer aspect-[4/3] rounded-2xl" />
+              <div key={i} className="animate-shimmer aspect-[3/4] rounded-[20px]" />
             ))}
           </div>
         ) : (
-          <div className={`grid grid-cols-1 gap-3 ${GRID_COLS[items.length]}`}>
-            {items.map((item) => (
-              <HotIssueCard key={item.key} item={item} wide={items.length === 1} />
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5">
+            {items.map((item, i) => (
+              <motion.li
+                key={item.key}
+                initial={{ opacity: 0, y: 48, rotate: i % 2 === 0 ? -3 : 3, scale: 0.94 }}
+                whileInView={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ type: "spring", stiffness: 110, damping: 18, delay: i * 0.1 }}
+              >
+                <TiltCard maxTilt={5}>
+                  <HotIssueCard item={item} />
+                </TiltCard>
+              </motion.li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
-    </section>
+      </section>
+    </MotionConfig>
   );
 }
