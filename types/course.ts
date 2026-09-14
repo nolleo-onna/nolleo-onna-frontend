@@ -80,7 +80,16 @@ export interface SharedCourse {
   authorProfileImageUrl: string | null;
   viewCount: number;
   likeCount: number;
+  /** 내가 좋아요를 눌렀는지 — 비로그인이면 항상 false */
+  likedByMe: boolean;
   createdAt: string;
+}
+
+// POST /api/v1/courses/shared/{shareToken}/likes/toggle 응답
+export interface CourseLikeToggleResult {
+  /** 토글 후 내 좋아요 상태 */
+  liked: boolean;
+  likeCount: number;
 }
 
 // ── 코스 수정 ──────────────────────────────────────────────

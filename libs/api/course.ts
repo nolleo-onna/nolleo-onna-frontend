@@ -3,6 +3,7 @@ import type {
   ApiErrorResponse,
   ApiResponse,
   CourseResponse,
+  CourseLikeToggleResult,
   CourseUpdateRequest,
   MyCourseSummary,
   PopularCourse,
@@ -123,6 +124,23 @@ export async function fetchSharedCourse(shareToken: string): Promise<SharedCours
   });
   if (!res.ok) throw new CourseUpdateError("코스를 찾을 수 없어요", res.status);
   const json: ApiResponse<SharedCourse> = await res.json();
+  return json.data;
+}
+
+// 공유 코스 좋아요 토글 — 로그인 필요. 사용자당 코스 1회, 다시 누르면 취소.
+export async function toggleSharedCourseLike(shareToken: string): Promise<CourseLikeToggleResult> {
+  const res = await clientFetch(
+    `/api/v1/courses/shared/${encodeURIComponent(shareToken)}/likes/toggle`,
+    { method: "POST" },
+  );
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .then((json: ApiErrorResponse | null) => json)
+      .catch(() => null);
+    throw new CourseUpdateError(error?.message || "좋아요를 반영하지 못했어요", res.status);
+  }
+  const json: ApiResponse<CourseLikeToggleResult> = await res.json();
   return json.data;
 }
 
