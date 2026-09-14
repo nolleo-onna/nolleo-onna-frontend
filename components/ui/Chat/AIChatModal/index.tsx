@@ -181,7 +181,8 @@ export function AIChatModal({
     const timer = setTimeout(() => {
       const el = inputRef.current;
       if (!el) return;
-      el.focus();
+      // 모달이 아직 누른 자리에서 커져 오는 중이라, 포커스가 페이지를 그 위치로 스크롤하지 않게 막는다
+      el.focus({ preventScroll: true });
       // 커서를 텍스트 끝으로
       el.setSelectionRange(el.value.length, el.value.length);
       // 높이 자동 조정
