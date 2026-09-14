@@ -1,56 +1,83 @@
 "use client";
 
 import Link from "next/link";
-import { type Variants, motion } from "motion/react";
-import { Sparkles } from "lucide-react";
+import { motion } from "motion/react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
+import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
 
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
+const FETCH_COUNT = 9;
+/** 데스크톱 한 화면 카드 수 — 이보다 많아야 넘기기(두 벌 렌더링·자동 재생)를 켠다 */
+const VISIBLE_DESKTOP = 3;
+const GAP_PX = 16;
+// 코스 카드는 동선·작성자까지 읽을 게 많아 스팟 카드(3초)보다 조금 느리게 넘긴다
+const AUTO_PLAY_MS = 4000;
+// 모바일은 옆 카드가 살짝 보이게 85%, 태블릿 2장, 데스크톱 3장 (gap 16px 기준)
+const CARD_WIDTH = "w-[85%] sm:w-[calc((100%-16px)/2)] lg:w-[calc((100%-32px)/3)]";
 
-const containerVariants: Variants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const CARD_COUNT = 6;
-
-// 사람들이 만들어 공개한 코스를 조회수 순으로 보여준다. 예전 "관광공사 추천 코스"
-// 목데이터 자리를 실제 사용자 코스로 채운 것.
+// 사람들이 만들어 공개한 코스를 조회수 순으로 보여준다. 한 줄에 3장씩, 다른 홈 카드처럼 넘긴다.
 export default function PopularCourseSection() {
-  const { data: courses, isPending, isError } = usePopularCourses(CARD_COUNT);
+  const { data: courses, isPending, isError } = usePopularCourses(FETCH_COUNT);
   const items = courses ?? [];
+  const canLoop = items.length > VISIBLE_DESKTOP;
+  const { scrollRef, scrollByCard } = useLoopingCarousel({
+    enabled: canLoop,
+    intervalMs: AUTO_PLAY_MS,
+    gapPx: GAP_PX,
+  });
+  // 한 화면보다 적을 때 두 벌로 그리면 같은 코스가 나란히 보이므로 넘기기를 켤 때만 복제한다
+  const slides = canLoop ? [...items, ...items] : items;
 
   return (
-    <section className="py-6 md:py-10">
+    <motion.section
+      className="py-6 md:py-10"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       <div className="mb-6 flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="text-xs font-semibold text-ocean-500">놀러온나 여행자들이 만든</span>
           <h2 className="text-xl font-bold text-gray-900 md:text-2xl">지금 인기 있는 코스</h2>
         </div>
-        <Link
-          href="/course"
-          className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          나도 만들기
-        </Link>
+        <div className="flex items-center gap-2">
+          {canLoop && (
+            <>
+              <button
+                type="button"
+                onClick={() => scrollByCard(-1)}
+                aria-label="이전 코스"
+                className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollByCard(1)}
+                aria-label="다음 코스"
+                className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
+          )}
+          <Link
+            href="/course"
+            className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            나도 만들기
+          </Link>
+        </div>
       </div>
 
       {isPending ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="animate-shimmer aspect-[4/3] rounded-[20px]" />
+        <div className="flex gap-4 overflow-hidden">
+          {Array.from({ length: VISIBLE_DESKTOP }, (_, i) => (
+            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/3] shrink-0 rounded-[20px]`} />
           ))}
         </div>
       ) : isError || items.length === 0 ? (
@@ -70,18 +97,24 @@ export default function PopularCourseSection() {
           </Link>
         </div>
       ) : (
-        <motion.div
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+        // 위아래 여백은 카드가 hover로 떠오를 때 그림자가 잘리지 않게 둔다
+        <div
+          ref={scrollRef}
+          className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 pt-1"
         >
-          {items.map((course, index) => (
-            <motion.div key={course.shareToken} variants={itemVariants}>
-              <Link href={`/course/shared/${encodeURIComponent(course.shareToken)}`}>
+          {slides.map((course, index) => {
+            const isClone = index >= items.length;
+            return (
+              <Link
+                key={`${isClone ? "b" : "a"}-${course.shareToken}`}
+                href={`/course/shared/${encodeURIComponent(course.shareToken)}`}
+                // 뒷벌은 끊김 없는 넘기기용 복제라 스크린리더·키보드 탐색에서 뺀다
+                aria-hidden={isClone || undefined}
+                tabIndex={isClone ? -1 : undefined}
+                className={`${CARD_WIDTH} flex shrink-0 snap-start`}
+              >
                 <RouteItineraryCard
-                  rank={index + 1}
+                  rank={(index % items.length) + 1}
                   imageSrc={course.thumbnailImageUrl}
                   title={course.title}
                   authorNickname={course.authorNickname}
@@ -92,10 +125,10 @@ export default function PopularCourseSection() {
                   stops={course.spotTitles}
                 />
               </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+            );
+          })}
+        </div>
       )}
-    </section>
+    </motion.section>
   );
 }
