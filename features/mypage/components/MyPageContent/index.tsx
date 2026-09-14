@@ -4,16 +4,19 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { type Variants, MotionConfig, motion } from "motion/react";
 import {
+  ArrowUpRight,
+  Bell,
   Bookmark,
   ChevronRight,
+  FileText,
   Heart,
   LogOut,
   MapPin,
+  MessageSquareText,
   Route,
   Sparkles,
-  Wallet,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +27,7 @@ import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
 
+import type { LucideIcon } from "lucide-react";
 import type { MyCourseSummary } from "@/types/course";
 import type { Hankkut } from "@/features/hankkut/data/mockHankkut";
 
@@ -35,11 +39,27 @@ const RECENT_COURSES_LIMIT = 4;
 const SAVED_HANKKUT_LIMIT = 4;
 const FAVORITE_PLACES_LIMIT = 4;
 const HANKKUT_BOOKMARK_STORAGE_KEY = "hankkut:bookmarks";
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 const CATEGORY_DOT_STYLES: Record<Hankkut["category"], string> = {
   "오늘 행사": "bg-pink-500",
   "무료로 즐기기": "bg-lime-400",
   "할인 혜택 팁": "bg-navy-900",
+};
+
+const heroStagger: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+const heroRise: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT } },
+};
+const sectionRise = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-40px" },
+  transition: { duration: 0.45, ease: EASE_OUT },
 };
 
 // 한끗 찜은 백엔드 API가 없어 localStorage에만 저장된다(useHankkutBookmark 참고).
@@ -63,10 +83,11 @@ function useSavedHankkut() {
 function LoadingState() {
   return (
     <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
-      <div className="animate-shimmer h-56 rounded-[28px]" />
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="animate-shimmer h-80 rounded-[28px] lg:col-span-2" />
-        <div className="animate-shimmer h-80 rounded-[28px]" />
+      <div className="animate-shimmer h-64 rounded-[32px]" />
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="animate-shimmer h-48 rounded-[24px]" />
+        ))}
       </div>
     </main>
   );
@@ -77,19 +98,18 @@ function LoggedOutState() {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
-      <section className="flex flex-col items-center gap-6 rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 px-6 py-20 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-base">
-          <MapPin className="h-8 w-8 text-ocean-500" />
+      <section className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-[32px] bg-navy-900 px-6 py-20 text-center text-white">
+        <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 -z-10 h-72 w-72 rounded-full bg-ocean-500/25 blur-3xl" />
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
+          <MapPin className="h-8 w-8 text-lime-300" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-navy-900">로그인이 필요해요</p>
-          <p className="mt-2 text-sm text-gray-500">
-            로그인하고 나만의 부산 여행 기록을 모아보세요
-          </p>
+          <p className="text-2xl font-bold">로그인이 필요해요</p>
+          <p className="mt-2 text-sm text-white/60">로그인하고 나만의 부산 여행 기록을 모아보세요</p>
         </div>
         <button
           onClick={() => router.push("/login")}
-          className="rounded-full bg-ocean-500 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-ocean-600 active:scale-95"
+          className="rounded-full bg-lime-300 px-8 py-3 text-sm font-bold text-navy-900 transition-transform hover:-translate-y-0.5 active:scale-95"
         >
           로그인하러 가기
         </button>
@@ -98,240 +118,212 @@ function LoggedOutState() {
   );
 }
 
+// ── 프로필 헤더 ───────────────────────────────────────────────────────────────
 interface ProfileHeroProps {
   nickname: string;
   email: string;
   profileImageUrl?: string;
   isAdmin: boolean;
-  stats: { label: string; value: string; icon: typeof Route }[];
+  stats: { label: string; value: string; icon: LucideIcon }[];
 }
+
+const QUICK_ACTIONS = [
+  { href: "/", label: "새 코스 만들기", icon: Sparkles, primary: true },
+  { href: "/spot", label: "스팟 찾기", icon: MapPin, primary: false },
+  { href: "/hankkut", label: "한끗 둘러보기", icon: MessageSquareText, primary: false },
+];
 
 function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: ProfileHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 p-6 md:p-10">
-      {/* 장식용 배경 원 */}
-      <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-ocean-100/60 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-lime-100/70 blur-2xl" />
+    <section className="relative isolate overflow-hidden rounded-[32px] bg-navy-900 text-white">
+      <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 -z-10 h-72 w-72 rounded-full bg-ocean-500/25 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 right-10 -z-10 h-72 w-72 rounded-full bg-lime-300/10 blur-3xl" />
 
-      <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-5">
-          {profileImageUrl ? (
-            <Image
-              src={toHttps(profileImageUrl)!}
-              alt={nickname}
-              width={88}
-              height={88}
-              className="h-[88px] w-[88px] rounded-full border-4 border-white object-cover shadow-base"
-            />
-          ) : (
-            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full border-4 border-white bg-lime-300 shadow-base">
-              <span className="text-3xl font-bold text-navy-900">
-                {nickname.charAt(0)}
-              </span>
-            </div>
-          )}
-
-          <div>
-            <p className="flex items-center gap-1 text-sm font-semibold text-ocean-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              마이페이지
-            </p>
-            <div className="mt-1 flex items-center gap-2">
-              <h1 className="relative text-2xl font-bold text-navy-900 md:text-3xl">
-                <span className="absolute inset-x-0 bottom-0.5 -z-10 h-2.5 bg-lime-300/70" />
-                {nickname}
+      <div className="grid gap-8 px-6 py-9 md:px-10 md:py-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <motion.div variants={heroStagger} initial="hidden" animate="visible" className="min-w-0">
+          <motion.div variants={heroRise} className="flex items-center gap-4">
+            {profileImageUrl ? (
+              <Image
+                src={toHttps(profileImageUrl)!}
+                alt={nickname}
+                width={72}
+                height={72}
+                className="h-[72px] w-[72px] shrink-0 rounded-full object-cover ring-4 ring-lime-300/80"
+              />
+            ) : (
+              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-lime-300 ring-4 ring-white/10">
+                <span className="text-2xl font-bold text-navy-900">{nickname.charAt(0)}</span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm text-white/55">안녕하세요,</p>
+              <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight md:text-4xl">
+                <span className="truncate">{nickname}</span>
+                <span className="shrink-0 text-white/40">님</span>
+                {isAdmin && (
+                  <span className="shrink-0 rounded-full bg-lime-300 px-2 py-0.5 text-[10px] font-bold text-navy-900">
+                    ADMIN
+                  </span>
+                )}
               </h1>
-              {isAdmin && (
-                <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
-                  ADMIN
-                </span>
-              )}
+              <p className="mt-1 truncate text-sm text-white/45">{email}</p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">{email}</p>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* 통계 */}
-        <div className="grid grid-cols-3 gap-3">
+          <motion.div variants={heroRise} className="mt-7 flex flex-wrap gap-2">
+            {QUICK_ACTIONS.map(({ href, label, icon: Icon, primary }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-semibold transition-transform hover:-translate-y-0.5 active:scale-95 ${
+                  primary
+                    ? "bg-lime-300 text-navy-900"
+                    : "bg-white/10 text-white ring-1 ring-inset ring-white/15 hover:bg-white/15"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Link>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        <motion.dl
+          variants={heroRise}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:w-[460px]"
+        >
           {stats.map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="flex flex-col items-center gap-1 rounded-2xl border border-white bg-white/80 px-4 py-3 backdrop-blur-sm md:min-w-[104px]"
-            >
-              <Icon className="h-4 w-4 text-ocean-500" />
-              <span className="text-lg font-bold text-navy-900">{value}</span>
-              <span className="text-[11px] text-gray-500">{label}</span>
+            <div key={label} className="rounded-2xl bg-white/[0.06] px-4 py-3.5 ring-1 ring-inset ring-white/10">
+              <Icon className="h-4 w-4 text-lime-300" />
+              <dd className="mt-2 text-2xl font-bold tabular-nums">{value}</dd>
+              <dt className="mt-0.5 text-[11px] text-white/50">{label}</dt>
             </div>
           ))}
-        </div>
+        </motion.dl>
       </div>
     </section>
   );
 }
 
-interface RecentCoursesSectionProps {
-  courses: MyCourseSummary[] | undefined;
-  isLoading: boolean;
+// ── 공통 섹션 머리 ────────────────────────────────────────────────────────────
+function SectionHead({
+  icon: Icon,
+  iconClass,
+  title,
+  href,
+}: {
+  icon: LucideIcon;
+  iconClass: string;
+  title: string;
+  href: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <h2 className="flex items-center gap-2 text-lg font-bold tracking-tight text-navy-900">
+        <span className={`flex h-8 w-8 items-center justify-center rounded-full ${iconClass}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        {title}
+      </h2>
+      <Link
+        href={href}
+        className="group inline-flex items-center gap-0.5 text-sm font-semibold text-gray-500 transition-colors hover:text-navy-900"
+      >
+        전체보기
+        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </div>
+  );
 }
 
-function RecentCoursesSection({ courses, isLoading }: RecentCoursesSectionProps) {
+function EmptyBlock({ icon: Icon, text, href, cta }: { icon: LucideIcon; text: string; href: string; cta: string }) {
+  return (
+    <div className="mt-5 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center">
+      <Icon className="h-6 w-6 text-gray-300" />
+      <p className="text-sm text-gray-500">{text}</p>
+      <Link
+        href={href}
+        className="rounded-full bg-navy-900 px-5 py-2 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
+      >
+        {cta}
+      </Link>
+    </div>
+  );
+}
+
+// ── 최근 만든 코스 — 한 줄 4장, 미니 동선 카드 ─────────────────────────────────
+function RecentCoursesSection({ courses, isLoading }: { courses: MyCourseSummary[] | undefined; isLoading: boolean }) {
   const router = useRouter();
 
   return (
-    <section className="rounded-[28px] border border-gray-100 bg-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Route className="h-4 w-4 text-ocean-500" />
-          <h2 className="text-base font-bold text-navy-900">최근 생성한 코스</h2>
-        </div>
-        <Link
-          href="/course"
-          className="flex items-center gap-0.5 text-xs text-gray-500 transition-colors hover:text-navy-900"
-        >
-          전체보기 <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
+    <motion.section {...sectionRise} className="rounded-[28px] bg-white p-6 ring-1 ring-gray-100 md:p-7">
+      <SectionHead icon={Route} iconClass="bg-ocean-50 text-ocean-600" title="최근 만든 코스" href="/course" />
 
       {isLoading ? (
-        <div className="mt-4 flex flex-col gap-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="animate-shimmer h-24 rounded-2xl" />
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="animate-shimmer h-44 rounded-2xl" />
           ))}
         </div>
       ) : !courses || courses.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl bg-gray-50 px-6 py-10 text-center">
-          <p className="text-sm text-gray-500">아직 만든 코스가 없어요</p>
-          <Link
-            href="/course"
-            className="rounded-full bg-navy-900 px-5 py-2 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
-          >
-            첫 코스 만들러 가기
-          </Link>
-        </div>
+        <EmptyBlock icon={Route} text="아직 만든 코스가 없어요" href="/" cta="첫 코스 만들러 가기" />
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {courses.slice(0, RECENT_COURSES_LIMIT).map((course) => (
-            <div
-              key={course.id}
-              onClick={() => router.push(`/course/result?pairId=${course.pairId}`)}
-              className="group cursor-pointer rounded-2xl border border-gray-100 p-5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-ocean-200 hover:shadow-[0_20px_40px_-16px_rgba(10,132,255,0.18)]"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-bold text-navy-900">{course.title}</p>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-ocean-500" />
-              </div>
-              {course.description && (
-                <p className="mt-1 line-clamp-1 text-xs text-gray-500">
-                  {course.description}
-                </p>
-              )}
-
-              {course.spotTitles && course.spotTitles.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {course.spotTitles.slice(0, 3).map((title) => (
-                    <span
-                      key={title}
-                      className="rounded-full bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-600"
-                    >
-                      {title}
-                    </span>
-                  ))}
-                  {course.spotTitles.length > 3 && (
-                    <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-600">
-                      +{course.spotTitles.length - 3}
-                    </span>
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {courses.slice(0, RECENT_COURSES_LIMIT).map((course) => {
+            const stops = (course.spotTitles ?? []).slice(0, 3);
+            const rest = (course.spotTitles?.length ?? 0) - stops.length;
+            return (
+              <button
+                key={course.id}
+                type="button"
+                onClick={() => router.push(`/course/result?pairId=${course.pairId}`)}
+                className="group flex h-full flex-col rounded-2xl bg-gray-50/70 p-4 text-left ring-1 ring-inset ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_36px_-18px_rgba(13,48,128,0.3)] hover:ring-ocean-200"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="line-clamp-2 text-[15px] font-bold leading-snug text-navy-900 break-keep">{course.title}</p>
+                  {course.isPublic && (
+                    <span className="shrink-0 rounded-full bg-lime-100 px-1.5 py-0.5 text-[10px] font-bold text-lime-700">공개</span>
                   )}
                 </div>
-              )}
-
-              <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {course.spotTitles?.length ?? 0}곳
-                </span>
-                <span className="flex items-center gap-1">
-                  <Wallet className="h-3 w-3" />
-                  {course.totalCost > 0
-                    ? `${course.totalCost.toLocaleString()}원`
-                    : "무료"}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
-  return (
-    <section className="rounded-[28px] border border-gray-100 bg-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bookmark className="h-4 w-4 text-pink-500" />
-          <h2 className="text-base font-bold text-navy-900">저장한 한끗</h2>
-        </div>
-        <Link
-          href="/hankkut"
-          className="flex items-center gap-0.5 text-xs text-gray-500 transition-colors hover:text-navy-900"
-        >
-          전체보기 <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {saved.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl bg-gray-50 px-6 py-10 text-center">
-          <Heart className="h-5 w-5 text-gray-300" />
-          <p className="text-sm text-gray-500">
-            아직 저장한 한끗 정보가 없어요
-          </p>
-          <Link
-            href="/hankkut"
-            className="rounded-full bg-navy-900 px-5 py-2 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
-          >
-            한끗 정보 구경하기
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-4 flex flex-col gap-3">
-          {saved.slice(0, SAVED_HANKKUT_LIMIT).map((item) => (
-            <Link
-              key={item.id}
-              href={`/hankkut/${item.id}`}
-              className="group flex items-center gap-3 rounded-2xl border border-gray-100 p-3 transition-all duration-300 ease-out hover:border-ocean-200 hover:shadow-[0_12px_24px_-12px_rgba(10,132,255,0.2)]"
-            >
-              <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  fill
-                  sizes="80px"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_DOT_STYLES[item.category]}`}
-                  />
-                  <span className="text-[11px] font-semibold text-gray-500">
-                    {item.category} · {item.region}
+                <ol className="mt-3 flex-1">
+                  {stops.map((spot, i) => (
+                    <li key={`${course.id}-${i}`} className="flex items-stretch gap-2.5">
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+                            i === 0 ? "bg-navy-900 text-lime-300" : "bg-white text-gray-500 ring-1 ring-gray-200"
+                          }`}
+                        >
+                          {i + 1}
+                        </span>
+                        {(i < stops.length - 1 || rest > 0) && (
+                          <span className="my-0.5 w-0 flex-1 border-l border-dashed border-gray-300" />
+                        )}
+                      </div>
+                      <span className="truncate pb-2 text-[12px] text-gray-600">{spot}</span>
+                    </li>
+                  ))}
+                  {rest > 0 && <li className="pl-6 text-[11px] font-medium text-gray-400">+{rest}곳</li>}
+                </ol>
+                <div className="mt-3 flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
+                  <span className="text-[15px] font-bold tabular-nums text-navy-900">
+                    {course.totalCost > 0 ? `${course.totalCost.toLocaleString()}원` : "무료"}
                   </span>
+                  <ArrowUpRight className="h-4 w-4 text-gray-300 transition-colors group-hover:text-ocean-500" />
                 </div>
-                <p className="mt-0.5 line-clamp-2 text-[13px] font-semibold text-navy-900">
-                  {item.title}
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-ocean-500" />
-            </Link>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
 
+// ── 찜한 장소 — 사진 타일 2×2 ─────────────────────────────────────────────────
 // 서버에 저장된 찜한 장소 목록(스팟 페이지 하트와 같은 데이터).
 // 헤더 아래 한 줄은 GET /users/me/favorite-stats — "오늘/이번 주/이번 달 N개 찜했어요" 문장.
 function FavoritePlacesSection() {
@@ -340,93 +332,110 @@ function FavoritePlacesSection() {
   const items = favorites ?? [];
 
   return (
-    <section className="rounded-[28px] border border-gray-100 bg-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Heart className="h-4 w-4 text-pink-500" />
-          <h2 className="text-base font-bold text-navy-900">찜한 장소</h2>
-        </div>
-        <Link
-          href="/spot"
-          className="flex items-center gap-0.5 text-xs text-gray-500 transition-colors hover:text-navy-900"
-        >
-          전체보기 <ChevronRight className="h-3 w-3" />
-        </Link>
-      </div>
+    <motion.section {...sectionRise} className="rounded-[28px] bg-white p-6 ring-1 ring-gray-100 md:p-7">
+      <SectionHead icon={Heart} iconClass="bg-pink-50 text-pink-500" title="찜한 장소" href="/spot" />
 
       {stats && stats.count > 0 && (
-        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1 text-[11px] font-semibold text-pink-600">
+        <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1 text-[11px] font-semibold text-pink-600">
           <Sparkles className="h-3 w-3" />
           {stats.message}
         </p>
       )}
 
       {isLoading ? (
-        <div className="mt-4 flex flex-col gap-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="animate-shimmer h-[76px] rounded-2xl" />
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="animate-shimmer aspect-[4/3] rounded-2xl" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl bg-gray-50 px-6 py-10 text-center">
-          <Heart className="h-5 w-5 text-gray-300" />
-          <p className="text-sm text-gray-500">아직 찜한 장소가 없어요</p>
-          <Link
-            href="/spot"
-            className="rounded-full bg-navy-900 px-5 py-2 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
-          >
-            스팟 구경하러 가기
-          </Link>
-        </div>
+        <EmptyBlock icon={Heart} text="아직 찜한 장소가 없어요" href="/spot" cta="스팟 구경하러 가기" />
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-5 grid grid-cols-2 gap-3">
           {items.slice(0, FAVORITE_PLACES_LIMIT).map((item) => {
             const category =
               item.category && item.category in CATEGORY_META
                 ? CATEGORY_META[item.category as keyof typeof CATEGORY_META]
                 : null;
+            const meta = [category?.label, item.district].filter(Boolean).join(" · ");
 
             return (
               <Link
                 key={item.mapPlaceId}
                 href={`/spot?keyword=${encodeURIComponent(item.name)}`}
-                className="group flex items-center gap-3 rounded-2xl border border-gray-100 p-3 transition-all duration-300 ease-out hover:border-ocean-200 hover:shadow-[0_12px_24px_-12px_rgba(10,132,255,0.2)]"
+                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-navy-700 to-ocean-600"
               >
-                <div className="relative flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ocean-50">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      sizes="80px"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <span className="text-2xl">{category?.emoji ?? "📍"}</span>
-                  )}
+                {item.imageUrl ? (
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 280px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <MapPin className="absolute left-1/2 top-[38%] h-7 w-7 -translate-x-1/2 -translate-y-1/2 text-white/30" strokeWidth={1.5} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <Heart className="absolute right-2.5 top-2.5 h-4 w-4 fill-pink-500 text-pink-500 drop-shadow" />
+                <div className="absolute inset-x-3 bottom-2.5">
+                  <p className="truncate text-[13px] font-bold text-white">{item.name}</p>
+                  {meta && <p className="truncate text-[10px] text-white/70">{meta}</p>}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-pink-500" />
-                    <span className="truncate text-[11px] font-semibold text-gray-500">
-                      {[category?.label, item.district].filter(Boolean).join(" · ") ||
-                        "찜한 장소"}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-[13px] font-semibold text-navy-900">
-                    {item.name}
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-ocean-500" />
               </Link>
             );
           })}
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
 
+// ── 저장한 한끗 ───────────────────────────────────────────────────────────────
+function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
+  return (
+    <motion.section {...sectionRise} className="rounded-[28px] bg-white p-6 ring-1 ring-gray-100 md:p-7">
+      <SectionHead icon={Bookmark} iconClass="bg-lime-100 text-lime-700" title="저장한 한끗" href="/hankkut" />
+
+      {saved.length === 0 ? (
+        <EmptyBlock icon={Bookmark} text="아직 저장한 한끗 정보가 없어요" href="/hankkut" cta="한끗 정보 구경하기" />
+      ) : (
+        <ul className="mt-5 flex flex-col gap-2.5">
+          {saved.slice(0, SAVED_HANKKUT_LIMIT).map((item) => (
+            <li key={item.id}>
+              <Link
+                href={`/hankkut/${item.id}`}
+                className="group flex items-center gap-3 rounded-2xl p-2 pr-3 ring-1 ring-inset ring-gray-100 transition-all duration-300 hover:bg-gray-50/70 hover:ring-ocean-200"
+              >
+                <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    sizes="80px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_DOT_STYLES[item.category]}`} />
+                    <span className="text-[11px] font-semibold text-gray-500">
+                      {item.category} · {item.region}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-[13px] font-semibold text-navy-900 break-keep">{item.title}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-ocean-500" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </motion.section>
+  );
+}
+
+// ── 설정 — 한 줄 ─────────────────────────────────────────────────────────────
 function SettingsSection({
   onOpenNotifications,
   onLogout,
@@ -436,33 +445,32 @@ function SettingsSection({
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
+  const itemClass =
+    "flex items-center gap-3 rounded-2xl bg-white px-5 py-4 text-left ring-1 ring-gray-100 transition-colors hover:bg-gray-50";
+
   return (
-    <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white">
-      <button
-        onClick={onOpenNotifications}
-        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
-      >
-        <span className="text-sm text-gray-700">알림 설정</span>
+    <motion.section {...sectionRise} aria-label="설정" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <button onClick={onOpenNotifications} className={itemClass}>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-500">
+          <Bell className="h-4 w-4" />
+        </span>
+        <span className="flex-1 text-sm font-semibold text-gray-700">알림 설정</span>
         <ChevronRight className="h-4 w-4 text-gray-300" />
       </button>
-      <Link
-        href="/terms"
-        className="flex w-full items-center justify-between border-b border-gray-50 px-6 py-4 transition-colors hover:bg-gray-50"
-      >
-        <span className="text-sm text-gray-700">이용약관</span>
+      <Link href="/terms" className={itemClass}>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-500">
+          <FileText className="h-4 w-4" />
+        </span>
+        <span className="flex-1 text-sm font-semibold text-gray-700">이용약관</span>
         <ChevronRight className="h-4 w-4 text-gray-300" />
       </Link>
-      <button
-        onClick={onLogout}
-        disabled={isLoggingOut}
-        className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50 disabled:opacity-50"
-      >
-        <span className="flex items-center gap-2 text-sm font-medium text-error">
+      <button onClick={onLogout} disabled={isLoggingOut} className={`${itemClass} disabled:opacity-50`}>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-error">
           <LogOut className="h-4 w-4" />
-          {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
         </span>
+        <span className="flex-1 text-sm font-semibold text-error">{isLoggingOut ? "로그아웃 중..." : "로그아웃"}</span>
       </button>
-    </section>
+    </motion.section>
   );
 }
 
@@ -478,57 +486,46 @@ export default function MyPageContent() {
   if (isLoading) return <LoadingState />;
   if (!isLoggedIn || !user) return <LoggedOutState />;
 
-
-  const totalSpots =
-    courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
+  const totalSpots = courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
+  const totalLikes = courses?.reduce((acc, c) => acc + (c.likeCount ?? 0), 0) ?? 0;
 
   const stats = [
-    {
-      label: "생성한 코스",
-      value: courses ? String(courses.length) : "-",
-      icon: Route,
-    },
-    {
-      label: "담은 스팟",
-      value: courses ? String(totalSpots) : "-",
-      icon: MapPin,
-    },
-    {
-      label: "찜한 장소",
-      value: favorites ? String(favorites.length) : "-",
-      icon: Heart,
-    },
+    { label: "만든 코스", value: courses ? String(courses.length) : "-", icon: Route },
+    { label: "코스에 담은 스팟", value: courses ? String(totalSpots) : "-", icon: MapPin },
+    { label: "찜한 장소", value: favorites ? String(favorites.length) : "-", icon: Heart },
+    { label: "받은 좋아요", value: courses ? String(totalLikes) : "-", icon: Sparkles },
   ];
 
   return (
-    <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
-      <ProfileHero
-        nickname={user.nickname}
-        email={user.email}
-        profileImageUrl={user.profileImageUrl}
-        isAdmin={user.role === "ADMIN"}
-        stats={stats}
-      />
+    <MotionConfig reducedMotion="user">
+      <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
+        <ProfileHero
+          nickname={user.nickname}
+          email={user.email}
+          profileImageUrl={user.profileImageUrl}
+          isAdmin={user.role === "ADMIN"}
+          stats={stats}
+        />
 
-      <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="mt-8">
           <RecentCoursesSection courses={courses} isLoading={isCoursesLoading} />
         </div>
-        <div className="flex flex-col gap-6">
+
+        <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           <FavoritePlacesSection />
           <SavedHankkutSection saved={savedHankkut} />
+        </div>
+
+        <div className="mt-6">
           <SettingsSection
             onOpenNotifications={() => setIsNotifOpen(true)}
             onLogout={() => logout()}
             isLoggingOut={isLoggingOut}
           />
         </div>
-      </div>
 
-      <NotificationSettingsModal
-        isOpen={isNotifOpen}
-        onClose={() => setIsNotifOpen(false)}
-      />
-    </main>
+        <NotificationSettingsModal isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+      </main>
+    </MotionConfig>
   );
 }
