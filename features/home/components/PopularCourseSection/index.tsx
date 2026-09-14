@@ -8,6 +8,7 @@ import SectionHeader from "@/features/home/components/SectionHeader";
 import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
 import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 const FETCH_COUNT = 9;
 /** 데스크톱 한 화면 카드 수 — 이보다 많아야 넘기기(두 벌 렌더링·자동 재생)를 켠다 */
@@ -79,7 +80,7 @@ export default function PopularCourseSection() {
             {isError ? "인기 코스를 불러오지 못했어요" : "아직 공개된 코스가 없어요"}
           </p>
           <p className="text-xs text-gray-400">
-            AI로 코스를 만들고 공유하면 이 자리에 가장 먼저 올라와요
+            {ASSISTANT_NAME}와 코스를 만들어 홈에 올리면 이 자리에 가장 먼저 보여요
           </p>
           <Link
             href="/course"

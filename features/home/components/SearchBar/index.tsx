@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Wallet, Clock, Users, Sparkles } from "lucide-react";
 import RegionModal from "@/components/ui/Modal/RegionModal";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 import { useAIChatContext } from "@/providers/AIChatProvider";
 import { SEARCHBAR_SELECTION_KEY } from "@/features/home/utils/searchBarSelection";
 
@@ -257,7 +258,7 @@ export default function SearchBar() {
                        hover:bg-ocean-100 active:scale-95 transition-all whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            AI에게 말하기
+            {ASSISTANT_NAME}에게 물어보기
           </button>
         </div>
 

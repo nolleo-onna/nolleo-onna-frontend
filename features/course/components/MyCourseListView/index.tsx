@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import CourseListToolbar from "@/features/course/components/CourseListToolbar";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 import {
   COURSE_PAGE_SIZE,
   applyCourseListControls,
@@ -34,7 +35,7 @@ function EmptyState() {
       <div>
         <p className="text-[19px] font-semibold text-gray-900 tracking-tight">아직 만든 코스가 없어요</p>
         <p className="text-[15px] text-gray-400 mt-2 leading-relaxed">
-          AI에게 원하는 여행을 말하면
+          {ASSISTANT_NAME}에게 원하는 여행을 말하면
           <br />
           부산 맞춤 코스를 만들어드려요
         </p>
@@ -243,7 +244,7 @@ export default function MyCourseListView() {
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ocean-50 via-white to-lime-50 mb-10">
         <div className="relative flex flex-col gap-6 px-6 py-10 md:flex-row md:items-end md:justify-between md:px-12 md:py-12">
           <div>
-            <p className="text-sm font-semibold text-ocean-600">AI가 만들어준 나만의 부산 여행</p>
+            <p className="text-sm font-semibold text-ocean-600">{ASSISTANT_NAME}와 함께 만든 나만의 부산 여행</p>
             <h1 className="mt-2 text-4xl font-bold text-navy-900 md:text-5xl">
               내가 만든{" "}
               <span className="relative inline-block">
