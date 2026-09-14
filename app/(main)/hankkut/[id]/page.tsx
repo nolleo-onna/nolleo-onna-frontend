@@ -24,19 +24,17 @@ export default async function HankkutDetailPage({
   const otherList = getOtherHankkutList(hankkut.id);
 
   return (
-    <div className="pt-16">
-      <div className="mx-auto w-full max-w-[1280px] px-5 py-8 md:px-10 lg:px-20">
-        <DetailReveal>
-          <HankkutDetailHeader hankkut={hankkut} />
+    <div className="bg-gray-50 pt-16">
+      <HankkutDetailHeader hankkut={hankkut} />
+      <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-8 px-5 py-10 md:px-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:py-14">
+        <DetailReveal delay={0.08}>
+          <HankkutDetailContent hankkut={hankkut} />
         </DetailReveal>
-        <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
-          <DetailReveal delay={0.08}>
-            <HankkutDetailContent hankkut={hankkut} />
-          </DetailReveal>
-          <DetailReveal delay={0.14}>
+        <DetailReveal delay={0.14}>
+          <div className="lg:sticky lg:top-24">
             <HankkutDetailSidebar hankkut={hankkut} otherList={otherList} />
-          </DetailReveal>
-        </div>
+          </div>
+        </DetailReveal>
       </div>
     </div>
   );
