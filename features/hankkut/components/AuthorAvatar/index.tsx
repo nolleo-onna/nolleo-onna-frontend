@@ -1,22 +1,36 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 
 interface AuthorAvatarProps {
   name: string;
-  /** 지금 로그인한 유저 본인 글일 때만 실제 프로필 사진을 보여준다 */
+  /** 작성자 프로필 사진. 없거나 불러오지 못하면 첫 글자로 대신한다 */
   imageUrl?: string;
   size?: number;
+}
+
+// 카카오 프로필 주소가 http로 오는데 next/image는 https 카카오 이미지만 허용해 깨진 아이콘이 떴다.
+// https로 바꿔 요청하고, 그래도 실패하면 폴백 원(라임 + 첫 글자)으로 바꾼다.
+function toHttps(url: string): string {
+  return url.replace(/^http:\/\//, "https://");
 }
 
 // 마이페이지 프로필 히어로와 같은 폴백 스타일(라임 원 + 첫 글자)을 재사용해
 // 게시판·댓글에서도 톤을 맞춘다.
 export default function AuthorAvatar({ name, imageUrl, size = 32 }: AuthorAvatarProps) {
-  if (imageUrl) {
+  const src = imageUrl ? toHttps(imageUrl) : null;
+  // 실패한 주소를 기억해 두면 다른 사진으로 바뀌었을 때 따로 초기화하지 않아도 다시 시도한다
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  if (src && src !== failedSrc) {
     return (
       <Image
-        src={imageUrl}
+        src={src}
         alt={name}
         width={size}
         height={size}
+        onError={() => setFailedSrc(src)}
         className="shrink-0 rounded-full border border-white object-cover shadow-base"
         style={{ width: size, height: size }}
       />

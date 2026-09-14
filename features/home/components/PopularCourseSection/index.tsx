@@ -118,7 +118,6 @@ export default function PopularCourseSection() {
                   imageSrc={course.thumbnailImageUrl}
                   title={course.title}
                   authorNickname={course.authorNickname}
-                  authorProfileImageUrl={course.authorProfileImageUrl}
                   viewCount={course.viewCount}
                   likeCount={course.likeCount}
                   totalCost={course.totalCost}

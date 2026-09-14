@@ -13,18 +13,15 @@ import {
   MapPin,
   Route,
   Sparkles,
-  SquarePen,
   Wallet,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
-import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
 import { useFavoriteStats } from "@/features/mypage/hooks/useFavoriteStats";
 import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
-import ProfileEditModal from "@/features/mypage/components/ProfileEditModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
 
 import type { MyCourseSummary } from "@/types/course";
@@ -107,10 +104,9 @@ interface ProfileHeroProps {
   profileImageUrl?: string;
   isAdmin: boolean;
   stats: { label: string; value: string; icon: typeof Route }[];
-  onEditProfile: () => void;
 }
 
-function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditProfile }: ProfileHeroProps) {
+function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: ProfileHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-gray-100 bg-gradient-to-br from-ocean-50 via-white to-lime-50 p-6 md:p-10">
       {/* 장식용 배경 원 */}
@@ -145,14 +141,6 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats, onEditP
                 <span className="absolute inset-x-0 bottom-0.5 -z-10 h-2.5 bg-lime-300/70" />
                 {nickname}
               </h1>
-              <button
-                type="button"
-                onClick={onEditProfile}
-                aria-label="닉네임 수정"
-                className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white hover:text-navy-900"
-              >
-                <SquarePen className="h-4 w-4" />
-              </button>
               {isAdmin && (
                 <span className="rounded-full bg-ocean-100 px-2 py-0.5 text-[10px] font-bold text-ocean-600">
                   ADMIN
@@ -485,14 +473,11 @@ export default function MyPageContent() {
   });
   const savedHankkut = useSavedHankkut();
   const { data: favorites } = useFavoritesList();
-  const { customNickname, saveNickname } = useCustomNickname(user?.userId);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   if (isLoading) return <LoadingState />;
   if (!isLoggedIn || !user) return <LoggedOutState />;
 
-  const displayNickname = customNickname ?? user.nickname;
 
   const totalSpots =
     courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
@@ -518,20 +503,11 @@ export default function MyPageContent() {
   return (
     <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
       <ProfileHero
-        nickname={displayNickname}
+        nickname={user.nickname}
         email={user.email}
         profileImageUrl={user.profileImageUrl}
         isAdmin={user.role === "ADMIN"}
         stats={stats}
-        onEditProfile={() => setIsEditOpen(true)}
-      />
-
-      <ProfileEditModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        currentNickname={customNickname ?? ""}
-        socialNickname={user.nickname}
-        onSave={saveNickname}
       />
 
       <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
