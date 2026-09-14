@@ -6,7 +6,7 @@ import { MotionConfig, motion } from "motion/react";
 import { ArrowRight, CalendarDays } from "lucide-react";
 
 import Container from "@/components/layout/Container";
-import TiltCard from "@/components/ui/TiltCard";
+import HoloCard, { HoloGlare } from "@/components/ui/HoloCard";
 import { eventBadgeClass } from "@/features/event/components/EventCard";
 import { useEvents } from "@/features/event/hooks/useEvents";
 import {
@@ -22,7 +22,7 @@ const OFFSETS = ["md:translate-y-0", "md:translate-y-10", "md:-translate-y-2", "
 
 /**
  * 지금 열리는 부산 행사 — 홈에서 유일하게 화면 끝까지 차는 어두운 띠. 행사 상세처럼 포스터가 기울어진 채
- * 떠올라 제자리에 앉는다. 진행 중(곧 끝나는 순) → 곧 시작하는 순, 보여줄 게 없거나 실패하면 통째로 숨긴다.
+ * 떠올라 제자리에 앉고, 마우스로 누른 채 끌면 카드처럼 기울며 광택이 따라온다. 진행 중(곧 끝나는 순) → 곧 시작하는 순, 보여줄 게 없거나 실패하면 통째로 숨긴다.
  */
 export default function EventSection() {
   const { data, isPending, isError } = useEvents();
@@ -78,14 +78,14 @@ export default function EventSection() {
                 {posters.map((event, i) => {
                   const badge = getEventBadge(event, today);
                   return (
-                    <li key={event.contentId} className={`w-[62%] shrink-0 snap-start sm:w-[40%] md:w-auto ${OFFSETS[i]}`}>
+                    <li key={event.contentId} className={`relative z-0 w-[62%] shrink-0 snap-start has-[[data-lifted=true]]:z-20 sm:w-[40%] md:w-auto ${OFFSETS[i]}`}>
                       <motion.div
                         initial={{ opacity: 0, y: 60, rotate: i % 2 === 0 ? -4 : 4, scale: 0.92 }}
                         whileInView={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
                         viewport={{ once: true, margin: "-60px" }}
                         transition={{ type: "spring", stiffness: 100, damping: 17, delay: i * 0.1 }}
                       >
-                        <TiltCard maxTilt={5}>
+                        <HoloCard>
                           <Link href={`/event/${encodeURIComponent(event.contentId)}`} className="group block">
                             <div className="relative aspect-[3/4] overflow-hidden rounded-[18px] bg-navy-800 shadow-[0_30px_60px_-24px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
                               {event.firstImage && (
@@ -110,8 +110,9 @@ export default function EventSection() {
                                   />
                                 </>
                               )}
+                              <HoloGlare />
                               <span
-                                className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ring-white/20 ${eventBadgeClass(badge)}`}
+                                className={`absolute left-3 top-3 z-20 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ring-white/20 ${eventBadgeClass(badge)}`}
                               >
                                 {badge.label}
                               </span>
@@ -124,7 +125,7 @@ export default function EventSection() {
                               {formatEventPeriod(event.eventStartDate, event.eventEndDate)}
                             </p>
                           </Link>
-                        </TiltCard>
+                        </HoloCard>
                       </motion.div>
                     </li>
                   );
