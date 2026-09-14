@@ -4,7 +4,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 
 import { formatEventPeriod, getEventBadge } from "@/features/event/utils/eventSchedule";
 
-import type { EventStatus } from "@/features/event/utils/eventSchedule";
+import type { EventBadge, EventStatus } from "@/features/event/utils/eventSchedule";
 import type { BusanEvent } from "@/types/event";
 
 const BADGE_STYLES: Record<EventStatus, string> = {
@@ -12,6 +12,11 @@ const BADGE_STYLES: Record<EventStatus, string> = {
   upcoming: "bg-navy-900 text-lime-300",
   ended: "bg-gray-200 text-gray-500",
 };
+
+/** 배지 색 — 곧 끝나는 행사는 상태와 상관없이 강조색 */
+export function eventBadgeClass(badge: EventBadge): string {
+  return badge.endingSoon ? "bg-pink-500 text-white" : BADGE_STYLES[badge.status];
+}
 
 interface EventCardProps {
   event: BusanEvent;
@@ -22,7 +27,7 @@ interface EventCardProps {
 // 포스터가 주인공인 행사 카드. 배지로 "지금 갈 수 있는지"를 먼저 보여준다.
 export default function EventCard({ event, today }: EventCardProps) {
   const badge = getEventBadge(event, today);
-  const badgeClass = badge.endingSoon ? "bg-pink-500 text-white" : BADGE_STYLES[badge.status];
+  const badgeClass = eventBadgeClass(badge);
 
   return (
     <Link href={`/event/${encodeURIComponent(event.contentId)}`} className="group block">
