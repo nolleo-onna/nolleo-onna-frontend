@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useSyncExternalStore } from "react";
+import Image from "next/image";
 import { Reorder, useDragControls } from "motion/react";
 import {
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   GripVertical,
   Loader2,
   Pencil,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import CourseBudgetGauge from "@/features/course/components/CourseBudgetGauge";
@@ -96,6 +98,51 @@ interface PlaceTimelineItemProps {
   onRemovePlace?: (id: number) => void;
 }
 
+/** 사이드바 맨 위 표지 — 코스에 담긴 장소 사진을 모자이크로 깔고 제목을 얹는다 */
+function CourseCover({ title, places }: { title: string; places: CoursePlace[] }) {
+  const photos = places.filter((place) => place.imageUrl).slice(0, 3);
+
+  return (
+    <div className="relative mb-4 h-40 overflow-hidden rounded-[20px] bg-gradient-to-br from-navy-700 to-ocean-600 lg:h-44">
+      {photos.length > 0 && (
+        <div className={`grid h-full gap-0.5 ${photos.length === 1 ? "grid-cols-1" : "grid-cols-[2fr_1fr]"}`}>
+          <div className="relative">
+            <Image src={photos[0].imageUrl} alt="" fill sizes="340px" className="object-cover" />
+          </div>
+          {photos.length > 1 && (
+            <div className={`grid gap-0.5 ${photos.length > 2 ? "grid-rows-2" : "grid-rows-1"}`}>
+              {photos.slice(1).map((photo) => (
+                <div key={photo.id} className="relative">
+                  <Image src={photo.imageUrl} alt="" fill sizes="120px" className="object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-navy-900/90 via-navy-900/25 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-4">
+        <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-sm">
+          <Footprints className="h-3 w-3" />
+          {places.length}곳을 잇는 코스
+        </span>
+        <h1 className="line-clamp-2 text-[19px] font-bold leading-snug text-white break-keep lg:text-[21px]">
+          {title}
+        </h1>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="px-2 text-center">
+      <p className="text-[10px] text-gray-400">{label}</p>
+      <p className={`mt-0.5 text-[16px] font-bold tabular-nums ${accent ? "text-ocean-600" : "text-navy-900"}`}>{value}</p>
+    </div>
+  );
+}
+
 // useDragControls는 항목마다 하나씩 필요해서(훅은 반복문에서 못 씀) 분리한 서브 컴포넌트.
 // 편집 모드에서는 카드 전체를 잡고 끌 수 있다(dragListener={cardDraggable}).
 // 드래그가 실제로 일어난 직후에는 클릭 이벤트가 따라오므로, 장소 선택으로
@@ -148,13 +195,13 @@ function PlaceTimelineItem({
           <div
             className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
               isSelected
-                ? "bg-ocean-500 text-white shadow-[0_2px_8px_rgba(10,132,255,0.4)]"
-                : "border border-gray-200 bg-white text-gray-500"
+                ? "bg-navy-900 text-lime-300 shadow-[0_2px_8px_rgba(5,12,26,0.35)]"
+                : "bg-white text-gray-500 ring-1 ring-gray-200"
             }`}
           >
             {index + 1}
           </div>
-          {!isLast && <div className="w-[2px] flex-1 bg-gray-100" />}
+          {!isLast && <div className="my-1 w-0 flex-1 border-l-2 border-dashed border-gray-200" />}
         </div>
 
         {/* 드래그 핸들 (편집 모드 전용) */}
@@ -178,15 +225,25 @@ function PlaceTimelineItem({
             if (isDraggingRef.current) return;
             onSelectPlace(place);
           }}
-          className={`mb-1 min-w-0 flex-1 rounded-xl px-3 py-2.5 text-left transition-all lg:px-3.5 ${
+          className={`mb-1 min-w-0 flex-1 rounded-2xl bg-white p-2 pr-3 text-left transition-all ${
             isSelected
-              ? "bg-ocean-50 ring-1 ring-ocean-200"
-              : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50/60"
+              ? "shadow-[0_10px_24px_-14px_rgba(5,12,26,0.45)] ring-2 ring-navy-900"
+              : "ring-1 ring-gray-100 hover:shadow-sm hover:ring-gray-200"
           } ${cardDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
+          <div className="flex items-center gap-3">
+            {/* 장소 사진 — 코스가 글자 목록이 아니라 실제 가는 곳으로 보이게 */}
+            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
+              {place.imageUrl ? (
+                <Image src={place.imageUrl} alt="" fill sizes="44px" className="object-cover" />
+              ) : (
+                <Footprints className="h-4 w-4 text-gray-300" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
           <p
             className={`mb-0.5 truncate text-[14px] font-semibold ${
-              isSelected ? "text-ocean-900" : "text-gray-800"
+              isSelected ? "text-navy-900" : "text-gray-800"
             }`}
           >
             {place.name}
@@ -224,6 +281,8 @@ function PlaceTimelineItem({
                 {CROWD_STYLE[congestion.level].label}
               </span>
             )}
+          </div>
+            </div>
           </div>
         </button>
 
@@ -316,7 +375,7 @@ export default function CourseSidebar({
     <aside className="min-h-0 w-full flex-1 overflow-y-auto border-t border-gray-100 bg-white lg:w-[340px] lg:flex-none lg:border-t-0 lg:border-r">
       <div className="p-4 lg:p-5">
         {/* 헤더 */}
-        <div className="mb-1 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold tracking-wide text-ocean-600">
             부산 여행 코스
           </p>
@@ -385,9 +444,7 @@ export default function CourseSidebar({
             </div>
           </div>
         ) : (
-          <h1 className="mb-3 text-[16px] font-bold leading-snug text-gray-800 lg:mb-4 lg:text-[19px]">
-            {course.title}
-          </h1>
+          <CourseCover title={course.title} places={places} />
         )}
 
         {/* 홈 인기 코스 올리기/내리기 — 헤더 공유와 별개 */}
@@ -409,24 +466,15 @@ export default function CourseSidebar({
           </p>
         )}
 
-        {/* 요약 통계 */}
-        <div className={`mb-4 grid-cols-3 gap-2 lg:mb-5 lg:grid ${isEditing ? "hidden" : "grid"}`}>
-          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
-            <p className="mb-0.5 text-[10px] text-gray-400">장소</p>
-            <p className="text-[15px] font-bold text-gray-800">{places.length}곳</p>
-          </div>
-          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
-            <p className="mb-0.5 text-[10px] text-gray-400">총 거리</p>
-            <p className="text-[15px] font-bold text-gray-800">
-              {totalDistance > 0 ? formatDistance(totalDistance) : "-"}
-            </p>
-          </div>
-          <div className="rounded-xl bg-gray-50 px-2 py-2.5 text-center">
-            <p className="mb-0.5 text-[10px] text-gray-400">예상 비용</p>
-            <p className="text-[15px] font-bold text-[#0d3080]">
-              {totalCost > 0 ? formatCost(totalCost) : "무료"}
-            </p>
-          </div>
+        {/* 요약 통계 — 칸 세 개 대신 구분선 한 줄 */}
+        <div
+          className={`mb-4 grid-cols-3 divide-x divide-gray-100 rounded-2xl bg-white py-3 ring-1 ring-gray-100 lg:mb-5 lg:grid ${
+            isEditing ? "hidden" : "grid"
+          }`}
+        >
+          <SummaryStat label="장소" value={`${places.length}곳`} />
+          <SummaryStat label="총 거리" value={totalDistance > 0 ? formatDistance(totalDistance) : "-"} />
+          <SummaryStat label="예상 비용" value={totalCost > 0 ? formatCost(totalCost) : "무료"} accent />
         </div>
 
         {/* 예산 게이지 */}
@@ -464,11 +512,11 @@ export default function CourseSidebar({
         ) : (
           description && (
             <div
-              className={`mb-4 rounded-xl bg-gradient-to-br from-[#f6f8ff] to-[#eaf6ff] px-3.5 py-3 lg:mb-5 ${
+              className={`mb-4 border-l-2 border-lime-300 py-0.5 pl-3.5 lg:mb-5 ${
                 isEditing ? "hidden lg:block" : ""
               }`}
             >
-              <p className="text-[12px] leading-relaxed text-gray-600">
+              <p className="text-[13px] leading-relaxed text-gray-600 break-keep">
                 {description}
               </p>
             </div>
@@ -478,9 +526,10 @@ export default function CourseSidebar({
         {/* 지금 혼잡도 요약 — 혼잡한 곳이 있으면 경고, 데이터가 있고 모두 원활하면 안심 문구 */}
         {congestionByPlaceId && congestionByPlaceId.size > 0 && (
           congested.length > 0 ? (
-            <div className="mb-4 rounded-xl border border-orange-100 bg-orange-50 px-3.5 py-3">
+            <div className="mb-4 rounded-2xl bg-orange-50/80 px-3.5 py-3 ring-1 ring-orange-100">
               <p className="text-[12px] font-semibold text-orange-700">
-                ⚠️ 지금 {congested[0].name}
+                <TriangleAlert className="mr-1 inline h-3.5 w-3.5 -translate-y-px" />
+                지금 {congested[0].name}
                 {congested.length > 1 && ` 외 ${congested.length - 1}곳`}이 붐벼요
               </p>
               {onStartEdit && !isEditing && (

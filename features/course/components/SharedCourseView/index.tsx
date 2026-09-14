@@ -120,11 +120,11 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
     <>
       <div className="flex h-screen flex-col pt-16">
         {/* 작성자 · 조회수 띠 — 공유받은 사람이 누구 코스인지 바로 알 수 있게 */}
-        <div className="flex items-center gap-3 border-b border-gray-100 bg-lime-50/60 px-4 py-2 text-[12px] lg:px-5">
+        <div className="flex items-center gap-3 bg-navy-900 px-4 py-2.5 text-[12px] text-white lg:px-5">
           <AuthorAvatar name={authorName} imageUrl={data.authorProfileImageUrl ?? undefined} size={24} />
-          <span className="font-semibold text-gray-700">{authorName}</span>
-          <span className="text-gray-400">님이 공유한 코스</span>
-          <span className="ml-auto flex items-center gap-1 text-gray-500">
+          <span className="font-semibold text-white">{authorName}</span>
+          <span className="text-white/50">님이 공유한 코스</span>
+          <span className="ml-auto flex items-center gap-1 text-white/60">
             <Eye className="h-3.5 w-3.5" />
             {data.viewCount}
           </span>
@@ -138,8 +138,8 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
               aria-label={data.likedByMe ? "좋아요 취소" : "좋아요"}
               className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-semibold transition-colors disabled:opacity-60 ${
                 data.likedByMe
-                  ? "border-pink-200 bg-pink-50 text-pink-600"
-                  : "border-gray-200 bg-white text-gray-500 hover:border-pink-200 hover:text-pink-500"
+                  ? "border-pink-400/40 bg-pink-500/20 text-pink-200"
+                  : "border-white/15 bg-white/10 text-white/80 hover:border-pink-300/60 hover:text-pink-200"
               }`}
             >
               <Heart className={`h-3.5 w-3.5 ${data.likedByMe ? "fill-pink-500 text-pink-500" : ""}`} />
@@ -149,7 +149,7 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
             <Link
               href={`/login?returnUrl=${encodeURIComponent(`/course/shared/${shareToken}`)}`}
               title="로그인하면 좋아요를 누를 수 있어요"
-              className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-gray-500 transition-colors hover:border-pink-200 hover:text-pink-500"
+              className="flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-white/80 transition-colors hover:border-pink-300/60 hover:text-pink-200"
             >
               <Heart className="h-3.5 w-3.5" />
               {data.likeCount}
@@ -157,7 +157,7 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
           )}
           <Link
             href="/course"
-            className="hidden items-center gap-1 rounded-full bg-navy-900 px-3 py-1 text-[11px] font-semibold text-lime-300 sm:flex"
+            className="hidden items-center gap-1 rounded-full bg-lime-300 px-3 py-1 text-[11px] font-bold text-navy-900 sm:flex"
           >
             <Sparkles className="h-3 w-3" />
             나도 코스 만들기
