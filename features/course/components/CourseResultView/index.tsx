@@ -319,7 +319,7 @@ export default function CourseResultView() {
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
 
-  // 코스를 공개로 바꿀 때(링크 공유 확인 · 홈 인기 코스에 올리기) — 발급된 토큰을 돌려준다
+  // 홈 인기 코스에 올릴 때(코스 공개) — 발급된 토큰을 돌려준다
   const handlePublish = async (): Promise<string | null> => {
     try {
       const updated = await updateVisibility.mutateAsync({ courseId, isPublic: true });
