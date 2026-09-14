@@ -1,94 +1,83 @@
 "use client";
 
-import { Sparkles, TrendingUp, PiggyBank } from "lucide-react";
-import { type Variants, motion } from "motion/react";
+import Link from "next/link";
+import { MotionConfig, motion } from "motion/react";
+import { ArrowRight } from "lucide-react";
 
-const features = [
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+const POINTS = [
   {
-    icon: <Sparkles className="w-5 h-5 text-ocean-400" />,
-    title: "AI 코스 추천",
-    description: '"영도 조용한 데이트" 한 마디면\nAI가 맞춤 코스를 만들어요',
+    no: "01",
+    title: "한 마디면 코스가 나와요",
+    description: "“영도 조용한 데이트”처럼 말하면 AI가 동선까지 짜드려요.",
   },
   {
-    icon: <TrendingUp className="w-5 h-5 text-ocean-400" />,
-    title: "날씨·혼잡도 예측",
-    description: "관광공사·기상청 데이터로\n오늘 어디가 좋을지 예측",
+    no: "02",
+    title: "붐비는 곳은 미리 피해요",
+    description: "관광공사 혼잡도 예측과 기상청 날씨로 오늘 갈 만한 곳을 골라요.",
   },
   {
-    icon: <PiggyBank className="w-5 h-5 text-ocean-400" />,
-    title: "예산 남는 코스",
-    description: "잔액 + 인당까지 표시\n예산 안에서 즐기는 코스",
+    no: "03",
+    title: "예산 안에서 끝나요",
+    description: "코스마다 남는 예산과 1인당 금액까지 함께 보여드려요.",
   },
 ];
 
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
-};
-
-const containerVariants: Variants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12 },
-  },
-};
-
+/**
+ * 서비스 소개 — 아이콘 3개를 가운데 정렬하던 소개 블록 대신, 왼쪽 큰 문장 + 오른쪽 번호 매긴 줄글로
+ * 잡지 기사처럼 읽히게 했다. 홈의 마지막 섹션이라 코스 만들기로 이어지는 버튼을 둔다.
+ */
 export default function ServiceIntroSection() {
   return (
-    <section
-        className="my-10 rounded-3xl overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0d0d14 0%, #0a1a2e 100%)" }}
-    >
-      <div className="px-8 md:px-16 py-16 md:py-20">
-        {/* 헤더 */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <span className="text-xs font-semibold text-ocean-400 tracking-widest uppercase block mb-3">
-            왜 놀러온나인가요
-          </span>
-          <h2 className="text-2xl md:text-3xl font-bold text-white">
-            왜 <span className="text-ocean-400">놀러온나</span>인가요?
-          </h2>
-        </motion.div>
-
-        {/* 피처 */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {features.map((feature) => (
-            <motion.div
-              key={feature.title}
-              variants={itemVariants}
-              className="flex flex-col items-center text-center gap-4"
+    <MotionConfig reducedMotion="user">
+      <section className="my-10 border-t border-navy-900/10 pt-12 md:my-16 md:pt-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.5, ease: EASE_OUT }}
+          >
+            <h2 className="text-3xl font-bold leading-[1.2] tracking-tight text-navy-900 break-keep md:text-[40px]">
+              부산 여행,
+              <br />
+              덜 붐비게
+              <br />
+              <span className="text-ocean-600">예산 안에서.</span>
+            </h2>
+            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-gray-500 break-keep">
+              놀러온나는 부산 여행자를 위한 예산 맞춤형 여행 플래너예요.
+            </p>
+            <Link
+              href="/course"
+              className="mt-7 inline-flex items-center gap-1.5 rounded-full bg-navy-900 px-5 py-3 text-sm font-bold text-lime-300 transition-transform hover:-translate-y-0.5 active:scale-95"
             >
-              {/* 아이콘 */}
-              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                {feature.icon}
-              </div>
-              {/* 텍스트 */}
-              <div className="flex flex-col gap-2">
-                <h3 className="text-base font-bold text-white">{feature.title}</h3>
-                <p className="text-sm text-white/50 leading-relaxed whitespace-pre-line">
-                  {feature.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
+              코스 만들러 가기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </motion.div>
+
+          <ol className="border-t border-gray-200">
+            {POINTS.map((point, i) => (
+              <motion.li
+                key={point.no}
+                className="grid grid-cols-[56px_minmax(0,1fr)] gap-4 border-b border-gray-200 py-6 md:grid-cols-[96px_minmax(0,1fr)] md:py-8"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, ease: EASE_OUT, delay: i * 0.08 }}
+              >
+                <span className="text-3xl font-bold leading-none tabular-nums text-gray-200 md:text-5xl">{point.no}</span>
+                <div>
+                  <h3 className="text-lg font-bold text-navy-900 md:text-xl">{point.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-gray-500 break-keep">{point.description}</p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    </MotionConfig>
   );
 }
