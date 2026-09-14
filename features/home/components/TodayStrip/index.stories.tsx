@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import SpotsPreviewSection from "./index";
 
-// useCongestion(react-query)가 QueryClientProvider를 필요로 해서 스토리 전용으로 감싸줌
-const meta = {
-  title: "Home/SpotsPreviewSection",
-  component: SpotsPreviewSection,
+import TodayStrip from "./index";
+
+// useWeather / useCongestion(react-query)가 QueryClientProvider를 필요로 해서 스토리 전용으로 감싸줌
+const meta: Meta<typeof TodayStrip> = {
+  title: "Home/TodayStrip",
+  component: TodayStrip,
   tags: ["autodocs"],
   decorators: [
     (Story) => {
@@ -19,15 +20,9 @@ const meta = {
       );
     },
   ],
-} satisfies Meta<typeof SpotsPreviewSection>;
+};
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof TodayStrip>;
 
-export const Crowd: Story = {
-  args: { type: "crowd" },
-};
-
-export const Relaxed: Story = {
-  args: { type: "relaxed" },
-};
+export const Default: Story = {};

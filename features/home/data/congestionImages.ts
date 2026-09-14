@@ -1,7 +1,7 @@
 // 관광공사 혼잡도 API(/congestion)는 이미지 URL을 안 내려주기 때문에,
 // TourAPI 검색(정식 명칭 + 별칭 변형)으로 관광지 이름과 이미지를 미리 매칭해둔 표.
 // TourAPI에 항목이 없는 곳 일부는 같은 장소/바로 인접한 스팟의 이미지를 재사용했다.
-// 여기 없는 이름은 SpotsPreviewSection에서 그라데이션 플레이스홀더로 대체된다.
+// 여기 없는 이름은 CrowdRankingSection에서 그라데이션 플레이스홀더로 대체된다.
 export const CONGESTION_ATTRACTION_IMAGES: Record<string, string> = {
   "40계단 문화관": "https://tong.visitkorea.or.kr/cms/resource/32/3493432_image2_1.jpg",
   "40계단 문화관광테마거리": "https://tong.visitkorea.or.kr/cms/resource/32/3493432_image2_1.jpg",

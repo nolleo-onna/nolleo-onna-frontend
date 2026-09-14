@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import SectionHeader from "@/features/home/components/SectionHeader";
 import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
 import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
@@ -32,47 +33,38 @@ export default function PopularCourseSection() {
 
   return (
     <motion.section
-      className="py-6 md:py-10"
+      className="py-8 md:py-12"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-ocean-500">놀러온나 여행자들이 만든</span>
-          <h2 className="text-xl font-bold text-gray-900 md:text-2xl">지금 인기 있는 코스</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {canLoop && (
-            <>
-              <button
-                type="button"
-                onClick={() => scrollByCard(-1)}
-                aria-label="이전 코스"
-                className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollByCard(1)}
-                aria-label="다음 코스"
-                className="hidden h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-700 sm:flex"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </>
-          )}
-          <Link
-            href="/course"
-            className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            나도 만들기
-          </Link>
-        </div>
-      </div>
+      <SectionHeader
+        title="지금 인기 있는 코스"
+        description="여행자들이 만들어 공유한 코스를 조회수 순으로 보여드려요"
+        action={{ label: "나도 만들기", href: "/course" }}
+      >
+        {canLoop && (
+          <div className="hidden items-center gap-2 sm:flex">
+            <button
+              type="button"
+              onClick={() => scrollByCard(-1)}
+              aria-label="이전 코스"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500 ring-1 ring-inset ring-gray-200 transition-colors hover:text-navy-900 hover:ring-gray-300"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByCard(1)}
+              aria-label="다음 코스"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500 ring-1 ring-inset ring-gray-200 transition-colors hover:text-navy-900 hover:ring-gray-300"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </SectionHeader>
 
       {isPending ? (
         <div className="flex gap-4 overflow-hidden">

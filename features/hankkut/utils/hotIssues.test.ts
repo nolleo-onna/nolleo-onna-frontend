@@ -72,6 +72,18 @@ describe("buildHotIssues", () => {
     expect(items.map((i) => i.key)).toEqual(["post-2", "post-4", "post-1"]);
     expect(items[0]).toMatchObject({ kind: "post", authorName: "박x성", tagLabel: "카페" });
   });
+
+  it("행사·글로 칸이 남으면 큐레이션 한끗을 조회수순으로 채우고, 칸이 차 있으면 넣지 않는다", () => {
+    const curated = [
+      { id: 10, category: "무료로 즐기기" as const, title: "골목 산책", summary: "", date: "", region: "서면", imageUrl: "https://a/1.jpg", views: 100 },
+      { id: 11, category: "할인 혜택 팁" as const, title: "시장 할인", summary: "", date: "", region: "서면", imageUrl: "https://a/2.jpg", views: 900 },
+    ];
+    const items = buildHotIssues([event("ongoing", "2026-09-04", "2026-09-19")], [], TODAY, curated);
+    expect(items.map((i) => i.key)).toEqual(["event-ongoing", "curated-11", "curated-10"]);
+    expect(items[1]).toMatchObject({ kind: "curated", href: "/hankkut/11", category: "할인 혜택 팁" });
+
+    expect(buildHotIssues(events, [], TODAY, curated).map((i) => i.kind)).toEqual(["event", "event", "event"]);
+  });
 });
 
 describe("sortByPopularity", () => {

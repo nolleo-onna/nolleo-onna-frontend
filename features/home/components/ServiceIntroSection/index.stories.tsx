@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <div className="bg-gray-100 p-8">
+    <div className="bg-gray-50 px-8 py-4">
       <ServiceIntroSection />
     </div>
   ),
