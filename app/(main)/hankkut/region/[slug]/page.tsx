@@ -4,11 +4,8 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, PenLine } from "lucide-react";
 
 import RegionBoardList from "@/features/hankkut/components/RegionBoardList";
-import RegionWeeklyBest from "@/features/hankkut/components/RegionWeeklyBest";
-import {
-  getGalleryBySlug,
-  getPostsForGallery,
-} from "@/features/hankkut/data/galleries";
+import RegionHotIssue from "@/features/hankkut/components/RegionHotIssue";
+import { getGalleryBySlug } from "@/features/hankkut/data/galleries";
 
 interface RegionPageProps {
   params: Promise<{ slug: string }>;
@@ -29,8 +26,6 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
   if (!gallery) {
     notFound();
   }
-
-  const curatedPosts = getPostsForGallery(slug);
 
   return (
     <div className="pt-16">
@@ -65,13 +60,14 @@ export default async function HankkutRegionPage({ params }: RegionPageProps) {
           </Link>
         </div>
 
+        {/* 핫이슈 — 이 동네에서 지금 갈 수 있는 행사 + 인기글. 둘 다 없으면 통째로 숨는다 */}
         <div className="mt-10">
-          <RegionWeeklyBest gallery={gallery} curatedPosts={curatedPosts} />
+          <RegionHotIssue gallery={gallery} />
         </div>
 
-        {/* 자유게시판 — 백엔드 게시글 API를 갤러리의 행정구(districtTag)로 걸러 보여준다 */}
+        {/* 화제글 — 백엔드 게시글 API를 갤러리의 행정구(districtTag)로 걸러 보여준다 */}
         <div className="mt-10">
-          <RegionBoardList regionSlug={slug} districtTag={gallery.districtTag} />
+          <RegionBoardList regionSlug={slug} regionName={gallery.name} districtTag={gallery.districtTag} />
         </div>
         <div className="mt-14" />
       </div>

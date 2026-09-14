@@ -27,7 +27,10 @@ export const postKeys = {
   detail: (postId: number) => [...postKeys.all, "detail", postId] as const,
 };
 
-export const BOARD_PAGE_SIZE = 10;
+export const BOARD_PAGE_SIZE = 20;
+
+/** 인기 정렬·핫이슈 후보로 보는 최근 글 수 — 서버가 조회수순을 지원하기 전까지 이 안에서 정렬한다 */
+export const RECENT_POSTS_WINDOW = 50;
 
 /** 갤러리(행정구) 자유게시판 목록 — 서버 페이징, 페이지 넘길 때 이전 목록을 유지해 깜빡임을 막는다 */
 export function useRegionPosts(
@@ -41,6 +44,11 @@ export function useRegionPosts(
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
   });
+}
+
+/** 동네 최근 글 50개 — 화제글 [인기] 탭과 핫이슈가 같은 캐시를 쓴다 */
+export function useRecentRegionPosts(district: PostDistrictTag) {
+  return useRegionPosts(district, 0, RECENT_POSTS_WINDOW);
 }
 
 /** 허브 카드용 — 갤러리별 글 수와 최신 글 제목만 (size=1로 가볍게) */
