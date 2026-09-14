@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Eye, Heart, Wallet } from "lucide-react";
 
-import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
 import { maskName } from "@/features/hankkut/utils/maskName";
 import { formatCost } from "@/features/course/utils/format";
 
@@ -11,7 +10,6 @@ interface RouteItineraryCardProps {
   imageSrc: string | null;
   title: string;
   authorNickname: string | null;
-  authorProfileImageUrl: string | null;
   viewCount: number;
   likeCount: number;
   totalCost: number | null;
@@ -28,7 +26,6 @@ export default function RouteItineraryCard({
   imageSrc,
   title,
   authorNickname,
-  authorProfileImageUrl,
   viewCount,
   likeCount,
   totalCost,
@@ -39,7 +36,7 @@ export default function RouteItineraryCard({
   const authorName = authorNickname ? maskName(authorNickname) : "놀러온나 여행자";
 
   return (
-    <div className="group overflow-hidden rounded-[20px] bg-white ring-1 ring-gray-100 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_32px_-14px_rgba(13,48,128,0.2)]">
+    <div className="group flex h-full w-full flex-col overflow-hidden rounded-[20px] bg-white ring-1 ring-gray-100 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_32px_-14px_rgba(13,48,128,0.2)]">
       {/* 대표 사진 — 첫 스팟 이미지, 없으면 그라데이션 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden">
         {imageSrc ? (
@@ -64,7 +61,7 @@ export default function RouteItineraryCard({
       </div>
 
       {/* 방문 동선 타임라인 */}
-      <div className="px-4 pt-3.5">
+      <div className="flex-1 px-4 pt-3.5">
         {visibleStops.map((stop, index) => (
           <div key={`${stop}-${index}`} className="flex items-stretch gap-2.5">
             <div className="flex flex-col items-center">
@@ -87,10 +84,7 @@ export default function RouteItineraryCard({
 
       {/* 하단 메타 — 작성자 · 조회수(인기 기준) · 좋아요 · 예상 비용 */}
       <div className="mt-1 flex items-center gap-3 border-t border-gray-50 px-4 py-3 text-xs text-gray-500">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <AuthorAvatar name={authorName} imageUrl={authorProfileImageUrl ?? undefined} size={18} />
-          <span className="truncate">{authorName}</span>
-        </span>
+        <span className="min-w-0 truncate">{authorName}</span>
         <span className="ml-auto flex items-center gap-1 font-semibold text-gray-700">
           <Eye className="h-3 w-3 text-gray-400" />
           {viewCount}

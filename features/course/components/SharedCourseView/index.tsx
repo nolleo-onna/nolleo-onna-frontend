@@ -10,7 +10,8 @@ import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
-import { useSharedCourse } from "@/features/course/hooks/useSharedCourse";
+import { useAuth } from "@/hooks/useAuth";
+import { useSharedCourse, useToggleSharedCourseLike } from "@/features/course/hooks/useSharedCourse";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
 import { isFoodCategory } from "@/features/course/hooks/useSpotDescription";
@@ -75,6 +76,8 @@ function NotFound() {
 export default function SharedCourseView({ shareToken }: { shareToken: string }) {
   const { data, isPending, isError } = useSharedCourse(shareToken);
   const { data: congestion } = useCongestion();
+  const { isLoggedIn } = useAuth();
+  const toggleLike = useToggleSharedCourseLike(shareToken);
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
@@ -125,10 +128,33 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
             <Eye className="h-3.5 w-3.5" />
             {data.viewCount}
           </span>
-          <span className="flex items-center gap-1 text-gray-500">
-            <Heart className="h-3.5 w-3.5" />
-            {data.likeCount}
-          </span>
+          {/* 좋아요 — 로그인해야 누를 수 있다. 비로그인은 숫자만 보여주고 로그인으로 안내 */}
+          {isLoggedIn ? (
+            <button
+              type="button"
+              onClick={() => toggleLike.mutate()}
+              disabled={toggleLike.isPending}
+              aria-pressed={data.likedByMe}
+              aria-label={data.likedByMe ? "좋아요 취소" : "좋아요"}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-semibold transition-colors disabled:opacity-60 ${
+                data.likedByMe
+                  ? "border-pink-200 bg-pink-50 text-pink-600"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-pink-200 hover:text-pink-500"
+              }`}
+            >
+              <Heart className={`h-3.5 w-3.5 ${data.likedByMe ? "fill-pink-500 text-pink-500" : ""}`} />
+              {data.likeCount}
+            </button>
+          ) : (
+            <Link
+              href={`/login?returnUrl=${encodeURIComponent(`/course/shared/${shareToken}`)}`}
+              title="로그인하면 좋아요를 누를 수 있어요"
+              className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-gray-500 transition-colors hover:border-pink-200 hover:text-pink-500"
+            >
+              <Heart className="h-3.5 w-3.5" />
+              {data.likeCount}
+            </Link>
+          )}
           <Link
             href="/course"
             className="hidden items-center gap-1 rounded-full bg-navy-900 px-3 py-1 text-[11px] font-semibold text-lime-300 sm:flex"
@@ -137,6 +163,12 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
             나도 코스 만들기
           </Link>
         </div>
+
+        {toggleLike.isError && (
+          <p role="alert" className="bg-pink-50 px-4 py-1.5 text-[11px] font-medium text-pink-600 lg:px-5">
+            {toggleLike.error.message}
+          </p>
+        )}
 
         <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           <CourseSidebar

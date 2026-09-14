@@ -7,7 +7,6 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, User, LogOut } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useCustomNickname } from "@/features/mypage/hooks/useCustomNickname";
 
 const NAV_ITEMS = [
   { label: "홈", href: "/" },
@@ -115,10 +114,8 @@ function UserChip({
 export default function Header() {
   const pathname = usePathname();
   const { user, isLoading, isLoggedIn, logout, isLoggingOut } = useAuth();
-  const { customNickname } = useCustomNickname(user?.userId);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // 마이페이지에서 바꾼 커스텀 닉네임이 있으면 우선 표시
-  const displayNickname = customNickname ?? user?.nickname ?? "";
+  const displayNickname = user?.nickname ?? "";
 
   return (
     <>

@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CornerDownRight, MessageCircle, Trash2 } from "lucide-react";
+import { Check, CornerDownRight, MessageCircle, Pencil, Trash2, X } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateComment,
   useDeleteComment,
   usePostComments,
+  useUpdateComment,
 } from "@/features/hankkut/hooks/usePostComments";
 import { maskName } from "@/features/hankkut/utils/maskName";
+import { isEdited } from "@/features/hankkut/utils/isEdited";
 import AuthorAvatar from "@/features/hankkut/components/AuthorAvatar";
 
 import type { PostComment } from "@/types/post";
@@ -34,12 +36,46 @@ interface CommentRowProps {
   comment: PostComment;
   isMine: boolean;
   isReply?: boolean;
+  isUpdating: boolean;
   onRemove: () => void;
   onReply?: () => void;
+  /** 저장이 끝나면 resolve — 실패하면 편집 상태를 유지한다 */
+  onUpdate: (content: string) => Promise<unknown>;
 }
 
-function CommentRow({ comment, isMine, isReply = false, onRemove, onReply }: CommentRowProps) {
+function CommentRow({
+  comment,
+  isMine,
+  isReply = false,
+  isUpdating,
+  onRemove,
+  onReply,
+  onUpdate,
+}: CommentRowProps) {
   const authorName = maskName(comment.author.nickname);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(comment.content);
+
+  const handleCancel = () => {
+    setDraft(comment.content);
+    setEditing(false);
+  };
+
+  const handleSave = async () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    if (trimmed === comment.content) {
+      handleCancel();
+      return;
+    }
+    try {
+      await onUpdate(trimmed);
+      setEditing(false);
+    } catch {
+      // 오류 문구는 섹션 하단 배너로 보여주고, 고칠 수 있게 편집 상태를 유지한다
+    }
+  };
+
   return (
     <li className={`flex gap-2.5 py-3 ${isReply ? "pl-9" : ""}`}>
       {isReply ? (
@@ -54,28 +90,81 @@ function CommentRow({ comment, isMine, isReply = false, onRemove, onReply }: Com
           <>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-gray-800">{authorName}</span>
-              <span className="text-[10px] text-gray-400">{formatDateTime(comment.createdAt)}</span>
+              <span className="text-[10px] text-gray-400">
+                {formatDateTime(comment.createdAt)}
+                {isEdited(comment.createdAt, comment.updatedAt) && " (수정됨)"}
+              </span>
             </div>
-            <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-gray-700">
-              {comment.content}
-            </p>
-            <div className="mt-1 flex items-center gap-2.5 text-[11px] text-gray-400">
-              {onReply && (
-                <button type="button" onClick={onReply} className="hover:text-gray-600">
-                  답글
-                </button>
-              )}
-              {isMine && (
-                <button
-                  type="button"
-                  onClick={onRemove}
-                  className="flex items-center gap-0.5 hover:text-red-500"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  삭제
-                </button>
-              )}
-            </div>
+
+            {editing ? (
+              <div className="mt-1.5 flex flex-col gap-1.5">
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  maxLength={CONTENT_MAX}
+                  rows={2}
+                  autoFocus
+                  aria-label="댓글 수정"
+                  className="w-full resize-none rounded-lg border border-ocean-300 bg-white px-2.5 py-1.5 text-[13px] text-gray-900 outline-none"
+                />
+                <div className="flex items-center gap-2 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={!draft.trim() || isUpdating}
+                    className="flex items-center gap-0.5 text-ocean-600 hover:underline disabled:opacity-40"
+                  >
+                    <Check className="h-3 w-3" />
+                    {isUpdating ? "저장 중" : "저장"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={isUpdating}
+                    className="flex items-center gap-0.5 text-gray-400 hover:underline disabled:opacity-40"
+                  >
+                    <X className="h-3 w-3" />
+                    취소
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-gray-700">
+                  {comment.content}
+                </p>
+                <div className="mt-1 flex items-center gap-2.5 text-[11px] text-gray-400">
+                  {onReply && (
+                    <button type="button" onClick={onReply} className="hover:text-gray-600">
+                      답글
+                    </button>
+                  )}
+                  {isMine && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDraft(comment.content);
+                          setEditing(true);
+                        }}
+                        className="flex items-center gap-0.5 hover:text-gray-600"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onRemove}
+                        className="flex items-center gap-0.5 hover:text-red-500"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        삭제
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -83,18 +172,22 @@ function CommentRow({ comment, isMine, isReply = false, onRemove, onReply }: Com
   );
 }
 
-/** 댓글 — 최상위 댓글 + 한 단계 답글. 수정 API는 없어 삭제만 지원한다 */
+/** 댓글 — 최상위 댓글 + 한 단계 답글. 본인 댓글은 수정·삭제할 수 있다 */
 export default function CommentSection({ postId, commentCount }: CommentSectionProps) {
   const { user, isLoggedIn } = useAuth();
   const { data, isPending, isError } = usePostComments(postId);
   const createComment = useCreateComment(postId);
+  const updateComment = useUpdateComment(postId);
   const removeComment = useDeleteComment(postId);
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<PostComment | null>(null);
 
   const comments = data?.content ?? [];
+  // 응답에 작성자 id가 없어 닉네임으로 본인 댓글을 가린다. 잘못 열려도 서버가 403(CM002)으로 막는다.
   const isMine = (comment: PostComment) =>
     !!user && user.nickname === comment.author.nickname;
+  const handleUpdate = (commentId: number) => (content: string) =>
+    updateComment.mutateAsync({ commentId, content });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +203,9 @@ export default function CommentSection({ postId, commentCount }: CommentSectionP
       },
     );
   };
+
+  const actionError =
+    createComment.error?.message ?? updateComment.error?.message ?? removeComment.error?.message;
 
   return (
     <section className="mt-8 border-t border-gray-100 pt-6">
@@ -134,8 +230,10 @@ export default function CommentSection({ postId, commentCount }: CommentSectionP
                   <CommentRow
                     comment={comment}
                     isMine={isMine(comment)}
+                    isUpdating={updateComment.isPending}
                     onRemove={() => removeComment.mutate(comment.id)}
                     onReply={isLoggedIn ? () => setReplyTo(comment) : undefined}
+                    onUpdate={handleUpdate(comment.id)}
                   />
                   {comment.replies.map((reply) => (
                     <CommentRow
@@ -143,7 +241,9 @@ export default function CommentSection({ postId, commentCount }: CommentSectionP
                       comment={reply}
                       isMine={isMine(reply)}
                       isReply
+                      isUpdating={updateComment.isPending}
                       onRemove={() => removeComment.mutate(reply.id)}
+                      onUpdate={handleUpdate(reply.id)}
                     />
                   ))}
                 </ul>
@@ -153,9 +253,9 @@ export default function CommentSection({ postId, commentCount }: CommentSectionP
         )
       )}
 
-      {(createComment.isError || removeComment.isError) && (
+      {actionError && (
         <p role="alert" className="mt-3 text-xs font-medium text-red-500">
-          {createComment.error?.message ?? removeComment.error?.message}
+          {actionError}
         </p>
       )}
 
