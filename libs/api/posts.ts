@@ -144,6 +144,15 @@ export async function deleteComment(commentId: number): Promise<void> {
   if (!res.ok) await throwApiError(res, "댓글을 삭제하지 못했어요");
 }
 
+// 댓글 수정 — 본인 댓글만(403 CM002), 삭제된 댓글은 400 CM004
+export async function updateComment(commentId: number, content: string): Promise<PostComment> {
+  const res = await clientFetch(`/api/v1/comments/${commentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content }),
+  });
+  return unwrap(res, "댓글을 수정하지 못했어요");
+}
+
 // 이미지 업로드 — multipart. 최대 5장, 각 10MB, jpg/png/webp
 export async function uploadImages(files: File[]): Promise<string[]> {
   const form = new FormData();
