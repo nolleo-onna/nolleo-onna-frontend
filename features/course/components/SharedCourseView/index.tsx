@@ -61,7 +61,7 @@ function NotFound() {
       <p className="text-xs text-gray-400">비공개로 바뀌었거나 링크가 잘못됐을 수 있어요</p>
       <Link
         href="/course"
-        className="mt-1 rounded-full bg-navy-900 px-5 py-2.5 text-xs font-semibold text-lime-300 transition-transform active:scale-95"
+        className="mt-1 rounded-full bg-navy-900 px-5 py-2.5 text-xs font-semibold text-ocean-400 transition-transform active:scale-95"
       >
         나만의 코스 만들러 가기
       </Link>

@@ -52,7 +52,7 @@ export default function CourseListToolbar() {
               aria-pressed={active}
               className={`rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                 active
-                  ? "bg-navy-900 text-lime-300"
+                  ? "bg-navy-900 text-ocean-400"
                   : "border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
