@@ -34,10 +34,10 @@ export function HomeListingCard({ share, isPending, onList, onUnlist }: HomeList
 
   if (share.isPublic) {
     return (
-      <div className="mb-3 rounded-xl bg-lime-50 px-3.5 py-3 text-[12px]">
+      <div className="mb-3 rounded-xl bg-ocean-50 px-3.5 py-3 text-[12px]">
         <div className="flex items-center gap-2">
-          <Globe className="h-3.5 w-3.5 shrink-0 text-lime-700" />
-          <span className="font-semibold text-lime-800">홈에 올라가 있어요</span>
+          <Globe className="h-3.5 w-3.5 shrink-0 text-ocean-600" />
+          <span className="font-semibold text-ocean-700">홈에 올라가 있어요</span>
           <span className="flex items-center gap-0.5 text-gray-500">
             <Eye className="h-3 w-3" />
             {share.viewCount}
@@ -47,7 +47,7 @@ export function HomeListingCard({ share, isPending, onList, onUnlist }: HomeList
             {share.likeCount}
           </span>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-lime-900/60 break-keep">
+        <p className="mt-1 text-[11px] leading-relaxed text-navy-700/60 break-keep">
           내리면 홈에서 사라지고, 사이트 링크로도 열리지 않아요.
         </p>
         <div className="mt-2.5 flex items-center gap-2">
@@ -92,7 +92,7 @@ export function HomeListingCard({ share, isPending, onList, onUnlist }: HomeList
           type="button"
           onClick={onList}
           disabled={isPending}
-          className="flex shrink-0 items-center gap-1 rounded-full bg-navy-900 px-3 py-1.5 text-[11px] font-bold text-lime-300 transition-opacity disabled:opacity-60"
+          className="flex shrink-0 items-center gap-1 rounded-full bg-navy-900 px-3 py-1.5 text-[11px] font-bold text-ocean-400 transition-opacity disabled:opacity-60"
         >
           {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Globe className="h-3 w-3" />}
           올리기

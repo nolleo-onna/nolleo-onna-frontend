@@ -143,7 +143,7 @@ export default function CourseSpotPicker({
                   onClick={() => setCategory(id)}
                   className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors ${
                     active
-                      ? "bg-navy-900 text-lime-300"
+                      ? "bg-navy-900 text-ocean-400"
                       : "border border-gray-200 bg-white text-gray-500 hover:border-gray-300"
                   }`}
                 >
@@ -259,7 +259,7 @@ export default function CourseSpotPicker({
                   }
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
                     added
-                      ? "bg-lime-100 text-lime-600"
+                      ? "bg-ocean-50 text-ocean-600"
                       : "bg-ocean-50 text-ocean-500 hover:bg-ocean-500 hover:text-white"
                   }`}
                 >

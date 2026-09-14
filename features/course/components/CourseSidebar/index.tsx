@@ -195,7 +195,7 @@ function PlaceTimelineItem({
           <div
             className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-colors ${
               isSelected
-                ? "bg-navy-900 text-lime-300 shadow-[0_2px_8px_rgba(5,12,26,0.35)]"
+                ? "bg-navy-900 text-ocean-400 shadow-[0_2px_8px_rgba(5,12,26,0.35)]"
                 : "bg-white text-gray-500 ring-1 ring-gray-200"
             }`}
           >
@@ -542,7 +542,7 @@ export default function CourseSidebar({
               )}
             </div>
           ) : (
-            <p className="mb-4 flex items-center gap-1 text-[11px] text-lime-600">
+            <p className="mb-4 flex items-center gap-1 text-[11px] text-ocean-600">
               ✓ 지금 코스의 모든 장소가 원활해요
             </p>
           )
