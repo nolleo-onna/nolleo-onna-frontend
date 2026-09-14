@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useAIChatContext } from "@/providers/AIChatProvider";
+import { AssistantGlyph } from "@/components/ui/Chat/AssistantAvatar";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 const HINT_MESSAGES = [
   "어디로 갈지 고민되나요?",
-  "AI가 코스를 짜드려요!",
-  "부산 여행 계획 세워볼까요?",
+  `${ASSISTANT_NAME}가 코스를 짜드려요!`,
+  `${ASSISTANT_NAME}랑 부산 여행 계획 세워볼까요?`,
 ];
 
 const HINT_SHOW_DELAY = 2000;   // 진입 후 힌트 노출까지
@@ -81,7 +83,7 @@ export default function AIChatFAB() {
         {/* 원형 버튼 */}
         <button
           onClick={handleOpen}
-          aria-label="AI 코스 메이커 열기"
+          aria-label={`${ASSISTANT_NAME}에게 물어보기`}
           className="flex h-14 w-14 flex-shrink-0 items-center justify-center
                      rounded-full bg-gradient-to-br from-[#34a6ff] to-[#0a84ff]
                      shadow-[0_6px_20px_rgba(10,132,255,0.40)]
@@ -89,7 +91,7 @@ export default function AIChatFAB() {
                      hover:shadow-[0_8px_26px_rgba(10,132,255,0.52)]
                      hover:brightness-105 hover:scale-105 active:scale-95"
         >
-          <MessageCircle className="h-6 w-6 text-white" />
+          <AssistantGlyph className="h-7 w-7 text-white" sparkleClassName="text-lime-200" />
         </button>
       </div>
     </>

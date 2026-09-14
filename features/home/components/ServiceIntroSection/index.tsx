@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MotionConfig, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -10,7 +11,7 @@ const POINTS = [
   {
     no: "01",
     title: "한 마디면 코스가 나와요",
-    description: "“영도 조용한 데이트”처럼 말하면 AI가 동선까지 짜드려요.",
+    description: `“영도 조용한 데이트”처럼 말하면 ${ASSISTANT_NAME}가 동선까지 짜드려요.`,
   },
   {
     no: "02",
