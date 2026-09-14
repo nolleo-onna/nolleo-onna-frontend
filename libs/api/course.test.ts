@@ -4,6 +4,7 @@ import {
   CourseUpdateError,
   fetchPopularCourses,
   fetchSharedCourse,
+  toggleSharedCourseLike,
   updateCourse,
   updateCourseVisibility,
 } from "./course";
@@ -121,5 +122,16 @@ describe("fetchPopularCourses", () => {
       // 로그인 리다이렉트도, 재발급 호출도 없어야 한다
       expect(fetchMock).toHaveBeenCalledTimes(1);
     }
+  });
+});
+
+describe("toggleSharedCourseLike", () => {
+  it("공유 토큰으로 POST 하고 liked·likeCount를 돌려준다", async () => {
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: { liked: true, likeCount: 3 } });
+
+    await expect(toggleSharedCourseLike("tok-1")).resolves.toEqual({ liked: true, likeCount: 3 });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.test.local/api/v1/courses/shared/tok-1/likes/toggle");
+    expect(init.method).toBe("POST");
   });
 });
