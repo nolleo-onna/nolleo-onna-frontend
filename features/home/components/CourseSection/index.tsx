@@ -13,6 +13,7 @@ import {
   buildPlayPrompt,
 } from "@/features/home/data/playSentence";
 import { useAIChatContext } from "@/providers/AIChatProvider";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 import type { MoodOption, SentenceOption } from "@/features/home/data/playSentence";
 
@@ -136,7 +137,7 @@ export default function CourseSection() {
       <section className="py-8 md:py-12">
         <SectionHeader
           title="오늘 어떻게 놀까?"
-          description="문장을 완성하면 AI가 그대로 코스를 짜드려요"
+          description={`문장을 완성하면 ${ASSISTANT_NAME}가 그대로 코스를 짜드려요`}
           action={{ label: "직접 조건 고르기", onClick: handleScrollToSearch }}
         />
 
@@ -243,7 +244,7 @@ export default function CourseSection() {
             <div className="absolute inset-x-4 bottom-4 md:inset-x-6 md:bottom-6">
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
                 <Sparkles className="h-3 w-3 text-lime-300" />
-                AI에게 보낼 문장
+                {ASSISTANT_NAME}에게 보낼 문장
               </p>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.p

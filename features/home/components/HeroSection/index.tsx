@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { type Variants, motion } from "motion/react";
 import Container from "@/components/layout/Container";
 import SearchBar from "@/features/home/components/SearchBar";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 const WavesBackground = dynamic(() => import("./WavesBackground"), { ssr: false });
 
@@ -103,7 +104,7 @@ export default function HeroSection() {
           variants={itemVariants}
           className="text-sm md:text-base text-white/70 leading-relaxed mb-8"
         >
-          예산·동행·분위기를 말하면 AI가 코스를 짜드려요.
+          예산·동행·분위기를 말하면 AI 여행 메이트 {ASSISTANT_NAME}가 코스를 짜드려요.
           <br />
           <span className="text-white font-medium">혼잡도 예측까지 반영해서 사람 많은 곳은 피해요.</span>
         </motion.p>

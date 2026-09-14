@@ -5,6 +5,8 @@ import { useEffect, useRef, KeyboardEvent } from 'react';
 import { X, Send, RotateCcw, Sparkles, MapPin, Wallet, Users, Palette } from 'lucide-react';
 import { MAX_INPUT_LENGTH } from '@/hooks/useAIChat';
 import type { ChatMessage } from '@/hooks/useAIChat';
+import AssistantAvatar, { AssistantGlyph } from '@/components/ui/Chat/AssistantAvatar';
+import { ASSISTANT_NAME, ASSISTANT_TAGLINE } from '@/constants/assistant';
 
 // ── 인트로 카드 ───────────────────────────────────────────────────────────────
 const INTRO_ITEMS = [
@@ -17,14 +19,12 @@ const INTRO_ITEMS = [
 function IntroMessage() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-        <Sparkles className="w-3.5 h-3.5 text-white" />
-      </div>
+      <AssistantAvatar size={28} className="mt-0.5" />
 
       <div className="bg-white rounded-2xl rounded-tl-md px-4 py-4 shadow-[0_2px_12px_rgba(13,48,128,0.06)] max-w-[88%] space-y-3">
         <div>
           <p className="font-bold text-[#0d3080] text-[14px] leading-snug">
-            안녕하세요! 부산 여행 코스를<br />대화로 만들어드려요 🧳
+            안녕하세요, {ASSISTANT_NAME}예요!<br />부산 여행 코스를 같이 짜드릴게요 🧳
           </p>
           <p className="text-[11px] text-gray-400 mt-1">
             아래 내용을 편하게 말씀해주세요
@@ -77,9 +77,7 @@ function MessageBubble({
   return (
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-white" />
-        </div>
+        <AssistantAvatar size={28} className="mt-0.5" />
       )}
       <div
         className={`
@@ -113,9 +111,7 @@ function MessageBubble({
 function TypingIndicator() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-        <Sparkles className="w-3.5 h-3.5 text-white" />
-      </div>
+      <AssistantAvatar size={28} className="mt-0.5" />
       <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-[0_2px_12px_rgba(13,48,128,0.06)] flex items-center gap-1.5">
         {[0, 1, 2].map((i) => (
           <span
@@ -252,17 +248,17 @@ export function AIChatModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="AI 코스 메이커"
+        aria-label={`${ASSISTANT_NAME} — ${ASSISTANT_TAGLINE}`}
       >
         {/* ── 헤더 ── */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#0d3080] via-[#1a44b8] to-[#2456d6]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur text-white">
+              <AssistantGlyph className="w-[18px] h-[18px]" sparkleClassName="text-lime-300" />
             </div>
             <div>
-              <p className="text-white font-bold text-[13px] leading-none">AI 코스 메이커</p>
-              <p className="text-white/50 text-[10px] mt-1">부산 여행 코스를 대화로!</p>
+              <p className="text-white font-bold text-[14px] leading-none">{ASSISTANT_NAME}</p>
+              <p className="text-white/60 text-[10px] mt-1">{ASSISTANT_TAGLINE} · 코스를 대화로 짜드려요</p>
             </div>
           </div>
 
@@ -330,7 +326,7 @@ export function AIChatModal({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="무엇이든 물어보세요 (Shift+Enter 줄바꿈)"
+              placeholder={`${ASSISTANT_NAME}에게 무엇이든 물어보세요 (Shift+Enter 줄바꿈)`}
               rows={1}
               maxLength={MAX_INPUT_LENGTH}
               disabled={isLoading || !!completedPairId}
@@ -355,7 +351,7 @@ export function AIChatModal({
           {/* 에러 / 글자수 / 안내 */}
           <div className="flex items-center justify-between mt-1.5 px-1.5 min-h-[14px]">
             <p className={`text-[10px] ${inputError ? 'text-red-400 font-medium' : 'text-gray-400'}`}>
-              {inputError ?? 'AI 답변은 정확하지 않을 수 있어요.'}
+              {inputError ?? `${ASSISTANT_NAME}(AI)의 답변은 정확하지 않을 수 있어요.`}
             </p>
             {inputValue.length > MAX_INPUT_LENGTH * 0.7 && (
               <span

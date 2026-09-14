@@ -30,6 +30,7 @@ import type {
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import type { MapPlace } from "@/types/map";
 
+import { ASSISTANT_NAME } from "@/constants/assistant";
 const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
   ssr: false,
   loading: () => <MapSkeleton />,
@@ -141,7 +142,7 @@ export default function CourseResultView() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-ocean-500" />
-        <p className="text-sm text-gray-500">AI가 코스를 생성하고 있어요...</p>
+        <p className="text-sm text-gray-500">{ASSISTANT_NAME}가 코스를 짜고 있어요...</p>
       </div>
     );
   }

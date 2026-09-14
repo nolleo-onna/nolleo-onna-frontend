@@ -1,6 +1,8 @@
 'use client';
 
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import AssistantAvatar from '@/components/ui/Chat/AssistantAvatar';
+import { ASSISTANT_NAME } from '@/constants/assistant';
 
 interface QuickGenerateOverlayProps {
   isOpen: boolean;
@@ -29,12 +31,10 @@ export default function QuickGenerateOverlay({ isOpen, onClose }: QuickGenerateO
       >
         <div className="relative flex h-14 w-14 items-center justify-center">
           <Loader2 className="absolute h-14 w-14 animate-spin text-ocean-200" strokeWidth={2.5} />
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff]">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
+          <AssistantAvatar size={36} />
         </div>
         <div className="text-center">
-          <p className="text-[15px] font-bold text-gray-900">AI가 코스를 만들고 있어요</p>
+          <p className="text-[15px] font-bold text-gray-900">{ASSISTANT_NAME}가 코스를 짜고 있어요</p>
           <p className="mt-1 text-[12px] text-gray-400">잠시만 기다려주세요...</p>
         </div>
         <button
