@@ -10,14 +10,13 @@ interface EventDetailPageProps {
   params: Promise<{ contentId: string }>;
 }
 
+// 히어로가 화면 끝까지 차야 해서 폭 제한 없이 헤더 높이만큼만 띄운다
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { contentId } = await params;
 
   return (
     <div className="pt-16">
-      <main className="mx-auto w-full max-w-3xl px-5 py-10 md:px-10">
-        <EventDetailView contentId={contentId} />
-      </main>
+      <EventDetailView contentId={contentId} />
     </div>
   );
 }
