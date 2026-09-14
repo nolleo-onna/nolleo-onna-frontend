@@ -9,6 +9,8 @@ export interface DistrictSummary {
   tmp: number | null;
   pty: PtyCode;
   rn1: number | null;
+  reh: number | null;
+  wsd: number | null;
   congestionRate: number | null;
   congestionLevel: CrowdLevel | null;
 }
@@ -50,6 +52,8 @@ export function mergeDistrictSummaries(
       tmp: w.tmp,
       pty: w.pty,
       rn1: w.rn1,
+      reh: w.reh,
+      wsd: w.wsd,
       congestionRate: rate ?? null,
       congestionLevel: rate != null ? getCrowdLevel(rate) : null,
     };
