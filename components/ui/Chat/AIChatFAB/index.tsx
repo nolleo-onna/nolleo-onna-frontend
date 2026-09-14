@@ -1,20 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
+import { motion } from "motion/react";
 import { useAIChatContext } from "@/providers/AIChatProvider";
+import { AssistantGlyph } from "@/components/ui/Chat/AssistantAvatar";
+import { ASSISTANT_NAME } from "@/constants/assistant";
 
 const HINT_MESSAGES = [
   "어디로 갈지 고민되나요?",
-  "AI가 코스를 짜드려요!",
-  "부산 여행 계획 세워볼까요?",
+  `${ASSISTANT_NAME}가 코스를 짜드려요!`,
+  `${ASSISTANT_NAME}랑 부산 여행 계획 세워볼까요?`,
 ];
 
 const HINT_SHOW_DELAY = 2000;   // 진입 후 힌트 노출까지
 const HINT_HIDE_DELAY = 6000;   // 힌트 유지 시간
 
 export default function AIChatFAB() {
-  const { openChat } = useAIChatContext();
+  const { openChat, isOpen } = useAIChatContext();
   const [showHint, setShowHint] = useState(false);
   const [hintDismissed, setHintDismissed] = useState(false);
   // 서버/클라이언트 첫 렌더에서 같은 값이어야 하므로 랜덤 선택은 마운트 후에만 한다
@@ -79,18 +82,22 @@ export default function AIChatFAB() {
         </div>
 
         {/* 원형 버튼 */}
-        <button
+        {/* 채팅이 열려 있는 동안엔 버튼이 모달로 변한 것처럼 작아지며 사라진다 */}
+        <motion.button
           onClick={handleOpen}
-          aria-label="AI 코스 메이커 열기"
-          className="flex h-14 w-14 flex-shrink-0 items-center justify-center
+          animate={isOpen ? { scale: 0.4, opacity: 0 } : { scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 420, damping: 30 }}
+          tabIndex={isOpen ? -1 : undefined}
+          aria-label={`${ASSISTANT_NAME}에게 물어보기`}
+          className={`flex h-14 w-14 flex-shrink-0 items-center justify-center ${isOpen ? "pointer-events-none" : ""}
                      rounded-full bg-gradient-to-br from-[#34a6ff] to-[#0a84ff]
                      shadow-[0_6px_20px_rgba(10,132,255,0.40)]
                      transition-all duration-200
                      hover:shadow-[0_8px_26px_rgba(10,132,255,0.52)]
-                     hover:brightness-105 hover:scale-105 active:scale-95"
+                     hover:brightness-105 hover:scale-105 active:scale-95`}
         >
-          <MessageCircle className="h-6 w-6 text-white" />
-        </button>
+          <AssistantGlyph className="h-7 w-7 text-white" sparkleClassName="text-lime-200" />
+        </motion.button>
       </div>
     </>
   );

@@ -3,8 +3,12 @@
 
 import { useEffect, useRef, KeyboardEvent } from 'react';
 import { X, Send, RotateCcw, Sparkles, MapPin, Wallet, Users, Palette } from 'lucide-react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { MAX_INPUT_LENGTH } from '@/hooks/useAIChat';
+import { backdropMotion, launchContent, launchPanel } from '@/components/ui/Chat/launchMotion';
 import type { ChatMessage } from '@/hooks/useAIChat';
+import AssistantAvatar, { AssistantGlyph } from '@/components/ui/Chat/AssistantAvatar';
+import { ASSISTANT_NAME, ASSISTANT_TAGLINE } from '@/constants/assistant';
 
 // ── 인트로 카드 ───────────────────────────────────────────────────────────────
 const INTRO_ITEMS = [
@@ -17,14 +21,12 @@ const INTRO_ITEMS = [
 function IntroMessage() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-        <Sparkles className="w-3.5 h-3.5 text-white" />
-      </div>
+      <AssistantAvatar size={28} className="mt-0.5" />
 
       <div className="bg-white rounded-2xl rounded-tl-md px-4 py-4 shadow-[0_2px_12px_rgba(13,48,128,0.06)] max-w-[88%] space-y-3">
         <div>
           <p className="font-bold text-[#0d3080] text-[14px] leading-snug">
-            안녕하세요! 부산 여행 코스를<br />대화로 만들어드려요 🧳
+            안녕하세요, {ASSISTANT_NAME}예요!<br />부산 여행 코스를 같이 짜드릴게요 🧳
           </p>
           <p className="text-[11px] text-gray-400 mt-1">
             아래 내용을 편하게 말씀해주세요
@@ -77,9 +79,7 @@ function MessageBubble({
   return (
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-white" />
-        </div>
+        <AssistantAvatar size={28} className="mt-0.5" />
       )}
       <div
         className={`
@@ -113,9 +113,7 @@ function MessageBubble({
 function TypingIndicator() {
   return (
     <div className="flex gap-2.5">
-      <div className="flex-shrink-0 w-7 h-7 mt-0.5 rounded-full bg-gradient-to-br from-[#0d3080] to-[#0a84ff] flex items-center justify-center shadow-sm">
-        <Sparkles className="w-3.5 h-3.5 text-white" />
-      </div>
+      <AssistantAvatar size={28} className="mt-0.5" />
       <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-[0_2px_12px_rgba(13,48,128,0.06)] flex items-center gap-1.5">
         {[0, 1, 2].map((i) => (
           <span
@@ -183,7 +181,8 @@ export function AIChatModal({
     const timer = setTimeout(() => {
       const el = inputRef.current;
       if (!el) return;
-      el.focus();
+      // 모달이 아직 누른 자리에서 커져 오는 중이라, 포커스가 페이지를 그 위치로 스크롤하지 않게 막는다
+      el.focus({ preventScroll: true });
       // 커서를 텍스트 끝으로
       el.setSelectionRange(el.value.length, el.value.length);
       // 높이 자동 조정
@@ -235,140 +234,147 @@ export function AIChatModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      {/* 오버레이 */}
-      <div
-        className="fixed inset-0 bg-[#0d3080]/20 backdrop-blur-[3px] z-40 animate-fade-in"
-        onClick={onClose}
-      />
+    <MotionConfig reducedMotion="user">
+      <AnimatePresence>
+        {isOpen && (
+          <div key="ai-chat-layer">
+            {/* 오버레이 — 어두워지며 흐려진다 */}
+            <motion.div className="fixed inset-0 z-40 bg-[#0d3080]/20" {...backdropMotion} onClick={onClose} />
 
-      {/* 모달 */}
-      <div
-        className="fixed z-50 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[440px] max-w-[calc(100vw-32px)] h-[600px] max-h-[calc(100vh-48px)] flex flex-col rounded-3xl overflow-hidden shadow-[0_24px_64px_rgba(13,48,128,0.25)] animate-slide-up"
-        style={{ background: '#F7F8FC' }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="AI 코스 메이커"
-      >
-        {/* ── 헤더 ── */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#0d3080] via-[#1a44b8] to-[#2456d6]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur">
-              <Sparkles className="w-4 h-4 text-white" />
+            {/* 모달 — 방금 누른 버튼 자리에서 커져 나와 가운데에 자리 잡고, 닫으면 그 자리로 돌아간다 */}
+            <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                className="pointer-events-auto flex h-[600px] max-h-[calc(100vh-48px)] w-[440px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-3xl shadow-[0_24px_64px_rgba(13,48,128,0.25)]"
+                style={{ background: '#F7F8FC' }}
+                variants={launchPanel}
+                initial="from"
+                animate="open"
+                exit="back"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${ASSISTANT_NAME} — ${ASSISTANT_TAGLINE}`}
+              >
+              {/* ── 헤더 ── */}
+              <motion.div custom={0} variants={launchContent} className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#0d3080] via-[#1a44b8] to-[#2456d6]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur text-white">
+                    <AssistantGlyph className="w-[18px] h-[18px]" sparkleClassName="text-lime-300" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-[14px] leading-none">{ASSISTANT_NAME}</p>
+                    <p className="text-white/60 text-[10px] mt-1">{ASSISTANT_TAGLINE} · 코스를 대화로 짜드려요</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-0.5">
+                  {messages.length > 0 && (
+                    <button
+                      onClick={handleReset}
+                      className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                      title="새 대화"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={onClose}
+                    aria-label="닫기"
+                    className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* ── 메시지 목록 ── */}
+              <motion.div custom={1} variants={launchContent} className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
+                <IntroMessage />
+
+                {messages.map((msg) => (
+                  <MessageBubble
+                    key={msg.id}
+                    role={msg.role}
+                    content={msg.content}
+                    status={msg.status}
+                  />
+                ))}
+
+                {isLoading && <TypingIndicator />}
+
+                {/* 확인 단계 액션 버튼 */}
+                {isAwaitingConfirmation && !isLoading && (
+                  <div className="flex justify-center gap-2 pt-1">
+                    <button
+                      onClick={handleReset}
+                      className="px-4 py-2 rounded-full text-[12px] font-semibold text-gray-500 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:text-gray-700 active:scale-95 transition-all duration-150"
+                    >
+                      🔄 처음부터 다시
+                    </button>
+                    <button
+                      onClick={sendConfirmation}
+                      className="px-4 py-2 rounded-full text-[12px] font-bold bg-gradient-to-r from-[#34a6ff] to-[#0a84ff] text-white shadow-[0_4px_14px_rgba(10,132,255,0.4)] hover:shadow-[0_6px_20px_rgba(10,132,255,0.5)] hover:brightness-105 active:scale-95 transition-all duration-150"
+                    >
+                      ✨ 네, 이대로 만들어주세요!
+                    </button>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </motion.div>
+
+              {/* ── 입력창 ── */}
+              <motion.div custom={2} variants={launchContent} className="flex-shrink-0 px-3 pb-3 pt-2" style={{ background: '#F7F8FC' }}>
+                <div className="flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(13,48,128,0.08)] border border-gray-100 focus-within:border-[#0d3080]/30 focus-within:shadow-[0_2px_16px_rgba(13,48,128,0.12)] transition-all">
+                  <textarea
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`${ASSISTANT_NAME}에게 무엇이든 물어보세요 (Shift+Enter 줄바꿈)`}
+                    rows={1}
+                    maxLength={MAX_INPUT_LENGTH}
+                    disabled={isLoading || !!completedPairId}
+                    className="flex-1 resize-none outline-none text-[14px] text-gray-800 placeholder:text-gray-400 bg-transparent disabled:opacity-50 self-center"
+                    style={{ lineHeight: '22px', height: '22px', maxHeight: '88px' }}
+                    onInput={(e) => {
+                      const el = e.currentTarget;
+                      el.style.height = '22px';
+                      el.style.height = `${Math.min(el.scrollHeight, 88)}px`;
+                    }}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!inputValue.trim() || isLoading || !!completedPairId}
+                    aria-label="메시지 전송"
+                    className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#0d3080] to-[#2456d6] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(13,48,128,0.3)] hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 self-end"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* 에러 / 글자수 / 안내 */}
+                <div className="flex items-center justify-between mt-1.5 px-1.5 min-h-[14px]">
+                  <p className={`text-[10px] ${inputError ? 'text-red-400 font-medium' : 'text-gray-400'}`}>
+                    {inputError ?? `${ASSISTANT_NAME}(AI)의 답변은 정확하지 않을 수 있어요.`}
+                  </p>
+                  {inputValue.length > MAX_INPUT_LENGTH * 0.7 && (
+                    <span
+                      className={`text-[10px] tabular-nums ${
+                        inputValue.length >= MAX_INPUT_LENGTH ? 'text-red-400' : 'text-gray-400'
+                      }`}
+                    >
+                      {inputValue.length}/{MAX_INPUT_LENGTH}
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+              </motion.div>
             </div>
-            <div>
-              <p className="text-white font-bold text-[13px] leading-none">AI 코스 메이커</p>
-              <p className="text-white/50 text-[10px] mt-1">부산 여행 코스를 대화로!</p>
-            </div>
           </div>
-
-          <div className="flex items-center gap-0.5">
-            {messages.length > 0 && (
-              <button
-                onClick={handleReset}
-                className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-                title="새 대화"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              aria-label="닫기"
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* ── 메시지 목록 ── */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
-          <IntroMessage />
-
-          {messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-              status={msg.status}
-            />
-          ))}
-
-          {isLoading && <TypingIndicator />}
-
-          {/* 확인 단계 액션 버튼 */}
-          {isAwaitingConfirmation && !isLoading && (
-            <div className="flex justify-center gap-2 pt-1">
-              <button
-                onClick={handleReset}
-                className="px-4 py-2 rounded-full text-[12px] font-semibold text-gray-500 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:text-gray-700 active:scale-95 transition-all duration-150"
-              >
-                🔄 처음부터 다시
-              </button>
-              <button
-                onClick={sendConfirmation}
-                className="px-4 py-2 rounded-full text-[12px] font-bold bg-gradient-to-r from-[#34a6ff] to-[#0a84ff] text-white shadow-[0_4px_14px_rgba(10,132,255,0.4)] hover:shadow-[0_6px_20px_rgba(10,132,255,0.5)] hover:brightness-105 active:scale-95 transition-all duration-150"
-              >
-                ✨ 네, 이대로 만들어주세요!
-              </button>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* ── 입력창 ── */}
-        <div className="flex-shrink-0 px-3 pb-3 pt-2" style={{ background: '#F7F8FC' }}>
-          <div className="flex items-center gap-2 bg-white rounded-2xl px-4 py-2.5 shadow-[0_2px_12px_rgba(13,48,128,0.08)] border border-gray-100 focus-within:border-[#0d3080]/30 focus-within:shadow-[0_2px_16px_rgba(13,48,128,0.12)] transition-all">
-            <textarea
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="무엇이든 물어보세요 (Shift+Enter 줄바꿈)"
-              rows={1}
-              maxLength={MAX_INPUT_LENGTH}
-              disabled={isLoading || !!completedPairId}
-              className="flex-1 resize-none outline-none text-[14px] text-gray-800 placeholder:text-gray-400 bg-transparent disabled:opacity-50 self-center"
-              style={{ lineHeight: '22px', height: '22px', maxHeight: '88px' }}
-              onInput={(e) => {
-                const el = e.currentTarget;
-                el.style.height = '22px';
-                el.style.height = `${Math.min(el.scrollHeight, 88)}px`;
-              }}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isLoading || !!completedPairId}
-              aria-label="메시지 전송"
-              className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#0d3080] to-[#2456d6] flex items-center justify-center text-white shadow-[0_2px_8px_rgba(13,48,128,0.3)] hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 self-end"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* 에러 / 글자수 / 안내 */}
-          <div className="flex items-center justify-between mt-1.5 px-1.5 min-h-[14px]">
-            <p className={`text-[10px] ${inputError ? 'text-red-400 font-medium' : 'text-gray-400'}`}>
-              {inputError ?? 'AI 답변은 정확하지 않을 수 있어요.'}
-            </p>
-            {inputValue.length > MAX_INPUT_LENGTH * 0.7 && (
-              <span
-                className={`text-[10px] tabular-nums ${
-                  inputValue.length >= MAX_INPUT_LENGTH ? 'text-red-400' : 'text-gray-400'
-                }`}
-              >
-                {inputValue.length}/{MAX_INPUT_LENGTH}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
+        )}
+      </AnimatePresence>
+    </MotionConfig>
   );
 }

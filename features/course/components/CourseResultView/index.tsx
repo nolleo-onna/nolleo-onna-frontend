@@ -30,6 +30,7 @@ import type {
 import type { CoursePlace, Course } from "@/features/course/data/mockCourse";
 import type { MapPlace } from "@/types/map";
 
+import { ASSISTANT_NAME } from "@/constants/assistant";
 const CourseMap = dynamic(() => import("@/features/course/components/CourseMap"), {
   ssr: false,
   loading: () => <MapSkeleton />,
@@ -141,7 +142,7 @@ export default function CourseResultView() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-ocean-500" />
-        <p className="text-sm text-gray-500">AI가 코스를 생성하고 있어요...</p>
+        <p className="text-sm text-gray-500">{ASSISTANT_NAME}가 코스를 짜고 있어요...</p>
       </div>
     );
   }
@@ -319,7 +320,7 @@ export default function CourseResultView() {
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
 
-  // 코스를 공개로 바꿀 때(링크 공유 확인 · 홈 인기 코스에 올리기) — 발급된 토큰을 돌려준다
+  // 홈 인기 코스에 올릴 때(코스 공개) — 발급된 토큰을 돌려준다
   const handlePublish = async (): Promise<string | null> => {
     try {
       const updated = await updateVisibility.mutateAsync({ courseId, isPublic: true });

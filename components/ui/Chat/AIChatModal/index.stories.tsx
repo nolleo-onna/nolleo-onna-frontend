@@ -51,7 +51,7 @@ function ModalWrapper() {
           onClick={() => setIsOpen(true)}
           className="px-6 py-3 rounded-full bg-gradient-to-r from-[#0d3080] to-[#1a4fc8] text-white text-sm font-semibold shadow-lg hover:scale-105 transition-transform"
         >
-          ✨ AI에게 말하기
+          온나에게 물어보기
         </button>
       </div>
 

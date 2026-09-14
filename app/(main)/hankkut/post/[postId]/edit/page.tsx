@@ -16,7 +16,7 @@ export default async function HankkutPostEditPage({ params }: EditPageProps) {
 
   return (
     <div className="pt-16">
-      <main className="mx-auto w-full max-w-3xl px-5 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-[1120px] px-5 py-10 md:px-10">
         <PostWriteForm postId={postId} />
       </main>
     </div>

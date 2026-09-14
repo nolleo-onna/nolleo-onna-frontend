@@ -24,7 +24,7 @@ const FEATURES = [
     icon: Sparkles,
     title: "AI 코스 추천",
     description:
-      "\"광안리에서 연인과 반나절, 5만원\" — 조건만 말하면 AI가 동선과 예산을 고려한 맞춤 코스를 만들어드려요.",
+      "\"광안리에서 연인과 반나절, 5만원\" — 조건만 말하면 AI 여행 메이트 온나가 동선과 예산을 고려한 맞춤 코스를 만들어드려요.",
   },
   {
     icon: Users,
@@ -76,7 +76,7 @@ export default function AboutPage() {
           <span className="text-ocean-300">놀러온나</span>가 다 짜드릴게요
         </h1>
         <p className="relative mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/70 md:text-base">
-          예산·동행·분위기만 말하면 AI가 코스를 만들고, 혼잡도와 날씨까지
+          예산·동행·분위기만 말하면 AI 여행 메이트 온나가 코스를 만들고, 혼잡도와 날씨까지
           반영해요. 부산을 처음 찾는 여행자도, 매주 놀러 나가는 부산 사람도
           더 알차게 놀 수 있도록 만들었어요.
         </p>
