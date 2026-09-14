@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type Variants, motion } from "motion/react";
 
+import SectionHeader from "@/features/home/components/SectionHeader";
 import SpotTicketCard from "@/features/home/components/PopularSpotsSection/SpotTicketCard";
 import { usePopularSpots } from "@/features/home/hooks/usePopularSpots";
 
@@ -29,20 +30,8 @@ export default function PopularSpotsSection() {
   if (!isPending && !spots?.length) return null;
 
   return (
-    <section className="py-6 md:py-10">
-      {/* 헤더 */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-gray-400">부산 스팟</span>
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">인기 부산 스팟</h2>
-        </div>
-        <button
-          onClick={() => router.push("/spot")}
-          className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
-        >
-          전체보기
-        </button>
-      </div>
+    <section className="py-8 md:py-12">
+      <SectionHeader title="인기 부산 스팟" action={{ label: "전체보기", href: "/spot" }} />
 
       {/* 카드 그리드 */}
       {isPending ? (

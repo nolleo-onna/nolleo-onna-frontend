@@ -12,7 +12,7 @@ interface UseLoopingCarouselOptions {
 
 /**
  * 카드 가로 슬라이드. 목록을 두 벌 이어 붙여 두고, 뒷벌에 들어서면 화면상 똑같이 보이는
- * 앞벌의 같은 위치로 순간 이동해 끝에서 처음으로 되감기지 않고 이어진다(SpotsPreviewSection과
+ * 앞벌의 같은 위치로 순간 이동해 끝에서 처음으로 되감기지 않고 이어진다(예전 SpotsPreviewSection과
  * 같은 방식). 일정 간격으로 한 칸씩 넘어가고, 마우스를 올리거나 직접 넘기는 동안은 멈춘다.
  */
 export function useLoopingCarousel({ enabled, intervalMs, gapPx }: UseLoopingCarouselOptions) {

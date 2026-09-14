@@ -81,11 +81,8 @@ export default function HeroSection() {
       >
         {/* 상단 태그 */}
         <motion.div variants={itemVariants} className="flex items-center gap-2 mb-5">
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-100 text-lime-600 text-xs font-semibold">
-            ✦ AI 맞춤 코스
-          </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-ocean-700 text-xs font-semibold">
-            🌊 부산 여행
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 ring-1 ring-inset ring-white/20 backdrop-blur-sm">
+            부산 AI 여행 플래너
           </span>
         </motion.div>
 
@@ -113,12 +110,12 @@ export default function HeroSection() {
 
         {/* 키워드 태그 */}
         <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-2">
-          {["🏖️ 해운대", "🌉 광안리", "☕ 카페 투어", "🍜 먹방 코스", "🌙 야경 투어", "🌿 자연 힐링"].map((tag) => (
+          {["해운대", "광안리", "카페 투어", "먹방 코스", "야경 투어", "자연 힐링"].map((tag) => (
             <span
               key={tag}
-              className="px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-xs text-gray-700 shadow-sm"
+              className="rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/80 ring-1 ring-inset ring-white/15 backdrop-blur-sm"
             >
-              {tag}
+              #{tag}
             </span>
           ))}
         </motion.div>
