@@ -102,7 +102,7 @@ function LoggedOutState() {
     <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
       <section className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-[32px] bg-ocean-600 px-6 py-20 text-center text-white">
         <div className="absolute inset-0 -z-10">
-          <SkyScene phase="day" pty={0} />
+          <SkyScene phase="day" pty={0} hideDecorOnMobile />
         </div>
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 ring-1 ring-inset ring-white/30 backdrop-blur-sm">
           <MapPin className="h-8 w-8 text-lime-300" />
@@ -142,7 +142,7 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: Profi
     <section className="relative isolate overflow-hidden rounded-[32px] bg-ocean-600 text-white">
       {/* 맑은 낮 하늘 — 홈 "오늘의 부산" 카드와 같은 장면(해·구름이 천천히 움직임), 시간대와 상관없이 늘 밝게 */}
       <div className="absolute inset-0 -z-10">
-        <SkyScene phase="day" pty={0} />
+        <SkyScene phase="day" pty={0} hideDecorOnMobile />
       </div>
 
       <div className="grid gap-8 px-6 py-9 md:px-10 md:py-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
