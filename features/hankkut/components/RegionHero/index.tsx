@@ -1,5 +1,6 @@
 "use client";
 
+import WavesBackground from "@/components/ui/WavesBackground";
 import Image from "next/image";
 import Link from "next/link";
 import { type Variants, MotionConfig, motion } from "motion/react";
@@ -60,23 +61,11 @@ export default function RegionHero({ gallery }: { gallery: HankkutGallery }) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <section className="relative isolate overflow-hidden bg-navy-900 text-white">
-        {cover && (
-          <motion.div
-            aria-hidden
-            className="absolute inset-0 -z-20"
-            initial={{ opacity: 0, scale: 1.2 }}
-            animate={{ opacity: 0.5, scale: 1.08 }}
-            transition={{ duration: 1.4, ease: EASE_OUT }}
-          >
-            <Image src={cover} alt="" fill priority quality={30} sizes="100vw" className="object-cover blur-3xl saturate-150" />
-          </motion.div>
-        )}
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-navy-900/40 via-navy-900/75 to-navy-900" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -left-24 -z-10 h-[380px] w-[380px] rounded-full bg-ocean-500/20 blur-3xl"
-        />
+      <section className="relative isolate overflow-hidden bg-ocean-700 text-white">
+        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자가 놓이는 왼쪽과 아래만 살짝 어둡게 해 읽기 쉽게 */}
+        <WavesBackground className="-z-20" zoom={0.8} />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-navy-900/30 to-transparent" />
 
         <div className="mx-auto max-w-[1280px] px-5 pb-12 pt-6 md:px-10 md:pb-16 md:pt-8 lg:px-20">
           <Link
