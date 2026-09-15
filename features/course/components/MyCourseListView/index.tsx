@@ -1,5 +1,6 @@
 "use client";
 
+import WavesBackground from "@/components/ui/WavesBackground";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -202,7 +203,7 @@ function RouteIllustration() {
       <path
         d="M28 172 C 80 172, 96 86, 150 86 S 214 150, 262 150 S 320 48, 338 48"
         fill="none"
-        stroke="rgba(255,255,255,0.08)"
+        stroke="rgba(255,255,255,0.16)"
         strokeWidth="14"
         strokeLinecap="round"
       />
@@ -251,7 +252,7 @@ function RouteIllustration() {
 function HeroStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold tracking-wider text-white/45">{label}</dt>
+      <dt className="text-[11px] font-semibold tracking-wider text-white/70">{label}</dt>
       <dd className="mt-0.5 text-2xl font-bold tabular-nums text-white">{value}</dd>
     </div>
   );
@@ -340,20 +341,21 @@ export default function MyCourseListView() {
     <MotionConfig reducedMotion="user">
     <main className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20 pt-28 pb-20">
       {/* 헤더 — 만든 코스 · 홈에 올린 코스 · 받은 좋아요 */}
-      <section className="relative isolate mb-10 overflow-hidden rounded-[32px] bg-navy-900 text-white">
-        <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 -z-10 h-72 w-72 rounded-full bg-ocean-500/25 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-32 right-10 -z-10 h-72 w-72 rounded-full bg-lime-300/10 blur-3xl" />
+      <section className="relative isolate mb-10 overflow-hidden rounded-[32px] bg-ocean-700 text-white">
+        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자 쪽(왼쪽)만 살짝 어둡게 */}
+        <WavesBackground className="-z-20" zoom={0.75} />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
         <div className="grid items-center gap-8 px-6 py-10 md:grid-cols-[minmax(0,1fr)_minmax(0,360px)] md:px-12 md:py-12">
           <motion.div variants={heroStagger} initial="hidden" animate="visible" className="min-w-0">
             <motion.p
               variants={heroRise}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 ring-1 ring-inset ring-white/15"
             >
-              <Sparkles className="h-3.5 w-3.5 text-ocean-400" />
+              <Sparkles className="h-3.5 w-3.5 text-ocean-100" />
               {ASSISTANT_NAME}와 함께 만든 나만의 부산 여행
             </motion.p>
             <motion.h1 variants={heroRise} className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">
-              내가 만든 <span className="text-ocean-400">코스</span>
+              내가 만든 <span className="text-ocean-100">코스</span>
             </motion.h1>
             <motion.dl variants={heroRise} className="mt-7 flex flex-wrap gap-x-8 gap-y-3">
               <HeroStat label="만든 코스" value={isLoading ? "–" : `${courses?.length ?? 0}개`} />

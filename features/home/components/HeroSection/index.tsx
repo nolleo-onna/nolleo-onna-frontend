@@ -1,13 +1,12 @@
 "use client";
 
+import WavesBackground from "@/components/ui/WavesBackground";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { type Variants, motion } from "motion/react";
 import Container from "@/components/layout/Container";
 import SearchBar from "@/features/home/components/SearchBar";
 import { ASSISTANT_NAME } from "@/constants/assistant";
 
-const WavesBackground = dynamic(() => import("./WavesBackground"), { ssr: false });
 
 const containerVariants: Variants = {
   hidden: {},
