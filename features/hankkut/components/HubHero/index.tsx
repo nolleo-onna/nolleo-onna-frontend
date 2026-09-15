@@ -1,6 +1,7 @@
 "use client";
 
-import WavesBackground from "@/components/ui/WavesBackground";
+import PhotoBackdrop from "@/components/ui/PhotoBackdrop";
+import { toBackdropPhoto } from "@/libs/tourImage";
 import Image from "next/image";
 import Link from "next/link";
 import { type Variants, MotionConfig, motion } from "motion/react";
@@ -25,6 +26,15 @@ const CURATED_COUNT = HANKKUT_GALLERIES.reduce(
   (sum, g) => sum + getGallerySummary(g.slug).postCount,
   0,
 );
+
+// 배경 — 바다·카페·먹거리·골목·전망, 부산 동네의 결이 차례로 지나간다 (관광공사 TourAPI 사진)
+const HUB_BANNER_PHOTOS = [
+  { src: "https://tong.visitkorea.or.kr/cms/resource/22/3495922_image2_1.jpg", label: "바다 · 송정해수욕장" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/60/3496960_image2_1.jpg", label: "카페 · 전포카페거리" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/30/3476830_image2_1.jpg", label: "먹거리 · 국제시장 먹자골목" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/74/3495874_image2_1.jpg", label: "골목 · 흰여울문화마을" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/50/2732750_image2_1.jpg", label: "전망 · 황령산" },
+].map((photo) => toBackdropPhoto(photo.src, photo.label));
 
 // 큐레이션 조회수가 높은 동네 사진 3장을 겹쳐 쌓는다 — 맨 앞(0번)이 가장 인기 있는 동네
 const STACK = HANKKUT_GALLERIES.map((gallery) => ({
@@ -77,9 +87,9 @@ export default function HubHero() {
   return (
     <MotionConfig reducedMotion="user">
       <section className="relative isolate overflow-hidden bg-ocean-700 text-white">
-        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자가 놓이는 왼쪽과 아래만 살짝 어둡게 해 읽기 쉽게 */}
-        <WavesBackground className="-z-20" zoom={0.8} />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
+        {/* 부산 동네 사진이 천천히 바뀌는 배경 — 글자가 놓이는 왼쪽과 아래를 어둡게 해 읽기 쉽게 */}
+        <PhotoBackdrop className="-z-20" photos={HUB_BANNER_PHOTOS} priority showLabel />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/70 via-navy-900/30 to-navy-900/10" />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-navy-900/30 to-transparent" />
 
         <div className="mx-auto grid max-w-[1280px] items-center gap-12 px-5 pb-14 pt-10 md:grid-cols-[minmax(0,1fr)_minmax(0,440px)] md:px-10 md:pb-20 md:pt-14 lg:px-20">

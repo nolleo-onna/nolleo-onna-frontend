@@ -1,6 +1,7 @@
 "use client";
 
-import WavesBackground from "@/components/ui/WavesBackground";
+import PhotoBackdrop from "@/components/ui/PhotoBackdrop";
+import { toBackdropPhoto } from "@/libs/tourImage";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -197,6 +198,14 @@ const ROUTE_PINS = [
 ];
 
 /** 코스 = 동선. 선이 그려지고 핀이 차례로 꽂히는 그림으로 목록 페이지의 성격을 보여준다 */
+// 헤더 배경 — 바다를 따라 달리는 부산 해안 드라이브 사진 (관광공사 TourAPI 사진)
+const COURSE_BANNER_PHOTOS = [
+  { src: "https://tong.visitkorea.or.kr/cms/resource/11/3413711_image2_1.jpg", label: "송도해상케이블카" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/02/3496802_image2_1.jpg", label: "이기대" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/02/3545402_image2_1.jpg", label: "금빛노을브릿지" },
+  { src: "https://tong.visitkorea.or.kr/cms/resource/00/3494300_image2_1.jpg", label: "오시리아 해안산책로" },
+].map((photo) => toBackdropPhoto(photo.src, photo.label));
+
 function RouteIllustration() {
   return (
     <svg viewBox="0 0 366 214" aria-hidden className="mx-auto hidden w-full max-w-[360px] md:block">
@@ -342,9 +351,9 @@ export default function MyCourseListView() {
     <main className="mx-auto w-full max-w-[1280px] px-5 md:px-10 lg:px-20 pt-28 pb-20">
       {/* 헤더 — 만든 코스 · 홈에 올린 코스 · 받은 좋아요 */}
       <section className="relative isolate mb-10 overflow-hidden rounded-[32px] bg-ocean-700 text-white">
-        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자 쪽(왼쪽)만 살짝 어둡게 */}
-        <WavesBackground className="-z-20" zoom={0.75} />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
+        {/* 부산 해안 드라이브 사진이 천천히 바뀌는 배경 — 글자 쪽(왼쪽)을 어둡게 해 읽기 쉽게 */}
+        <PhotoBackdrop className="-z-20" photos={COURSE_BANNER_PHOTOS} priority showLabel />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/70 via-navy-900/30 to-transparent" />
         <div className="grid items-center gap-8 px-6 py-10 md:grid-cols-[minmax(0,1fr)_minmax(0,360px)] md:px-12 md:py-12">
           <motion.div variants={heroStagger} initial="hidden" animate="visible" className="min-w-0">
             <motion.p
