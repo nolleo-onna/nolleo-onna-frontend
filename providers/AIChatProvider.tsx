@@ -87,9 +87,9 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
   // 코스 생성 완료 → 결과 페이지 이동
   useEffect(() => {
     if (!completedPairId) return;
-    // quick 모드는 보여줄 대화 내용이 없어 바로 넘어가고, 채팅 모드는 완료 말풍선을
+    // quick 모드는 게이지가 100%로 차는 완료 화면을 잠깐 보여주고 넘어가고, 채팅 모드는 완료 말풍선을
     // 잠깐 보여준 뒤 이동한다.
-    const delay = viewMode === "quick" ? 400 : 2000;
+    const delay = viewMode === "quick" ? 1100 : 2000;
     const timer = setTimeout(() => {
       setIsOpen(false);
       const budget = budgetRef.current;
@@ -111,7 +111,7 @@ export default function AIChatProvider({ children }: AIChatProviderProps) {
       {viewMode === "chat" ? (
         <AIChatModal isOpen={isOpen} onClose={closeChat} initialMessage={initialMessage} {...chat} />
       ) : (
-        <QuickGenerateOverlay isOpen={isOpen} onClose={closeChat} />
+        <QuickGenerateOverlay isOpen={isOpen} onClose={closeChat} done={!!completedPairId} />
       )}
     </AIChatContext.Provider>
   );
