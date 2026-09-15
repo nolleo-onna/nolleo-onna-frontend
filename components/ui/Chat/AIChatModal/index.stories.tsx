@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import { useAIChat } from '@/hooks/useAIChat';
 import { AIChatModal } from './index';
+import type { AIChatModalProps } from './index';
 
 const meta = {
   title: 'UI/Chat/AIChatModal',
@@ -92,4 +93,78 @@ export const AlwaysOpen: Story = {
     layout: 'fullscreen',
   },
   render: () => <AlwaysOpenWrapper />,
+};
+
+// ── API 없이 고정 메시지로 보는 화면들 ────────────────────────────────────────
+const SAMPLE_MESSAGES: AIChatModalProps['messages'] = [
+  { id: 'm1', role: 'user', content: '광안리에서 연인이랑 야경 보는 코스 짜줘' },
+  { id: 'm2', role: 'assistant', content: '좋아요! 광안리 야경 데이트 코스로 짜볼게요.\n예산은 1인 기준 어느 정도로 생각하세요?' },
+  { id: 'm3', role: 'user', content: '5만원 안쪽' },
+  { id: 'm4', role: 'user', content: '너무 붐비는 곳은 빼줘' },
+  {
+    id: 'm5',
+    role: 'assistant',
+    content: '정리해볼게요.\n· 지역: 광안리\n· 동행: 연인\n· 분위기: 야경, 한적하게\n· 예산: 1인 5만원 이내\n이대로 코스를 만들까요?',
+  },
+];
+
+function StaticFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative h-screen w-full" style={{ background: 'linear-gradient(135deg, #9fd3ff 0%, #3d8bff 45%, #0d3080 100%)' }}>
+      {children}
+    </div>
+  );
+}
+
+/** 첫 화면 — 인사와 눌러 쓰는 예시 */
+export const Empty: Story = {
+  args: { ...placeholderArgs, isOpen: true },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => (
+    <StaticFrame>
+      <AIChatModal {...args} />
+    </StaticFrame>
+  ),
+};
+
+/** 대화 중 — 이어 보낸 말풍선 묶음과 확인 버튼 */
+export const Conversation: Story = {
+  args: { ...placeholderArgs, isOpen: true, messages: SAMPLE_MESSAGES, isAwaitingConfirmation: true },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => (
+    <StaticFrame>
+      <AIChatModal {...args} />
+    </StaticFrame>
+  ),
+};
+
+/** 답을 쓰는 중 */
+export const Typing: Story = {
+  args: { ...placeholderArgs, isOpen: true, messages: SAMPLE_MESSAGES.slice(0, 3), isLoading: true },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => (
+    <StaticFrame>
+      <AIChatModal {...args} />
+    </StaticFrame>
+  ),
+};
+
+/** 코스 완성 */
+export const Completed: Story = {
+  args: {
+    ...placeholderArgs,
+    isOpen: true,
+    completedPairId: 'sample-pair',
+    messages: [
+      ...SAMPLE_MESSAGES,
+      { id: 'm6', role: 'user', content: '응 좋아' },
+      { id: 'm7', role: 'assistant', status: 'COMPLETED', content: '광안리 야경 데이트 코스를 만들었어요!\n결과 페이지로 이동할게요.' },
+    ],
+  },
+  parameters: { layout: 'fullscreen' },
+  render: (args) => (
+    <StaticFrame>
+      <AIChatModal {...args} />
+    </StaticFrame>
+  ),
 };
