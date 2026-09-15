@@ -1,6 +1,8 @@
 "use client";
 
-import WavesBackground from "@/components/ui/WavesBackground";
+import PhotoBackdrop from "@/components/ui/PhotoBackdrop";
+import { toBackdropPhoto } from "@/libs/tourImage";
+import { HANKKUT_GALLERIES, getPostsForGallery } from "@/features/hankkut/data/galleries";
 import Image from "next/image";
 import { type Variants, MotionConfig, motion } from "motion/react";
 import { Clock, MapPin, Ticket } from "lucide-react";
@@ -61,12 +63,19 @@ interface HankkutDetailHeaderProps {
 
 /** 한끗 상세 첫 화면 — 행사 상세처럼 사진이 흐린 배경 위로 떠오르고, 제목·위치·운영시간·요금이 차례로 올라온다 */
 export default function HankkutDetailHeader({ hankkut }: HankkutDetailHeaderProps) {
+  // 배경은 같은 동네 다른 글의 사진 — 오른쪽 카드 사진과 겹치지 않게, 없으면 이 글 사진
+  const gallery = HANKKUT_GALLERIES.find((g) => g.regionKeywords.some((keyword) => hankkut.region.includes(keyword)));
+  const neighbors = gallery
+    ? [...new Set(getPostsForGallery(gallery.slug).map((post) => post.imageUrl))].filter((src) => src && src !== hankkut.imageUrl)
+    : [];
+  const backdropPhotos = (neighbors.length > 0 ? neighbors : [hankkut.imageUrl]).map((src) => toBackdropPhoto(src));
+
   return (
     <MotionConfig reducedMotion="user">
       <section className="relative isolate overflow-hidden bg-ocean-700 text-white">
-        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자가 놓이는 왼쪽과 아래만 살짝 어둡게 해 읽기 쉽게 */}
-        <WavesBackground className="-z-20" zoom={0.8} />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
+        {/* 같은 동네 사진이 천천히 바뀌는 배경 — 글자가 놓이는 왼쪽과 아래를 어둡게 해 읽기 쉽게 */}
+        <PhotoBackdrop className="-z-20" photos={backdropPhotos} priority />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/70 via-navy-900/30 to-transparent" />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-navy-900/30 to-transparent" />
 
         <div className="mx-auto max-w-[1180px] px-5 pb-12 pt-6 md:px-10 md:pb-16 md:pt-8">

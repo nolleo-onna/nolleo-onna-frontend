@@ -1,6 +1,7 @@
 "use client";
 
-import WavesBackground from "@/components/ui/WavesBackground";
+import PhotoBackdrop from "@/components/ui/PhotoBackdrop";
+import { toBackdropPhoto } from "@/libs/tourImage";
 import Image from "next/image";
 import Link from "next/link";
 import { type Variants, MotionConfig, motion } from "motion/react";
@@ -53,6 +54,9 @@ export default function RegionHero({ gallery }: { gallery: HankkutGallery }) {
   const curated = getPostsForGallery(gallery.slug);
   const topCurated = [...curated].sort((a, b) => b.views - a.views)[0];
   const cover = curated[0]?.imageUrl;
+  // 배경은 이 동네 글의 다른 사진들로 — 오른쪽 카드와 같은 사진이 겹치지 않게, 없으면 대표 사진
+  const regionPhotos = [...new Set(curated.map((post) => post.imageUrl).filter(Boolean))];
+  const backdropPhotos = (regionPhotos.length > 1 ? regionPhotos.filter((src) => src !== cover) : regionPhotos).map((src) => toBackdropPhoto(src));
   const activeEvents = sortActiveEvents(
     filterEventsByDistrict(events.data ?? [], gallery.districtTag),
     today,
@@ -62,9 +66,9 @@ export default function RegionHero({ gallery }: { gallery: HankkutGallery }) {
   return (
     <MotionConfig reducedMotion="user">
       <section className="relative isolate overflow-hidden bg-ocean-700 text-white">
-        {/* 홈 히어로와 같은 three.js 파도 배경 — 글자가 놓이는 왼쪽과 아래만 살짝 어둡게 해 읽기 쉽게 */}
-        <WavesBackground className="-z-20" zoom={0.8} />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/55 via-navy-900/20 to-transparent" />
+        {/* 이 동네 사진이 천천히 바뀌는 배경 — 글자가 놓이는 왼쪽과 아래를 어둡게 해 읽기 쉽게 */}
+        <PhotoBackdrop className="-z-20" photos={backdropPhotos} priority />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-900/70 via-navy-900/30 to-transparent" />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-navy-900/30 to-transparent" />
 
         <div className="mx-auto max-w-[1280px] px-5 pb-12 pt-6 md:px-10 md:pb-16 md:pt-8 lg:px-20">

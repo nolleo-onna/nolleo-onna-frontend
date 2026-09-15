@@ -27,6 +27,7 @@ import { useFavoritePlaceImages } from "@/features/mypage/hooks/useFavoritePlace
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
+import SkyScene from "@/features/home/components/TodayStrip/SkyScene";
 
 import type { LucideIcon } from "lucide-react";
 import type { MyCourseSummary } from "@/types/course";
@@ -99,14 +100,16 @@ function LoggedOutState() {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-5 pt-28 pb-20 md:px-10 lg:px-20">
-      <section className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-[32px] bg-navy-900 px-6 py-20 text-center text-white">
-        <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 -z-10 h-72 w-72 rounded-full bg-ocean-500/25 blur-3xl" />
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 ring-1 ring-inset ring-white/15">
+      <section className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-[32px] bg-ocean-600 px-6 py-20 text-center text-white">
+        <div className="absolute inset-0 -z-10">
+          <SkyScene phase="day" pty={0} />
+        </div>
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 ring-1 ring-inset ring-white/30 backdrop-blur-sm">
           <MapPin className="h-8 w-8 text-lime-300" />
         </div>
         <div>
           <p className="text-2xl font-bold">로그인이 필요해요</p>
-          <p className="mt-2 text-sm text-white/60">로그인하고 나만의 부산 여행 기록을 모아보세요</p>
+          <p className="mt-2 text-sm text-white/85">로그인하고 나만의 부산 여행 기록을 모아보세요</p>
         </div>
         <button
           onClick={() => router.push("/login")}
@@ -136,9 +139,11 @@ const QUICK_ACTIONS = [
 
 function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: ProfileHeroProps) {
   return (
-    <section className="relative isolate overflow-hidden rounded-[32px] bg-navy-900 text-white">
-      <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 -z-10 h-72 w-72 rounded-full bg-ocean-500/25 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 right-10 -z-10 h-72 w-72 rounded-full bg-lime-300/10 blur-3xl" />
+    <section className="relative isolate overflow-hidden rounded-[32px] bg-ocean-600 text-white">
+      {/* 맑은 낮 하늘 — 홈 "오늘의 부산" 카드와 같은 장면(해·구름이 천천히 움직임), 시간대와 상관없이 늘 밝게 */}
+      <div className="absolute inset-0 -z-10">
+        <SkyScene phase="day" pty={0} />
+      </div>
 
       <div className="grid gap-8 px-6 py-9 md:px-10 md:py-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <motion.div variants={heroStagger} initial="hidden" animate="visible" className="min-w-0">
@@ -157,17 +162,17 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: Profi
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm text-white/55">안녕하세요,</p>
+              <p className="text-sm text-white/85">안녕하세요,</p>
               <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight md:text-4xl">
                 <span className="truncate">{nickname}</span>
-                <span className="shrink-0 text-white/40">님</span>
+                <span className="shrink-0 text-white/75">님</span>
                 {isAdmin && (
                   <span className="shrink-0 rounded-full bg-lime-300 px-2 py-0.5 text-[10px] font-bold text-navy-900">
                     ADMIN
                   </span>
                 )}
               </h1>
-              <p className="mt-1 truncate text-sm text-white/45">{email}</p>
+              <p className="mt-1 truncate text-sm text-white/80">{email}</p>
             </div>
           </motion.div>
 
@@ -179,7 +184,7 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: Profi
                 className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-semibold transition-transform hover:-translate-y-0.5 active:scale-95 ${
                   primary
                     ? "bg-lime-300 text-navy-900"
-                    : "bg-white/10 text-white ring-1 ring-inset ring-white/15 hover:bg-white/15"
+                    : "bg-white/20 text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm hover:bg-white/30"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -194,13 +199,13 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: Profi
           initial="hidden"
           animate="visible"
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:w-[460px]"
+          className="grid grid-cols-3 gap-2.5 lg:w-[380px]"
         >
           {stats.map(({ label, value, icon: Icon }) => (
-            <div key={label} className="rounded-2xl bg-white/[0.06] px-4 py-3.5 ring-1 ring-inset ring-white/10">
+            <div key={label} className="rounded-2xl bg-white/15 px-4 py-3.5 ring-1 ring-inset ring-white/25 backdrop-blur-sm">
               <Icon className="h-4 w-4 text-lime-300" />
               <dd className="mt-2 text-2xl font-bold tabular-nums">{value}</dd>
-              <dt className="mt-0.5 text-[11px] text-white/50">{label}</dt>
+              <dt className="mt-0.5 text-[11px] text-white/85">{label}</dt>
             </div>
           ))}
         </motion.dl>
@@ -490,12 +495,10 @@ export default function MyPageContent() {
   if (isLoading) return <LoadingState />;
   if (!isLoggedIn || !user) return <LoggedOutState />;
 
-  const totalSpots = courses?.reduce((acc, c) => acc + (c.spotTitles?.length ?? 0), 0) ?? 0;
   const totalLikes = courses?.reduce((acc, c) => acc + (c.likeCount ?? 0), 0) ?? 0;
 
   const stats = [
     { label: "만든 코스", value: courses ? String(courses.length) : "-", icon: Route },
-    { label: "코스에 담은 스팟", value: courses ? String(totalSpots) : "-", icon: MapPin },
     { label: "찜한 장소", value: favorites ? String(favorites.length) : "-", icon: Heart },
     { label: "받은 좋아요", value: courses ? String(totalLikes) : "-", icon: Sparkles },
   ];
