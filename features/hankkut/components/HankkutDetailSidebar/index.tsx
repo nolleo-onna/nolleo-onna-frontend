@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { ArrowUpRight, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -44,6 +44,16 @@ export default function HankkutDetailSidebar({
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
           {hankkut.address}
         </p>
+        {/* 관광공사 행사를 다룬 글이면 기간·요금·길찾기가 있는 행사 상세로 */}
+        {hankkut.eventContentId && (
+          <Link
+            href={`/event/${hankkut.eventContentId}`}
+            className="group mt-4 flex items-center justify-between rounded-2xl bg-navy-900 px-4 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+          >
+            행사 상세 보기
+            <ArrowUpRight className="h-4 w-4 text-lime-300 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </Link>
+        )}
       </section>
 
       {/* 다른 한끗 추천 */}

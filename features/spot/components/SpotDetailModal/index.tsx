@@ -6,6 +6,7 @@ import { X, MapPin, Phone, Clock, ParkingSquare, ExternalLink, CalendarX } from 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSpotDetail } from "@/features/spot/hooks/useSpotDetail";
+import { useMapPlaceIdByOriginal } from "@/features/spot/hooks/useMapPlaceIdByOriginal";
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
 import { useFavoriteStatus, useToggleFavorite } from "@/features/spot/hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
@@ -14,6 +15,8 @@ type Props = {
   contentId: string | null;
   placeType: "SPOT" | "FOOD" | null;
   mapPlaceId: number | null;
+  /** mapPlaceId를 모르는 장소(코스)면 이 이름으로 지도 장소를 찾아 찜·별점에 쓴다 */
+  placeName?: string;
   /** 마커 클릭 경로에서 mapPlaceId 매핑이 아직 로딩 중인지 — 찜·별점 자리에 스켈레톤 표시 */
   isMapPlaceIdLoading?: boolean;
   onClose: () => void;
@@ -165,19 +168,38 @@ function StarRating({ mapPlaceId }: { mapPlaceId: number }) {
   );
 }
 
-export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMapPlaceIdLoading = false, onClose }: Props) {
-  const { data: spotData, isPending: spotPending } = useSpotDetail(
-    placeType === "SPOT" ? contentId : null
+export default function SpotDetailModal({
+  contentId,
+  placeType,
+  mapPlaceId: mapPlaceIdProp,
+  placeName,
+  isMapPlaceIdLoading: isMapPlaceIdLoadingProp = false,
+  onClose,
+}: Props) {
+  // 코스 장소는 mapPlaceId 없이 온다 — 이름 검색으로 찾기 전까지 찜·별점 자리는 스켈레톤
+  const knownMapPlaceId = mapPlaceIdProp !== null && mapPlaceIdProp > 0 ? mapPlaceIdProp : null;
+  const { data: lookedUpMapPlaceId, isLoading: isLookingUpMapPlaceId } = useMapPlaceIdByOriginal(
+    knownMapPlaceId === null && placeName ? contentId : null,
+    placeName,
   );
+  const mapPlaceId = knownMapPlaceId ?? lookedUpMapPlaceId ?? mapPlaceIdProp;
+  const isMapPlaceIdLoading = isMapPlaceIdLoadingProp || isLookingUpMapPlaceId;
 
-  const { data: foodData, isPending: foodPending } = useQuery({
+  const { data: foodData, isPending: foodPending, isError: foodFailed } = useQuery({
     queryKey: ["food", "detail", contentId],
     queryFn: () => fetchFoodDetail(contentId!),
     enabled: !!contentId && placeType === "FOOD",
     staleTime: 1000 * 60 * 10,
+    // 없는 id(404)는 다시 불러도 없으니 스켈레톤에 붙잡아 두지 않는다
+    retry: false,
   });
 
-  const isPending = placeType === "SPOT" ? spotPending : foodPending;
+  // 코스에서 온 음식점·카페는 식당 DB id가 아니라 관광공사 contentId를 갖고 있어 food API가 404를 준다.
+  // 그럴 땐 같은 id로 관광지 상세를 불러 보여준다 (모달이 회색 스켈레톤에 멈춰 보이던 원인).
+  const showsSpot = placeType !== "FOOD" || foodFailed;
+  const { data: spotData, isPending: spotPending } = useSpotDetail(showsSpot ? contentId : null);
+
+  const isPending = showsSpot ? spotPending : foodPending;
 
   // 지도 마커 클릭 경로에서는 mapPlaceId가 0으로 올 수 있어, 유효한 id일 때만
   // 찜 버튼을 노출한다.
@@ -233,7 +255,7 @@ export default function SpotDetailModal({ contentId, placeType, mapPlaceId, isMa
               <div className="animate-shimmer h-12 w-full rounded-2xl" />
             </div>
           </div>
-        ) : placeType === "SPOT" && spotData ? (
+        ) : showsSpot && spotData ? (
           <>
             {/* 히어로 이미지 — 제목·주소를 이미지 위에 겹쳐 잡지 표지처럼 */}
             <div className="relative h-64 bg-gray-100">

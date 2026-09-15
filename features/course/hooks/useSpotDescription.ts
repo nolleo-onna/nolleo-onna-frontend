@@ -29,12 +29,15 @@ export function useSpotDescription(contentId: string | null, category?: string) 
       if (!contentId) return null;
       try {
         if (isFood) {
-          const food = await fetchFoodDetail(contentId);
-          return {
-            overview: food.description ?? "",
-            address: food.address ?? "",
-            tel: food.tel ?? "",
-          };
+          // 코스의 음식점은 관광공사 contentId라 food API에 없을 수 있다 — 없으면 아래 관광지 상세로 넘어간다
+          const food = await fetchFoodDetail(contentId).catch(() => null);
+          if (food) {
+            return {
+              overview: food.description ?? "",
+              address: food.address ?? "",
+              tel: food.tel ?? "",
+            };
+          }
         }
         const spot = await fetchSpotDetail(contentId);
         return {
