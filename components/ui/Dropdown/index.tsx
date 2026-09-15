@@ -35,6 +35,7 @@ export default function Dropdown({
 
         <ListboxOptions
           anchor="bottom end"
+          modal={false}
           className="mt-1 w-28 overflow-hidden rounded-xl bg-white shadow-lg outline-none focus:outline-none"
         >
           {options.map((option) => (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MotionConfig } from "motion/react";
 
+import ChunkReloadGuard from "@/components/layout/ChunkReloadGuard";
 import Header from "@/components/layout/Header";
 import QueryProvider from "@/providers/QueryProvider";
 import PageTransition from "@/providers/PageTransition";
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body>
         <MotionConfig reducedMotion="user">
           <QueryProvider>
+            <ChunkReloadGuard />
             <Header />
             <PageTransition>{children}</PageTransition>
           </QueryProvider>

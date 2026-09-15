@@ -48,7 +48,7 @@ function toPlace(item: CourseItemResponse): CoursePlace {
     rating: 0,
     reviewCount: 0,
     originalId: item.originalId,
-    mapPlaceId: item.serialNum,
+    // serialNum은 코스 안 방문 순번이라 mapPlaceId가 아니다 — 상세 모달이 이름·originalId로 찾는다
     // 무료·비용 미상 장소는 null로 오므로 합산·표시가 안전하도록 0으로 맞춘다
     expectedCost: item.expectedCost ?? 0,
     distanceFromPrevM: item.distanceFromPrevM,
@@ -415,6 +415,7 @@ export default function CourseResultView() {
         contentId={modalContentId}
         placeType={modalPlaceType}
         mapPlaceId={modalMapPlaceId}
+        placeName={selectedPlace?.name}
         onClose={handleModalClose}
       />
     </>
