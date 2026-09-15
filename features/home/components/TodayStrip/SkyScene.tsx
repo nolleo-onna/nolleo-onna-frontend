@@ -120,10 +120,12 @@ interface SkySceneProps {
   windy?: boolean;
   /** 화면 밖이거나 움직임 줄이기 설정이면 false — 같은 장면을 멈춘 채로 보여준다 */
   animated?: boolean;
+  /** 글자가 위에 겹치는 배너라면 좁은 화면(md 미만)에서 해·달·구름을 숨겨 글자와 부딪히지 않게 */
+  hideDecorOnMobile?: boolean;
 }
 
 /** 오늘의 부산 왼쪽 하늘 — 시간대 배경 위에 해·달·별, 구름, 비·눈, 바람 줄기를 겹친다 */
-export default function SkyScene({ phase, pty, windy = false, animated = true }: SkySceneProps) {
+export default function SkyScene({ phase, pty, windy = false, animated = true, hideDecorOnMobile = false }: SkySceneProps) {
   const wet = pty !== 0;
   const rain = pty === 1 || pty === 2;
   const snow = pty === 2 || pty === 3;
@@ -134,6 +136,7 @@ export default function SkyScene({ phase, pty, windy = false, animated = true }:
       aria-hidden
       className={`pointer-events-none absolute inset-0 overflow-hidden bg-gradient-to-b ${wet ? OVERCAST_SKY[phase] : CLEAR_SKY[phase]}`}
     >
+      <div className={hideDecorOnMobile ? "hidden md:block" : undefined}>
       {!wet && (night ? <NightSky animated={animated} /> : <Sun phase={phase} animated={animated} />)}
 
       {wet ? (
@@ -148,6 +151,8 @@ export default function SkyScene({ phase, pty, windy = false, animated = true }:
           <Cloud className={`right-[34%] top-[8%] w-12 ${night ? "text-white/[0.06]" : "text-white/40"}`} drift={-10} duration={13} animated={animated} />
         </>
       )}
+
+      </div>
 
       {rain &&
         DROPS.map((drop, i) => (
