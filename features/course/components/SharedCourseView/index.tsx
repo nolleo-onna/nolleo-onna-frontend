@@ -37,7 +37,7 @@ function toPlace(item: CourseItemResponse): CoursePlace {
     rating: 0,
     reviewCount: 0,
     originalId: item.originalId,
-    mapPlaceId: item.serialNum,
+    // serialNum은 코스 안 방문 순번이라 mapPlaceId가 아니다 — 상세 모달이 이름·originalId로 찾는다
     expectedCost: item.expectedCost ?? 0,
     distanceFromPrevM: item.distanceFromPrevM,
   };
@@ -203,6 +203,7 @@ export default function SharedCourseView({ shareToken }: { shareToken: string })
         contentId={modalContentId}
         placeType={modalPlaceType}
         mapPlaceId={modalMapPlaceId}
+        placeName={selectedPlace?.name}
         onClose={handleModalClose}
       />
     </>

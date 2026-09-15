@@ -76,6 +76,8 @@ export default function CourseListToolbar() {
 
           <ListboxOptions
             anchor="bottom end"
+            // Headless UI 기본값(modal)은 열린 동안 페이지 나머지를 inert로 막고 스크롤을 잠근다 — 드롭다운엔 필요 없다
+            modal={false}
             className="z-20 mt-1 w-36 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg outline-none"
           >
             {SORT_OPTIONS.map(({ value, label }) => (

@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMyCourses } from "@/features/course/hooks/useMyCourses";
 import { useFavoriteStats } from "@/features/mypage/hooks/useFavoriteStats";
 import { useFavoritesList } from "@/features/spot/hooks/useFavorites";
+import { useFavoritePlaceImages } from "@/features/mypage/hooks/useFavoritePlaceImages";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
@@ -330,6 +331,8 @@ function FavoritePlacesSection() {
   const { data: favorites, isLoading } = useFavoritesList();
   const { data: stats } = useFavoriteStats();
   const items = favorites ?? [];
+  const shown = items.slice(0, FAVORITE_PLACES_LIMIT);
+  const images = useFavoritePlaceImages(shown);
 
   return (
     <motion.section {...sectionRise} className="rounded-[28px] bg-white p-6 ring-1 ring-gray-100 md:p-7">
@@ -352,7 +355,8 @@ function FavoritePlacesSection() {
         <EmptyBlock icon={Heart} text="아직 찜한 장소가 없어요" href="/spot" cta="스팟 구경하러 가기" />
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3">
-          {items.slice(0, FAVORITE_PLACES_LIMIT).map((item) => {
+          {shown.map((item) => {
+            const imageUrl = images.get(item.mapPlaceId);
             const category =
               item.category && item.category in CATEGORY_META
                 ? CATEGORY_META[item.category as keyof typeof CATEGORY_META]
@@ -365,9 +369,9 @@ function FavoritePlacesSection() {
                 href={`/spot?keyword=${encodeURIComponent(item.name)}`}
                 className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-navy-700 to-ocean-600"
               >
-                {item.imageUrl ? (
+                {imageUrl ? (
                   <Image
-                    src={item.imageUrl}
+                    src={imageUrl}
                     alt={item.name}
                     fill
                     sizes="(max-width: 1024px) 50vw, 280px"
