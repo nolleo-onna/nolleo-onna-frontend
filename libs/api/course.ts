@@ -176,6 +176,26 @@ const GENERATE_ERROR_MESSAGE: Record<string, string> = {
 };
 
 /**
+ * 서버 원문 메시지는 화면에 절대 내보내지 않는다.
+ * 엔드포인트가 아직 배포되지 않으면 스프링이 "No static resource api/v1/courses." 같은
+ * 내부 메시지를 404로 내려주는데, 그게 그대로 사용자에게 보이면 자기 입력이 잘못된 줄 안다.
+ * 원문은 콘솔에만 남기고, 화면에는 우리가 쓴 문구만 쓴다.
+ */
+function generateErrorMessage(status: number, errorCode: string): string {
+  const known = GENERATE_ERROR_MESSAGE[errorCode];
+  if (known) return known;
+
+  // 404 = 이 경로에 매핑된 API가 없음 (백엔드 미배포). 사용자가 다시 눌러도 소용없다.
+  if (status === 404 || status === 501) {
+    return "코스 만들기 기능이 아직 서버에 준비되지 않았어요. 잠시 뒤 다시 시도해주세요";
+  }
+  if (status >= 500) {
+    return "서버에 문제가 생겨 코스를 만들지 못했어요. 잠시 뒤 다시 시도해주세요";
+  }
+  return "코스를 만들지 못했어요. 잠시 뒤 다시 시도해주세요";
+}
+
+/**
  * 폼(지역·예산·꼭 포함 장소·축제)으로 코스를 한 번에 만든다.
  * AI를 거치지 않아 일일 제한이 없고 보통 1초 안에 응답한다 — 챗봇 같은 긴 로딩 UI가 필요 없다.
  * 못 찾은 장소·축제는 에러가 아니라 응답의 unmatched로 오고 생성은 그대로 진행된다.
@@ -192,11 +212,9 @@ export async function generateCourse(body: CourseGenerateRequest): Promise<Cours
       .then((json: ApiErrorResponse | null) => json)
       .catch(() => null);
     const code = error?.errorCode ?? "UNKNOWN";
-    throw new CourseGenerateError(
-      GENERATE_ERROR_MESSAGE[code] ?? error?.message ?? "코스를 만들지 못했어요. 잠시 후 다시 시도해주세요",
-      res.status,
-      code,
-    );
+    // 원문은 개발자가 원인을 찾을 수 있게 콘솔에만 남긴다
+    console.error("[generateCourse] 실패", { status: res.status, errorCode: code, message: error?.message });
+    throw new CourseGenerateError(generateErrorMessage(res.status, code), res.status, code);
   }
 
   const json: ApiResponse<CourseGenerateResult> = await res.json();
