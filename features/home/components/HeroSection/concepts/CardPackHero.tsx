@@ -36,11 +36,47 @@ import type { PanInfo } from "motion/react";
 const T = "https://tong.visitkorea.or.kr/cms/resource/";
 
 type KindKey = "cafe" | "food" | "sea" | "night";
-const KINDS: Record<KindKey, { icon: LucideIcon; frame: string; ring: string; energy: string }> = {
-  cafe: { icon: Coffee, frame: "from-amber-200 via-yellow-50 to-amber-300", ring: "ring-amber-300", energy: "bg-amber-500" },
-  food: { icon: UtensilsCrossed, frame: "from-rose-300 via-orange-50 to-rose-400", ring: "ring-rose-300", energy: "bg-rose-500" },
-  sea: { icon: Waves, frame: "from-sky-300 via-cyan-50 to-sky-400", ring: "ring-sky-300", energy: "bg-sky-500" },
-  night: { icon: MoonStar, frame: "from-indigo-300 via-violet-50 to-indigo-400", ring: "ring-indigo-300", energy: "bg-indigo-500" },
+/**
+ * 카드 종류별 색.
+ * frame은 카드 테두리(실제 카드처럼 진하게), chip은 가격 배지, caption은 코스 설명 띠.
+ * 파스텔로 흐리게 두면 흰 카드 위에서 테두리인지 얼룩인지 구분이 안 돼서 채도를 올렸다.
+ */
+const KINDS: Record<
+  KindKey,
+  { icon: LucideIcon; frame: string; ring: string; energy: string; chip: string; caption: string }
+> = {
+  cafe: {
+    icon: Coffee,
+    frame: "from-amber-400 via-amber-200 to-orange-500",
+    ring: "ring-amber-400",
+    energy: "bg-amber-500",
+    chip: "bg-amber-500 text-white",
+    caption: "bg-amber-100 text-amber-900",
+  },
+  food: {
+    icon: UtensilsCrossed,
+    frame: "from-rose-400 via-rose-200 to-red-500",
+    ring: "ring-rose-400",
+    energy: "bg-rose-500",
+    chip: "bg-rose-500 text-white",
+    caption: "bg-rose-100 text-rose-900",
+  },
+  sea: {
+    icon: Waves,
+    frame: "from-sky-400 via-cyan-200 to-blue-500",
+    ring: "ring-sky-400",
+    energy: "bg-sky-500",
+    chip: "bg-sky-500 text-white",
+    caption: "bg-sky-100 text-sky-900",
+  },
+  night: {
+    icon: MoonStar,
+    frame: "from-indigo-400 via-violet-300 to-indigo-600",
+    ring: "ring-indigo-400",
+    energy: "bg-indigo-500",
+    chip: "bg-indigo-500 text-white",
+    caption: "bg-indigo-100 text-indigo-900",
+  },
 };
 
 interface CourseCard {
@@ -123,8 +159,12 @@ function Marquee() {
   );
 }
 
-/** 홀로그램 광택 — 무지개 띠가 카드 위를 천천히 오간다 */
-function HoloSheen({ strong = false }: { strong?: boolean }) {
+/**
+ * 홀로그램 광택 — 무지개 띠가 카드 위를 천천히 오간다.
+ * 어두운 면 위에서는 color-dodge가 확 타서 면 전체가 보라로 물든다.
+ * 그럴 땐 opacity로 세기를 직접 낮춰 "쓸고 지나가는 광택"으로 보이게 한다.
+ */
+function HoloSheen({ strong = false, opacity }: { strong?: boolean; opacity?: number }) {
   const reduceMotion = useReducedMotion();
   const pos = useMotionValue(30);
   const backgroundPosition = useMotionTemplate`${pos}% ${pos}%`;
@@ -146,7 +186,7 @@ function HoloSheen({ strong = false }: { strong?: boolean }) {
           backgroundSize: "260% 260%",
           backgroundPosition,
           mixBlendMode: "color-dodge",
-          opacity: strong ? 0.85 : 0.45,
+          opacity: opacity ?? (strong ? 0.85 : 0.45),
         }}
       />
       {strong && (
@@ -164,55 +204,57 @@ function NormalCard({ card }: { card: CourseCard }) {
   const kind = KINDS[card.kind as KindKey];
   const Icon = kind.icon;
   return (
-    <div className={`h-full w-full rounded-[18px] bg-gradient-to-br p-[7px] shadow-[0_18px_40px_-16px_rgba(5,12,26,0.55)] ${kind.frame}`}>
-      <div className="flex h-full flex-col rounded-[12px] bg-white/85 px-2.5 pb-1.5 pt-2 text-left">
-        <div className="flex items-end justify-between gap-1">
+    <div
+      className={`h-full w-full rounded-[18px] bg-gradient-to-br p-[6px] shadow-[0_20px_44px_-18px_rgba(5,12,26,0.7)] ring-1 ring-inset ring-white/50 ${kind.frame}`}
+    >
+      <div className="relative flex h-full flex-col overflow-hidden rounded-[13px] bg-[#fcfcfe] px-2.5 pb-2 pt-2 text-left ring-1 ring-inset ring-black/[0.07]">
+        {/* 레어도 — 예전엔 맨 아래 줄에 파묻혀 안 보였다. 카드 모서리로 올린다 */}
+        <span className="absolute right-2 top-1.5 text-[9px] font-black tracking-tighter text-navy-900/25">
+          {RARITY_MARK[card.rarity]}
+        </span>
+
+        <div className="flex items-end justify-between gap-1.5 pr-4">
           <div className="min-w-0">
-            <p className="text-[9px] font-bold text-gray-500">{card.area}</p>
-            <p className="truncate text-[15px] font-extrabold leading-tight text-navy-900">{card.title}</p>
+            <p className="text-[8.5px] font-bold tracking-[0.08em] text-gray-400">{card.area}</p>
+            <p className="truncate text-[16px] font-extrabold leading-tight tracking-tight text-navy-900">
+              {card.title}
+            </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <span className="text-[9px] font-bold text-gray-500">1인</span>
-            <span className="text-[15px] font-extrabold tabular-nums text-navy-900">{card.price}</span>
-            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-white ${kind.energy}`}>
-              <Icon className="h-3 w-3" />
-            </span>
+          {/* 가격·종류를 배지 하나로 합쳤다 — 예전엔 "1인"·금액·아이콘이 따로 놀았다 */}
+          <div className={`flex shrink-0 items-center gap-1 rounded-full px-1.5 py-[3px] ${kind.chip}`}>
+            <Icon className="h-3 w-3" />
+            <span className="text-[12.5px] font-extrabold tabular-nums">{card.price}</span>
           </div>
         </div>
 
-        <div className={`relative mt-1.5 h-[100px] shrink-0 overflow-hidden rounded-[6px] ring-[3px] md:h-[116px] ${kind.ring}`}>
+        <div className={`relative mt-2 h-[104px] shrink-0 overflow-hidden rounded-[9px] ring-2 md:h-[120px] ${kind.ring}`}>
           <Image src={card.photo} alt="" fill sizes="360px" draggable={false} className="object-cover" />
+          {/* 사진이 프레임 안에 들어앉아 보이게 하는 안쪽 그림자 */}
+          <div aria-hidden className="absolute inset-0 shadow-[inset_0_2px_10px_rgba(0,0,0,0.28)]" />
           {card.rarity === 3 && <HoloSheen />}
         </div>
-        <p className={`mt-1 rounded-[4px] bg-gradient-to-r px-1.5 py-0.5 text-center text-[9px] font-bold italic text-navy-900/80 ${kind.frame}`}>
+
+        <p className={`mt-1.5 rounded-[5px] px-2 py-[3px] text-center text-[9px] font-bold tracking-wide ${kind.caption}`}>
           No.{card.no} · {card.caption}
         </p>
 
-        <ul className="mt-0.5 min-h-0 flex-1">
+        {/* 행마다 flex-1 — 남는 세로 공간을 고르게 나눠 가져서 마지막 줄 아래가 휑해지지 않는다 */}
+        <ul className="mt-1 flex min-h-0 flex-1 flex-col">
           {card.stops.map(([name, time]) => (
-            <li key={name} className="flex items-center gap-1.5 border-b border-gray-200 py-1 last:border-0">
-              <span className={`h-3 w-3 shrink-0 rounded-full ring-2 ring-white ${kind.energy}`} />
+            <li key={name} className="flex flex-1 items-center gap-1.5 border-b border-gray-100 last:border-0">
+              <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${kind.energy}`} />
               <span className="flex-1 truncate text-[11.5px] font-bold text-navy-900">{name}</span>
-              <span className="text-[11px] font-extrabold tabular-nums text-navy-900">{time}</span>
+              <span className="text-[10.5px] font-extrabold tabular-nums text-gray-400">{time}</span>
             </li>
           ))}
         </ul>
 
-        <div className="grid grid-cols-3 border-t border-gray-300 pt-1 text-center">
-          {[
-            ["동행", card.with],
-            ["거리", card.distance],
-            ["혼잡", card.crowd],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <p className="text-[8px] font-semibold text-gray-500">{label}</p>
-              <p className="text-[10px] font-bold text-navy-900">{value}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-0.5 flex items-center justify-between text-[8px] font-bold text-gray-500">
-          <span className="tabular-nums">{card.no}/005 · 예시</span>
-          <span>{RARITY_MARK[card.rarity]}</span>
+        {/* 예전엔 3칸 표 + 별도 하단 줄로 두 겹이었다. 한 줄로 합쳐 카드가 스펙시트처럼 안 보이게 */}
+        <div className="flex items-center justify-between border-t border-gray-200 pt-1.5 text-[9px] font-bold text-gray-500">
+          <span className="truncate">
+            {card.with} · {card.distance} · {card.crowd}
+          </span>
+          <span className="shrink-0 tabular-nums text-gray-300">{card.no}/005</span>
         </div>
       </div>
     </div>
@@ -222,19 +264,21 @@ function NormalCard({ card }: { card: CourseCard }) {
 /** 레어 카드 — 사진이 카드 전체를 채우는 풀아트 + 강한 홀로 */
 function RareCard({ card }: { card: CourseCard }) {
   return (
-    <div className="h-full w-full rounded-[18px] bg-gradient-to-br from-yellow-200 via-pink-200 to-cyan-200 p-[7px] shadow-[0_24px_60px_-18px_rgba(255,190,80,0.85)]">
-      <div className="relative h-full w-full overflow-hidden rounded-[12px]">
+    <div className="h-full w-full rounded-[18px] bg-gradient-to-br from-amber-300 via-yellow-100 to-amber-500 p-[6px] shadow-[0_26px_64px_-16px_rgba(245,175,60,0.9)] ring-1 ring-inset ring-white/60">
+      <div className="relative h-full w-full overflow-hidden rounded-[13px] ring-1 ring-inset ring-black/20">
         <Image src={card.photo} alt="" fill sizes="360px" draggable={false} className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/85" />
         <HoloSheen strong />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5 text-left text-white">
           <div className="min-w-0">
-            <p className="text-[9px] font-bold text-white/80">{card.area}</p>
-            <p className="text-[16px] font-extrabold leading-tight drop-shadow">{card.title}</p>
+            <p className="text-[8.5px] font-bold tracking-[0.08em] text-white/75">{card.area}</p>
+            <p className="text-[17px] font-black leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+              {card.title}
+            </p>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[9px] font-bold text-white/80">1인</p>
-            <p className="text-[16px] font-extrabold tabular-nums">{card.price}</p>
+          <div className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400 px-1.5 py-[3px] text-navy-900">
+            <Sparkles className="h-3 w-3" />
+            <span className="text-[12.5px] font-extrabold tabular-nums">{card.price}</span>
           </div>
         </div>
         <div className="absolute inset-x-0 bottom-0 p-2.5 text-left text-white">
@@ -280,8 +324,13 @@ function Pack({ onOpen }: { onOpen: () => void }) {
   const cutWidth = useTransform(cut, (v) => `calc(${v * 100}% - ${v * 16}px)`);
   const [torn, setTorn] = useState(false);
 
+  // torn은 애니메이션이 끝나야 true가 돼서, 그 사이에 tear()가 또 불리면
+  // onOpen 타이머가 두 번 걸린다. 시작 시점에 바로 잠근다.
+  const tearingRef = useRef(false);
+
   const tear = () => {
-    if (torn) return;
+    if (torn || tearingRef.current) return;
+    tearingRef.current = true;
     animate(cut, 1, {
       duration: 0.22,
       ease: "easeOut",
@@ -318,57 +367,73 @@ function Pack({ onOpen }: { onOpen: () => void }) {
         whileHover={torn ? undefined : { scale: 1.03 }}
         onPan={handlePan}
         onPanEnd={handlePanEnd}
-        onTap={() => cut.get() < 0.05 && tear()}
+        // 예전엔 cut이 0에 가까울 때만 뜯었는데, 클릭이 미세한 pan으로 잡히면
+        // cut이 남아 있어서 눌러도 안 뜯겼다. 이제 누르면 항상 뜯긴다(중복은 tear가 막는다).
+        onTap={() => tear()}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && tear()}
       >
         {/* 뜯겨 나가는 윗부분 */}
         <motion.div
-          className="absolute inset-x-0 top-0 z-10 flex h-[16%] items-center justify-center overflow-hidden rounded-t-[16px] bg-gradient-to-r from-lime-300 via-cyan-200 to-sky-300"
+          className="absolute inset-x-0 top-0 z-10 flex h-[16%] items-center justify-center overflow-hidden rounded-t-[16px] bg-gradient-to-b from-[#1c2745] to-[#0e1628] ring-1 ring-inset ring-white/10"
           animate={torn ? { y: -110, x: 70, rotate: 24, opacity: 0 } : { y: 0, x: 0, rotate: 0, opacity: 1 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
         >
-          <div className="absolute inset-x-0 top-0 h-2 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.7)_0_2px,transparent_2px_6px)]" />
-          <span className="text-[13px] font-extrabold tracking-[0.18em] text-navy-900/70">TEAR HERE</span>
+          {/* 포일을 접어 눌러 붙인 윗단 — 가는 밝은 선 + 압착 자국 */}
+          <div aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-white/45 to-transparent" />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-[7px] h-1.5 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.22)_0_2px,transparent_2px_7px)]"
+          />
+          <span className="mt-1.5 text-[11px] font-extrabold tracking-[0.34em] text-lime-300/85">TEAR HERE</span>
         </motion.div>
 
         {/* 팩 몸통 */}
         <motion.div
-          className="absolute inset-x-0 bottom-0 top-[16%] overflow-hidden rounded-b-[16px] bg-gradient-to-br from-navy-700 via-ocean-600 to-sky-400 shadow-[0_28px_60px_-24px_rgba(5,12,26,0.8)]"
+          className="absolute inset-x-0 bottom-0 top-[16%] overflow-hidden rounded-b-[16px] bg-gradient-to-b from-[#17223f] via-[#0a1123] to-[#111b33] shadow-[0_34px_72px_-26px_rgba(3,8,20,0.95)] ring-1 ring-inset ring-white/10"
           animate={torn ? { y: 80, opacity: 0, scale: 0.94 } : { y: 0, opacity: 1, scale: 1 }}
           transition={{ duration: 0.45, delay: torn ? 0.18 : 0 }}
         >
-          <div className="absolute inset-0 opacity-35 mix-blend-luminosity">
-            <Image src={CARDS[4].photo} alt="" fill sizes="360px" draggable={false} className="object-cover" />
-          </div>
-          <HoloSheen strong />
-          <div className="relative flex h-full flex-col items-center justify-between px-5 pb-5 pt-6 text-center text-white">
-            <p className="text-[13px] font-extrabold tracking-[0.22em] text-lime-300">NOLLEO ONNA</p>
+          {/* 포일 결 — 반투명 사진을 깔면 탁해 보여서, 결이 있는 어두운 면으로 바꿨다 */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: "repeating-linear-gradient(115deg, rgba(255,255,255,0.9) 0 1px, transparent 1px 7px)" }}
+          />
+          {/* 엠블럼 뒤에서 번지는 라임 발광 */}
+          <div aria-hidden className="absolute left-1/2 top-[38%] h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime-300/20 blur-3xl" />
+          {/* 어두운 남색 위라 기본 세기(0.85)면 면 전체가 보라로 타버린다 */}
+          <HoloSheen strong opacity={0.3} />
+          {/* 왼쪽 위에서 들어오는 빛 — 평평한 사각형이 아니라 물체로 보이게 */}
+          <div aria-hidden className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),transparent_42%)]" />
+
+          <div className="relative flex h-full flex-col items-center justify-between px-5 pb-6 pt-6 text-center text-white">
+            <p className="text-[11px] font-extrabold tracking-[0.36em] text-white/55">NOLLEO ONNA</p>
             <div>
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/40 backdrop-blur-sm">
+              <div className="mx-auto flex h-[84px] w-[84px] items-center justify-center rounded-full bg-white/10 ring-1 ring-white/25 backdrop-blur-sm">
                 <AssistantAvatar size={58} />
               </div>
-              <p className="mt-4 text-[28px] font-extrabold leading-tight break-keep drop-shadow">
+              <p className="mt-5 text-[30px] font-black leading-[1.15] tracking-tight break-keep drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]">
                 오늘의
                 <br />
                 부산 코스 팩
               </p>
-              <p className="mt-1.5 text-[14px] font-semibold text-white/85">코스 카드 5장 · 레어 1장 확정</p>
             </div>
-            <div className="flex gap-1.5">
-              {[Coffee, UtensilsCrossed, Waves, MoonStar].map((Icon, i) => (
-                <span key={i} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                  <Icon className="h-4 w-4" />
-                </span>
-              ))}
-            </div>
+            {/* 아이콘 4개를 늘어놓는 대신 한 줄 배지로 — 앞면 글자를 줄인다 */}
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-lime-300/15 px-3 py-1 text-[12px] font-bold text-lime-300 ring-1 ring-inset ring-lime-300/30">
+              <Sparkles className="h-3.5 w-3.5" />5장 · 레어 1장 확정
+            </p>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-2 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.45)_0_2px,transparent_2px_6px)]" />
+          {/* 아래쪽 포일 압착선 */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 h-1.5 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.2)_0_2px,transparent_2px_7px)]"
+          />
         </motion.div>
 
         {/* 뜯는 선 — 민 만큼 빛난다 */}
         {!torn && (
           <>
-            <div className="absolute inset-x-2 top-[16%] z-20 border-t-2 border-dashed border-white/80" />
+            <div className="absolute inset-x-2 top-[16%] z-20 border-t-2 border-dashed border-white/35" />
             <motion.div
               className="absolute left-2 top-[16%] z-20 h-[3px] -translate-y-[2px] rounded-full bg-lime-300 shadow-[0_0_14px_4px_rgba(200,241,53,0.9)]"
               style={{ width: cutWidth }}
