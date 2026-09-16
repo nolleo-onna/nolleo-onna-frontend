@@ -2,6 +2,8 @@ import { clientFetch } from "@/libs/clientFetch";
 import type {
   ApiErrorResponse,
   ApiResponse,
+  CourseGenerateRequest,
+  CourseGenerateResult,
   CourseResponse,
   CourseLikeToggleResult,
   CourseUpdateRequest,
@@ -152,4 +154,51 @@ export async function fetchPopularCourses(size = 6): Promise<PopularCourse[]> {
   if (!res.ok) throw new Error("인기 코스를 불러오지 못했어요");
   const json: ApiResponse<PopularCourse[]> = await res.json();
   return json.data ?? [];
+}
+
+/** 폼 코스 생성 실패. errorCode로 어느 칸이 잘못됐는지 구분한다 */
+export class CourseGenerateError extends Error {
+  readonly status: number;
+  readonly errorCode: string;
+
+  constructor(message: string, status: number, errorCode: string) {
+    super(message);
+    this.name = "CourseGenerateError";
+    this.status = status;
+    this.errorCode = errorCode;
+  }
+}
+
+const GENERATE_ERROR_MESSAGE: Record<string, string> = {
+  UNKNOWN_START_AREA: "아직 코스를 만들 수 없는 지역이에요. 다른 지역을 골라주세요",
+  NO_SPOT_CANDIDATES: "이 근처에서 담을 만한 장소를 찾지 못했어요. 다른 지역으로 해볼까요?",
+  INVALID_REQUEST: "입력 내용을 확인해주세요",
+};
+
+/**
+ * 폼(지역·예산·꼭 포함 장소·축제)으로 코스를 한 번에 만든다.
+ * AI를 거치지 않아 일일 제한이 없고 보통 1초 안에 응답한다 — 챗봇 같은 긴 로딩 UI가 필요 없다.
+ * 못 찾은 장소·축제는 에러가 아니라 응답의 unmatched로 오고 생성은 그대로 진행된다.
+ */
+export async function generateCourse(body: CourseGenerateRequest): Promise<CourseGenerateResult> {
+  const res = await clientFetch("/api/v1/courses", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .then((json: ApiErrorResponse | null) => json)
+      .catch(() => null);
+    const code = error?.errorCode ?? "UNKNOWN";
+    throw new CourseGenerateError(
+      GENERATE_ERROR_MESSAGE[code] ?? error?.message ?? "코스를 만들지 못했어요. 잠시 후 다시 시도해주세요",
+      res.status,
+      code,
+    );
+  }
+
+  const json: ApiResponse<CourseGenerateResult> = await res.json();
+  return json.data;
 }
