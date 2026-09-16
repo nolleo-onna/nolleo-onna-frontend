@@ -1,11 +1,9 @@
 import Modal from "@/components/ui/Modal";
+import { COURSE_START_AREAS } from "@/constants/course";
 
-const REGIONS = [
-  "해운대", "광안리", "서면", "영도",
-  "전포", "남포", "기장", "동래",
-  "중구", "부산진구", "북구", "사하구",
-  "강서구", "연제구", "수영구", "사상구",
-];
+// 코스 생성 API가 받는 지역과 정확히 같아야 한다. 목록에 없는 값(예: "사상구")을
+// 보내면 서버가 UNKNOWN_START_AREA로 막는다.
+const REGIONS = COURSE_START_AREAS;
 
 type Props = {
   isOpen: boolean;

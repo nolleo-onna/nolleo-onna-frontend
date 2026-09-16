@@ -129,3 +129,61 @@ export interface PopularCourse {
   likeCount: number;
   createdAt: string;
 }
+
+// ── 폼 코스 생성 (POST /api/v1/courses) ────────────────────
+// 챗봇과 달리 AI를 거치지 않아 일일 제한이 없고 보통 1초 안에 응답한다.
+
+/** 예산 등급. 생략·null이면 서버가 UNLIMITED로 본다 */
+export type CourseBudgetTier = "NONE" | "UNDER_10K" | "UNDER_30K" | "UNDER_50K" | "UNLIMITED";
+
+export interface CourseGenerateRequest {
+  /** 시작 지역. constants/course의 COURSE_START_AREAS 중 하나여야 한다 */
+  startArea: string;
+  budget?: CourseBudgetTier;
+  /** 꼭 포함할 장소명. 최대 5개, 각 1~50자 */
+  includeSpots?: string[];
+  /** 축제·행사명. 최대 50자. 찾으면 축제 좌표가 코스 검색 중심이 된다 */
+  festival?: string;
+}
+
+export interface CourseGenerateMatchedSpot {
+  /** 사용자가 입력한 이름 */
+  name: string;
+  /** 데이터에서 찾은 실제 제목 */
+  matchedTitle: string;
+  contentId: string;
+}
+
+export interface CourseGenerateMatchedFestival {
+  name: string;
+  matchedTitle: string;
+  /** 행사 기간 "M.d~M.d". 종료일이 없으면 "11.1~" */
+  period: string;
+}
+
+/** 서버가 실제로 적용한 조건 — 입력과 다를 수 있다 */
+export interface CourseGenerateApplied {
+  /** 축제를 찾았으면 축제 위치에 가장 가까운 지원 지역으로 바뀐다 */
+  startArea: string;
+  budget: {
+    tier: CourseBudgetTier;
+    /** true면 예산 상한 안에서 식사·카페를 다 못 채워 상한을 풀고 채웠다 */
+    filterRelaxed: boolean;
+  };
+  includeSpots: CourseGenerateMatchedSpot[];
+  festival: CourseGenerateMatchedFestival | null;
+}
+
+/** 찾지 못해 생성에서 빠진 입력. 에러가 아니라 생성은 정상 진행된다 */
+export interface CourseGenerateUnmatched {
+  includeSpots: string[];
+  festival: string | null;
+}
+
+export interface CourseGenerateResult {
+  pairId: string;
+  /** GET /api/v1/courses/{pairId}와 같은 구조. 현재 1개 */
+  courses: CourseResponse[];
+  applied: CourseGenerateApplied;
+  unmatched: CourseGenerateUnmatched;
+}

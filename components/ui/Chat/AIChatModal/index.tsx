@@ -9,6 +9,7 @@ import { backdropMotion, launchContent, launchPanel } from '@/components/ui/Chat
 import type { ChatMessage } from '@/hooks/useAIChat';
 import AssistantAvatar from '@/components/ui/Chat/AssistantAvatar';
 import { ASSISTANT_NAME, ASSISTANT_TAGLINE } from '@/constants/assistant';
+import { CHAT_DAILY_LIMIT, CHAT_TURNS_PER_CONVERSATION } from '@/constants/course';
 
 const INPUT_LINE = 22;
 const INPUT_MAX = 88;
@@ -59,6 +60,11 @@ function Intro({ onPick }: { onPick: (text: string) => void }) {
         ))}
       </div>
       <p className="mt-4 text-[12px] text-gray-400 break-keep">지역은 꼭 알려주세요 · 예산·동행·분위기를 더하면 더 정확해요</p>
+      <p className="mt-1.5 text-[11px] text-gray-400 break-keep">
+        대화로 만드는 코스는 하루 {CHAT_DAILY_LIMIT}번까지예요 (한 대화에 질문 {CHAT_TURNS_PER_CONVERSATION}번)
+        <br />
+        검색바에서 만들면 횟수 제한 없이 만들 수 있어요
+      </p>
     </div>
   );
 }
@@ -298,6 +304,10 @@ export function AIChatModal({
                   <AssistantAvatar size={34} />
                   <p className="mt-1 text-[13px] font-semibold leading-none text-gray-900">{ASSISTANT_NAME}</p>
                   <p className="mt-1 text-[11px] leading-none text-gray-400">{ASSISTANT_TAGLINE}</p>
+                  {/* 서버가 막기 전에 미리 알려준다 — 초과하면 LIMIT_EXCEEDED 말풍선이 뜬다 */}
+                  <p className="mt-1.5 rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-medium leading-none text-gray-500">
+                    하루 {CHAT_DAILY_LIMIT}번 · 한 대화에 질문 {CHAT_TURNS_PER_CONVERSATION}번까지
+                  </p>
                   <button
                     type="button"
                     onClick={onClose}
