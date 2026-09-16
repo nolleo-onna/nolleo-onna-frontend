@@ -1,15 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  CourseGenerateError,
   CourseUpdateError,
   fetchPopularCourses,
   fetchSharedCourse,
+  generateCourse,
   toggleSharedCourseLike,
   updateCourse,
   updateCourseVisibility,
 } from "./course";
 
-import type { CourseUpdateRequest } from "@/types/course";
+import type { CourseGenerateRequest, CourseUpdateRequest } from "@/types/course";
 
 const body: CourseUpdateRequest = {
   title: "광안리 바다 산책",
@@ -133,5 +135,71 @@ describe("toggleSharedCourseLike", () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("https://api.test.local/api/v1/courses/shared/tok-1/likes/toggle");
     expect(init.method).toBe("POST");
+  });
+});
+
+describe("generateCourse", () => {
+  const form: CourseGenerateRequest = { startArea: "센텀", budget: "NONE" };
+
+  it("POST /courses로 폼을 보내고 data를 돌려준다", async () => {
+    const result = { pairId: "p1", courses: [], applied: {}, unmatched: {} };
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: result });
+
+    await expect(generateCourse(form)).resolves.toEqual(result);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.test.local/api/v1/courses");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(form);
+  });
+
+  it("아는 errorCode는 우리 문구로 바꾼다", async () => {
+    mockFetch(400, { status: 400, errorCode: "UNKNOWN_START_AREA", message: "unsupported area" });
+
+    await expect(generateCourse(form)).rejects.toMatchObject({
+      status: 400,
+      errorCode: "UNKNOWN_START_AREA",
+      message: expect.stringContaining("다른 지역"),
+    });
+  });
+
+  it("엔드포인트가 아직 배포되지 않아 404가 오면 서버 원문 대신 준비 중 안내를 보여준다", async () => {
+    // 스프링이 매핑을 못 찾으면 이 문구를 404로 내려준다 — 그대로 노출되면 사용자가 자기 입력 탓을 한다
+    mockFetch(404, { status: 404, message: "No static resource api/v1/courses." });
+
+    const error = await generateCourse(form).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(CourseGenerateError);
+    expect((error as CourseGenerateError).message).not.toContain("static resource");
+    expect((error as CourseGenerateError).message).toContain("준비되지 않았어요");
+  });
+
+  it("5xx도 서버 원문을 노출하지 않는다", async () => {
+    mockFetch(500, { status: 500, message: "NullPointerException at CourseService.java:142" });
+
+    const error = await generateCourse(form).catch((e: unknown) => e);
+
+    expect((error as CourseGenerateError).message).not.toContain("NullPointerException");
+    expect((error as CourseGenerateError).message).toContain("서버에 문제");
+  });
+
+  it("에러 응답이 JSON이 아니어도 우리 문구로 떨어진다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        status: 502,
+        ok: false,
+        json: async () => {
+          throw new Error("not json");
+        },
+      }),
+    );
+    vi.stubGlobal("window", { location: { pathname: "/", search: "", href: "" } });
+
+    await expect(generateCourse(form)).rejects.toMatchObject({
+      status: 502,
+      errorCode: "UNKNOWN",
+      message: expect.stringContaining("서버에 문제"),
+    });
   });
 });
