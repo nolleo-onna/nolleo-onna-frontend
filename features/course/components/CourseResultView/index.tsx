@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
 import CourseSidebar from "@/features/course/components/CourseSidebar";
+import CourseNoticeToasts from "@/features/course/components/CourseNoticeToasts";
 import CoursePlaceDetail from "@/features/course/components/CoursePlaceDetail";
 import SpotDetailModal from "@/features/spot/components/SpotDetailModal";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
@@ -349,6 +350,9 @@ export default function CourseResultView() {
 
   return (
     <>
+      {/* 폼 생성 시 요청과 다르게 적용된 조건 안내 (축제 위치로 바뀐 지역, 못 찾은 장소 등) */}
+      <CourseNoticeToasts pairId={pairId} />
+
       <div className="flex h-screen flex-col pt-16">
         {/* 모바일: 지도 위 + 타임라인 아래(편집 시 지도 대신 추가 패널) / lg: 가로 3컬럼 */}
         <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
