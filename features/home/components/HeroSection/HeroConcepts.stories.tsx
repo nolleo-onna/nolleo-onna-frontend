@@ -40,7 +40,7 @@ export const AChatDemo: Story = { name: "A · 말하면 코스가 나오는 대�
 
 export const BRouteMap: Story = { name: "B · 지도 위에 그려지는 코스", render: () => <RouteDrawHero /> };
 
-export const CCardPack: Story = { name: "C · 카드팩 뜯기 (포켓몬 카드처럼)", render: () => <CardPackHero /> };
+export const CCardPack: Story = { name: "C · 오늘의 코스 팩", render: () => <CardPackHero /> };
 
 export const DSlot: Story = { name: "D · 오늘 뭐하지 슬롯머신", render: () => <SlotHero /> };
 

@@ -97,7 +97,7 @@ const LIVE_CHIPS = [
   { icon: Coffee, text: "전포 카페거리 한산" },
 ];
 
-/** 카드 디자인 원본 크기 — 실제 포켓몬 카드 비율(63:88) */
+/** 카드 디자인 원본 크기 — 실제 트레이딩 카드 비율(63:88) */
 const CARD_NATIVE = "h-[336px] w-[240px]";
 /** 원본을 통째로 키우는 배율 — 내부 px 값을 건드리지 않아 카드 안 비율이 그대로 유지된다 */
 const CARD_SCALE = "scale-[1.08] md:scale-[1.32]";
@@ -561,7 +561,7 @@ function Collection({ onReset }: { onReset: () => void }) {
 
 type Phase = "pack" | "cards" | "done";
 
-/** 시안 C — 포켓몬 카드 앱의 카드팩 개봉처럼: 팩 뜯기 → 한 장씩 넘기기 → 마지막 레어 → 펼쳐 보기 */
+/** 시안 C · 오늘의 코스 팩 — 카드팩을 뜯어 오늘 놀 코스를 뽑는다: 팩 뜯기 → 한 장씩 넘기기 → 마지막 레어 → 펼쳐 보기 */
 export default function CardPackHero() {
   const [phase, setPhase] = useState<Phase>("pack");
   const [round, setRound] = useState(0);
