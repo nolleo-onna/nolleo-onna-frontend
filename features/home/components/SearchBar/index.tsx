@@ -10,20 +10,17 @@ import {
   COURSE_BUDGET_OPTIONS,
   COURSE_INCLUDE_SPOTS_MAX,
   COURSE_PLACE_NAME_MAX,
-  courseBudgetAmount,
   normalizeStartArea,
 } from "@/constants/course";
 import { useAIChatContext } from "@/providers/AIChatProvider";
 import { SEARCHBAR_SELECTION_KEY } from "@/features/home/utils/searchBarSelection";
-import { CourseGenerateError, generateCourse } from "@/libs/api/course";
-import { saveCourseBudget } from "@/features/course/utils/budgetStorage";
-import { buildCourseNotices, saveCourseNotices } from "@/features/course/utils/courseNotices";
 import SuggestField, { type Suggestion } from "@/features/home/components/SearchBar/SuggestField";
 import {
   useDebouncedValue,
   useFestivalSuggestions,
   useSpotSuggestions,
 } from "@/features/home/hooks/useCourseFormSuggestions";
+import { useGenerateCourse } from "@/features/home/hooks/useGenerateCourse";
 import type { CourseBudgetTier } from "@/types/course";
 
 type Tab = "course" | "spot";
@@ -174,8 +171,7 @@ export default function SearchBar({ variant = "default" }: SearchBarProps) {
   const [festivalQuery, setFestivalQuery] = useState("");
   const [festival, setFestival] = useState<string | null>(null);
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { generate, isGenerating, error } = useGenerateCourse();
 
   const debouncedSpotQuery = useDebouncedValue(spotQuery);
   const debouncedFestivalQuery = useDebouncedValue(festivalQuery);
@@ -244,46 +240,9 @@ export default function SearchBar({ variant = "default" }: SearchBarProps) {
     setFestivalQuery("");
   };
 
-  // 검색 버튼 → 폼 그대로 코스 생성 (AI 호출 없음, 보통 1초 안에 끝난다)
-  const handleSearch = async () => {
-    if (isGenerating) return;
-    setError(null);
-    setIsGenerating(true);
-
-    try {
-      const result = await generateCourse({
-        startArea: selectedRegion,
-        budget: budgetTier,
-        ...(includeSpots.length > 0 ? { includeSpots } : {}),
-        ...(festival ? { festival } : {}),
-      });
-
-      const budget = courseBudgetAmount(result.applied.budget.tier);
-      if (budget !== undefined) saveCourseBudget(result.pairId, budget);
-
-      // 요청과 다르게 적용된 조건(축제 위치로 바뀐 지역, 못 찾은 장소 등)은
-      // 결과 화면에서 알려준다.
-      saveCourseNotices(
-        result.pairId,
-        buildCourseNotices({
-          requestedArea: selectedRegion,
-          applied: result.applied,
-          unmatched: result.unmatched,
-        }),
-      );
-
-      const budgetParam = budget !== undefined ? `&budget=${budget}` : "";
-      router.push(`/course/result?pairId=${result.pairId}${budgetParam}`);
-    } catch (err) {
-      // 401은 clientFetch가 이미 로그인 페이지로 보내는 중이라 여기서 더 알리지 않는다
-      setError(
-        err instanceof CourseGenerateError && err.status !== 401
-          ? err.message
-          : "코스를 만들지 못했어요. 잠시 후 다시 시도해주세요",
-      );
-      setIsGenerating(false);
-    }
-  };
+  // 검색 버튼 → 폼 그대로 코스 생성
+  const handleSearch = () =>
+    generate({ startArea: selectedRegion, budget: budgetTier, includeSpots, festival });
 
   const handleInteract = () => setHasInteracted(true);
   const spotsFull = includeSpots.length >= COURSE_INCLUDE_SPOTS_MAX;
