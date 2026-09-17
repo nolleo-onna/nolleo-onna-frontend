@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { fetchMapPlaces } from "../apis/map";
 import type { MapPlacesParams } from "@/types/map";
@@ -57,6 +57,10 @@ export const useMapPlaces = (search: MapPlacesSearchFilter = {}) => {
       return allPages.length;
     },
     staleTime: 1000 * 60 * 5,
+    // 검색어·필터가 바뀌어 쿼리 키가 새로 생겨도 결과가 올 때까지 이전 목록을 그대로 둔다.
+    // 이게 없으면 새 키마다 isLoading이 true가 되어 사이드바가 스켈레톤으로 바뀌고,
+    // 그 순간 검색 input까지 언마운트돼 한 글자 치자마자 입력이 끊겼다.
+    placeholderData: keepPreviousData,
   });
 
   return query;

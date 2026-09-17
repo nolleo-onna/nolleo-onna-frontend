@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { ChevronDown, Heart, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useFavoriteIds, useToggleFavorite } from "../hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
@@ -36,6 +37,8 @@ interface SpotListSidebarProps {
 }
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
+/** 검색어를 서버 조건으로 넘기기 전 기다리는 시간 */
+const SEARCH_DEBOUNCE_MS = 300;
 
 // 검색어와 일치한 부분을 강조해서 보여준다 (공백 차이 등으로 위치를 못 찾으면 그냥 이름만)
 function HighlightedName({ name, term, className }: { name: string; term: string | null; className: string }) {
@@ -71,9 +74,12 @@ export default function SpotListSidebar({
   const [search, setSearch] = useState(() => searchParams.get("keyword") ?? "");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
+  // input에는 치는 그대로 보여주고, 검색은 입력이 멎은 뒤의 값으로만 한다.
+  // 한 글자(한글은 자모 조합 단계)마다 서버 쿼리 키가 바뀌면 요청이 쏟아지고 목록이 계속 깜빡인다.
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
   // 지역(구/동네)·카테고리·무료·이름/초성을 한 번에 해석하는 검색 파이프라인.
   // 서버가 받는 조건(구·카테고리·이름)은 서버로 보내고, 나머지는 받은 결과에서 마저 거른다.
-  const parsed = useMemo(() => parseSearch(search), [search]);
+  const parsed = useMemo(() => parseSearch(debouncedSearch), [debouncedSearch]);
   const serverFilter = useMemo(() => toServerFilter(parsed), [parsed]);
   const { data, isLoading, isError, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useMapPlaces(serverFilter);
@@ -114,14 +120,15 @@ export default function SpotListSidebar({
   // 검색 결과가 바뀌면(타이핑 멈춘 뒤) 지도가 결과 위치로 이동하도록 좌표를 올려보낸다.
   // 검색어를 지웠을 때는 지도를 건드리지 않는다(사용자가 보던 화면 유지).
   useEffect(() => {
-    if (!onSearchResults || !search.trim()) return;
+    if (!onSearchResults || !debouncedSearch.trim()) return;
+    // 검색어는 이미 디바운스됐고, 여기선 뒤따라 도착하는 결과 페이지를 한 번에 모으는 짧은 여유만 둔다
     const timeout = setTimeout(() => {
       // 동네·구 검색은 중심 한 점으로 확대 이동, 그 외에는 결과 전체가 화면에 들어오게
       const coords = getMapCoords(parsed, places);
       if (coords.length > 0) onSearchResults(coords);
-    }, 450);
+    }, 150);
     return () => clearTimeout(timeout);
-  }, [search, parsed, places, onSearchResults]);
+  }, [debouncedSearch, parsed, places, onSearchResults]);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -146,7 +153,10 @@ export default function SpotListSidebar({
 
   const totalCount = data?.pages[0]?.totalElements ?? 0;
 
-  if (isLoading) {
+  // 전체 스켈레톤은 아무것도 입력하기 전 첫 로딩에만. 입력이 있으면 검색 input이 들어 있는
+  // 평소 화면을 유지하고 목록 자리에서 "찾는 중"을 보여준다 — 여기서 aside를 통째로 바꾸면
+  // input이 언마운트돼 포커스와 한글 조합이 끊긴다.
+  if (isLoading && !search) {
     return (
       <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-gray-100 bg-white">
         <div className="px-4 py-3 border-b border-gray-100">
@@ -303,7 +313,7 @@ export default function SpotListSidebar({
               {favoritesOnly ? "아직 찜한 곳이 없어요" : "검색 결과가 없어요"}
             </p>
             {(() => {
-              const suggestion = suggestPlaceName(search);
+              const suggestion = suggestPlaceName(debouncedSearch);
               return suggestion ? (
                 <button
                   onClick={() => setSearch(suggestion)}

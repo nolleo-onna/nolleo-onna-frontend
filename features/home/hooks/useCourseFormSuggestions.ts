@@ -1,26 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { useEvents } from "@/features/event/hooks/useEvents";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
 
+// 스팟 사이드바 검색도 같이 쓰게 되어 공용 훅으로 옮겼다
+export { useDebouncedValue } from "@/hooks/useDebouncedValue";
+
 const SUGGEST_LIMIT = 8;
-const DEBOUNCE_MS = 250;
-
-/** 한 글자 칠 때마다 요청하지 않도록 입력이 멎은 뒤에만 값을 넘긴다 */
-export function useDebouncedValue<T>(value: T, delay = DEBOUNCE_MS): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debounced;
-}
 
 export const courseSuggestKeys = {
   spots: (keyword: string) => ["mapPlaces", "suggest", keyword] as const,
