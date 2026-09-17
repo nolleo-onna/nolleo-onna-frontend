@@ -147,7 +147,16 @@ function SpotChips({ spots, onRemove }: { spots: string[]; onRemove: (name: stri
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
-export default function SearchBar() {
+interface SearchBarProps {
+  /**
+   * formOnly — 탭·"온나에게 물어보기" 헤더와 카드 테두리를 빼고 코스 조건 폼만 그린다.
+   * 채팅을 따로 크게 보여주는 히어로 안에 폼을 보조로 넣을 때 쓴다.
+   */
+  variant?: "default" | "formOnly";
+}
+
+export default function SearchBar({ variant = "default" }: SearchBarProps) {
+  const formOnly = variant === "formOnly";
   const router = useRouter();
   const { openChat } = useAIChatContext();
 
@@ -284,12 +293,17 @@ export default function SearchBar() {
       <div
         id="search-bar"
         onClick={handleInteract}
-        className={`w-full max-w-3xl mx-auto rounded-3xl border border-gray-100 bg-white
+        className={
+          formOnly
+            ? "w-full"
+            : `w-full max-w-3xl mx-auto rounded-3xl border border-gray-100 bg-white
                     shadow-[0_4px_24px_rgba(13,48,128,0.06)] p-5 ${
                       !hasInteracted ? "animate-wiggle" : ""
-                    }`}
+                    }`
+        }
       >
         {/* ── 상단: 탭 + AI 버튼 ── */}
+        {!formOnly && (
         <div className="flex items-center justify-between mb-4 gap-2">
           <div className="inline-flex bg-gray-50 rounded-xl p-1 gap-0.5">
             <button
@@ -320,9 +334,10 @@ export default function SearchBar() {
             {ASSISTANT_NAME}에게 물어보기
           </button>
         </div>
+        )}
 
         {/* ── 필드 ── */}
-        {activeTab === "course" && (
+        {(formOnly || activeTab === "course") && (
           <>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <FieldCard
