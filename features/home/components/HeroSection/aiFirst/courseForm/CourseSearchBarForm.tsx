@@ -3,11 +3,14 @@
 import { useId, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Loader2, MapPin, PartyPopper, Search, Sparkles, Star, Wallet, X } from "lucide-react";
+import { Check, Flame, Loader2, MapPin, PartyPopper, Plus, Sparkles, Star, Wallet, X } from "lucide-react";
 
 import { COURSE_BUDGET_LABEL, COURSE_INCLUDE_SPOTS_MAX, COURSE_PLACE_NAME_MAX } from "@/constants/course";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
-import { AreaPicker, BudgetPicker } from "./Pickers";
+import { useActiveFestivalPicks, useAreaSpotPicks } from "@/features/home/hooks/useCourseFormSuggestions";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import { areaGuideOf } from "./areaGuide";
+import { AreaTilePicker, BudgetPicker } from "./Pickers";
 import { useCourseFormState, type CourseSlot } from "./useCourseFormState";
 
 const SLOT_META: Record<CourseSlot, { label: string; icon: React.ReactNode; tint: string }> = {
@@ -16,6 +19,9 @@ const SLOT_META: Record<CourseSlot, { label: string; icon: React.ReactNode; tint
   festival: { label: "행사", icon: <PartyPopper />, tint: "bg-pink-50 text-pink-500" },
   spot: { label: "꼭 갈 곳", icon: <Star />, tint: "bg-amber-50 text-amber-500" },
 };
+
+// 꼭 갈 곳 추천의 분류 탭 — 코스에 자주 넣는 것만
+const PICK_CATEGORIES = [undefined, "FD", "NA", "VE"] as const;
 
 /** 검색어와 겹치는 부분을 굵게 — "이재" → **이재**모피자 본점 */
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -34,36 +40,35 @@ function Highlight({ text, query }: { text: string; query: string }) {
 interface ResultListProps {
   id: string;
   query: string;
-  suggestions: Suggestion[];
+  items: Suggestion[];
   isLoading: boolean;
   activeIndex: number;
   onHover: (i: number) => void;
   onPick: (s: Suggestion) => void;
   isPicked: (s: Suggestion) => boolean;
-  emptyHint: React.ReactNode;
   fallbackIcon: React.ReactNode;
+  /** 결과가 없을 때 한 줄 */
+  emptyMessage: string;
 }
 
-function ResultList({ id, query, suggestions, isLoading, activeIndex, onHover, onPick, isPicked, emptyHint, fallbackIcon }: ResultListProps) {
-  if (!query.trim()) return <div className="px-2 py-3 text-[13px] text-gray-400">{emptyHint}</div>;
-
-  if (suggestions.length === 0) {
+function ResultList({ id, query, items, isLoading, activeIndex, onHover, onPick, isPicked, fallbackIcon, emptyMessage }: ResultListProps) {
+  if (items.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-2 py-3 text-[13px] text-gray-400">
+      <div className="flex items-center gap-2 px-2 py-4 text-[13px] text-gray-400">
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" /> 찾는 중...
           </>
         ) : (
-          <>&lsquo;{query.trim()}&rsquo;와 비슷한 곳이 없어요 — 이름 일부만 쳐보세요</>
+          emptyMessage
         )}
       </div>
     );
   }
 
   return (
-    <ul id={id} role="listbox" className="grid max-h-[288px] gap-1 overflow-y-auto sm:grid-cols-2">
-      {suggestions.map((s, i) => {
+    <ul id={id} role="listbox" className="grid max-h-[300px] gap-1 overflow-y-auto sm:grid-cols-2">
+      {items.map((s, i) => {
         const picked = isPicked(s);
         return (
           <li key={s.id} role="option" aria-selected={i === activeIndex}>
@@ -76,26 +81,31 @@ function ResultList({ id, query, suggestions, isLoading, activeIndex, onHover, o
               }}
               onMouseEnter={() => onHover(i)}
               className={`flex w-full items-center gap-3 rounded-2xl p-2 text-left transition-colors ${
-                i === activeIndex ? "bg-gray-100" : ""
+                picked ? "bg-ocean-50" : i === activeIndex ? "bg-gray-100" : ""
               }`}
             >
-              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100 text-gray-400 [&>svg]:h-5 [&>svg]:w-5">
-                {s.imageUrl ? <Image src={s.imageUrl} alt="" fill sizes="48px" className="object-cover" /> : fallbackIcon}
+              <span className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100 text-gray-400 [&>svg]:h-5 [&>svg]:w-5">
+                {s.imageUrl ? <Image src={s.imageUrl} alt="" fill sizes="56px" className="object-cover" /> : fallbackIcon}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-semibold text-gray-900">
                   <Highlight text={s.title} query={query} />
                 </span>
-                <span className="mt-0.5 block truncate text-[12px] text-gray-400">
-                  {[s.meta, s.badge].filter(Boolean).join(" · ")}
+                <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-gray-400">
+                  {s.badge && (
+                    <span className="shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600">
+                      {s.badge}
+                    </span>
+                  )}
+                  {s.meta && <span className="truncate">{s.meta}</span>}
                 </span>
               </span>
               <span
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  picked ? "bg-navy-900 text-white" : "text-gray-300"
+                  picked ? "bg-ocean-500 text-white" : "bg-gray-100 text-gray-400"
                 }`}
               >
-                {picked ? <Check className="h-4 w-4" strokeWidth={3} /> : <PlusDot />}
+                {picked ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-4 w-4" strokeWidth={2.5} />}
               </span>
             </button>
           </li>
@@ -104,8 +114,6 @@ function ResultList({ id, query, suggestions, isLoading, activeIndex, onHover, o
     </ul>
   );
 }
-
-const PlusDot = () => <span className="text-[18px] leading-none">+</span>;
 
 /**
  * 조건 폼 시안 · 한 줄 검색 바
@@ -128,9 +136,21 @@ export default function CourseSearchBarForm() {
     form.setOpenSlot(slot);
   };
 
+  const [pickCategory, setPickCategory] = useState<(typeof PICK_CATEGORIES)[number]>(undefined);
+
   const isSearchSlot = openSlot === "festival" || openSlot === "spot";
   const query = openSlot === "festival" ? form.festivalQuery : form.spotQuery;
   const suggest = openSlot === "festival" ? form.festivalSuggest : form.spotSuggest;
+  const isTyping = query.trim().length > 0;
+
+  // 치기 전엔 추천 — 행사는 지금·곧 열리는 것, 꼭 갈 곳은 고른 동네의 장소 (축제를 골랐으면 부산 전체)
+  const areaGuide = festival ? undefined : areaGuideOf(area);
+  const festivalPicks = useActiveFestivalPicks();
+  const spotPicks = useAreaSpotPicks(areaGuide?.district, pickCategory, openSlot === "spot");
+  const picks = openSlot === "festival" ? festivalPicks : spotPicks;
+
+  // 화면에 보이는 목록 하나로 방향키·Enter를 맞춘다
+  const shownItems = isTyping ? suggest.suggestions : picks.picks;
 
   const pick = (s: Suggestion) => {
     setActiveIndex(-1);
@@ -143,7 +163,7 @@ export default function CourseSearchBarForm() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const list = suggest.suggestions;
+    const list = shownItems;
     if (e.key === "Escape") {
       form.setOpenSlot(null);
     } else if (e.key === "ArrowDown" && list.length > 0) {
@@ -273,7 +293,7 @@ export default function CourseSearchBarForm() {
           type="button"
           onClick={form.submit}
           disabled={isGenerating}
-          className="mt-1 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-br from-lime-300 to-lime-400 px-6 text-[15px] font-bold text-navy-900 shadow-[0_10px_24px_-10px_rgba(171,204,26,0.9)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 md:mt-0"
+          className="mt-1 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-br from-[#34a6ff] to-[#0a84ff] px-6 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(10,132,255,0.8)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 md:mt-0"
         >
           {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {isGenerating ? "만드는 중" : "코스 만들기"}
@@ -300,12 +320,26 @@ export default function CourseSearchBarForm() {
             )}
             <div className="relative rounded-[28px] bg-white p-3 shadow-[0_24px_60px_-24px_rgba(5,12,26,0.7)] md:p-4">
               <div className="flex items-center justify-between gap-3 px-2 pb-2">
-                <p className="flex items-center gap-1.5 text-[13px] font-bold text-gray-900">
-                  {isSearchSlot && <Search className="h-3.5 w-3.5 text-gray-400" />}
+                <p className="flex min-w-0 items-center gap-1.5 truncate text-[13px] font-bold text-gray-900">
                   {openSlot === "area" && "어디서 놀까요?"}
                   {openSlot === "budget" && "예산은 얼마 안으로?"}
-                  {openSlot === "festival" && "행사 · 축제 찾기"}
-                  {openSlot === "spot" && "스팟 장소 찾기"}
+                  {openSlot === "festival" &&
+                    (isTyping ? (
+                      `'${query.trim()}' 행사`
+                    ) : (
+                      <>
+                        <Flame className="h-4 w-4 text-pink-500" /> 지금 · 곧 열리는 행사
+                      </>
+                    ))}
+                  {openSlot === "spot" &&
+                    (isTyping ? (
+                      `'${query.trim()}' 스팟 장소`
+                    ) : (
+                      <>
+                        <MapPin className="h-4 w-4 text-ocean-500" />
+                        {areaGuide ? `${area} 근처 가볼 만한 곳` : "부산 가볼 만한 곳"}
+                      </>
+                    ))}
                 </p>
                 <button
                   type="button"
@@ -319,7 +353,7 @@ export default function CourseSearchBarForm() {
 
               {openSlot === "area" && (
                 <div className="px-2 pb-2">
-                  <AreaPicker
+                  <AreaTilePicker
                     value={area}
                     onPick={(name) => {
                       form.setArea(name);
@@ -379,25 +413,47 @@ export default function CourseSearchBarForm() {
                 </div>
               )}
 
+              {openSlot === "spot" && !isTyping && (
+                <div className="flex gap-1.5 overflow-x-auto px-2 pb-3">
+                  {PICK_CATEGORIES.map((code) => {
+                    const selected = pickCategory === code;
+                    return (
+                      <button
+                        key={code ?? "ALL"}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setActiveIndex(-1);
+                          setPickCategory(code);
+                        }}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                          selected ? "bg-navy-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {code ? `${CATEGORY_META[code].emoji} ${CATEGORY_META[code].label}` : "전체"}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {isSearchSlot && (
                 <ResultList
                   id={listId}
-                  query={query}
-                  suggestions={suggest.suggestions}
-                  isLoading={suggest.isLoading}
+                  query={isTyping ? query : ""}
+                  items={shownItems}
+                  isLoading={isTyping ? suggest.isLoading : picks.isLoading}
                   activeIndex={activeIndex}
                   onHover={setActiveIndex}
                   onPick={pick}
                   isPicked={(s) => (openSlot === "festival" ? s.title === festival : includeSpots.includes(s.title))}
                   fallbackIcon={SLOT_META[openSlot].icon}
-                  emptyHint={
-                    openSlot === "spot" ? (
-                      <>
-                        스팟에 있는 장소를 찾아요. 이름 일부만 쳐도 돼요 — 예) <b className="text-gray-600">이재</b> → 이재모피자 본점
-                      </>
-                    ) : (
-                      <>진행 중이거나 다가오는 부산 행사를 찾아요 — 예) 불꽃, 드론</>
-                    )
+                  emptyMessage={
+                    isTyping
+                      ? `'${query.trim()}'와 비슷한 곳이 없어요 — 이름 일부만 쳐보세요`
+                      : openSlot === "festival"
+                        ? "지금 열리고 있는 행사가 없어요"
+                        : "이 분류엔 아직 장소가 없어요"
                   }
                 />
               )}

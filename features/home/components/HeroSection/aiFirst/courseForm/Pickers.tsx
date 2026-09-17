@@ -10,6 +10,7 @@ import {
 } from "@/constants/course";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
 import type { CourseBudgetTier } from "@/types/course";
+import { AREA_GROUPS } from "./areaGuide";
 import type { CourseFormState } from "./useCourseFormState";
 
 // 흰 배경 위에 놓이는 고르기 판들 — 조건 폼 시안 네 가지가 같이 쓴다.
@@ -34,6 +35,80 @@ export function AreaPicker({ value, onPick, size = "md" }: AreaPickerProps) {
         >
           {name}
         </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 지역 고르기 — 대표 동네는 이모지·한 줄 소개가 붙은 카드로, 구 단위는 작은 칩으로.
+ * 이름만 나열하면 어디가 뭐 하는 곳인지 몰라 고르기 어렵다는 피드백으로 만들었다.
+ */
+export function AreaTilePicker({ value, onPick }: Pick<AreaPickerProps, "value" | "onPick">) {
+  return (
+    <div className="space-y-4">
+      {AREA_GROUPS.map((group) => (
+        <section key={group.title}>
+          <p className="mb-2 text-[12px] font-semibold text-gray-400">{group.title}</p>
+          {group.variant === "card" ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {group.areas.map((guide) => {
+                const selected = value === guide.area;
+                return (
+                  <button
+                    key={guide.area}
+                    type="button"
+                    onClick={() => onPick(guide.area)}
+                    aria-pressed={selected}
+                    className={`group relative flex items-center gap-3 rounded-2xl p-3 text-left transition-all ${
+                      selected
+                        ? "bg-navy-900 text-white shadow-[0_10px_24px_-12px_rgba(5,12,26,0.9)]"
+                        : "bg-gray-50 ring-1 ring-inset ring-gray-100 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_10px_24px_-14px_rgba(13,48,128,0.45)]"
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[22px] transition-transform group-hover:scale-110 ${
+                        selected ? "bg-white/10" : "bg-white shadow-sm"
+                      }`}
+                    >
+                      {guide.emoji}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[15px] font-bold leading-tight">{guide.area}</span>
+                      <span className={`mt-0.5 block truncate text-[11px] ${selected ? "text-white/60" : "text-gray-400"}`}>
+                        {guide.tagline}
+                      </span>
+                    </span>
+                    {selected && (
+                      <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-ocean-400">
+                        <Check className="h-2.5 w-2.5 text-white" strokeWidth={4} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {group.areas.map((guide) => (
+                <button
+                  key={guide.area}
+                  type="button"
+                  onClick={() => onPick(guide.area)}
+                  aria-pressed={value === guide.area}
+                  className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
+                    value === guide.area
+                      ? "bg-navy-900 text-white"
+                      : "bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:ring-gray-300"
+                  }`}
+                >
+                  {guide.area}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
       ))}
     </div>
   );

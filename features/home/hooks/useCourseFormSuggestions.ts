@@ -5,6 +5,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { useEvents } from "@/features/event/hooks/useEvents";
+import { getEventBadge, sortActiveEvents, toDateKey } from "@/features/event/utils/eventSchedule";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
 import type { MapPlacePage } from "@/types/map";
@@ -86,4 +87,55 @@ export function useFestivalSuggestions(keyword: string) {
   }, [data, trimmed]);
 
   return { suggestions, isLoading: isLoading && trimmed.length > 0 };
+}
+
+const PICKS_LIMIT = 6;
+
+export const courseAreaPickKeys = {
+  list: (district: string, category: string | undefined) =>
+    ["mapPlaces", "areaPicks", district, category ?? "ALL"] as const,
+};
+
+/**
+ * 검색어를 치기 전에 보여줄 "이 동네 가볼 만한 곳" — 스팟 장소를 구·군(+분류)으로 부른다.
+ * 사진 있는 곳부터 받으려고 imageUrl 오름차순으로 정렬한다 (스팟 목록과 같은 이유).
+ */
+export function useAreaSpotPicks(district: string | undefined, category: string | undefined, enabled: boolean) {
+  const { data, isFetching } = useQuery({
+    queryKey: courseAreaPickKeys.list(district ?? "", category),
+    queryFn: () =>
+      fetchMapPlaces({
+        ...(district && { district }),
+        ...(category && { category }),
+        sort: "imageUrl,asc",
+        size: PICKS_LIMIT,
+      }),
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    select: toSpotSuggestions,
+    placeholderData: keepPreviousData,
+  });
+
+  return { picks: data ?? EMPTY, isLoading: isFetching };
+}
+
+/** 검색어를 치기 전에 보여줄 "지금·곧 열리는 행사" — 진행 중(곧 끝나는 순) → 예정(곧 시작하는 순) */
+export function useActiveFestivalPicks() {
+  const { data, isLoading } = useEvents();
+
+  const picks = useMemo<Suggestion[]>(() => {
+    if (!data) return EMPTY;
+    const today = toDateKey(new Date());
+    return sortActiveEvents(data, today)
+      .slice(0, PICKS_LIMIT)
+      .map((event) => ({
+        id: event.contentId,
+        title: event.title,
+        meta: formatPeriod(event.eventStartDate, event.eventEndDate),
+        imageUrl: event.firstImage2 ?? event.firstImage,
+        badge: getEventBadge(event, today).label,
+      }));
+  }, [data]);
+
+  return { picks, isLoading };
 }

@@ -32,6 +32,21 @@ const PLACE_ROWS: PlaceRow[] = [
   ["2785289", "감지해변", "영도구", "NA", null],
   ["1805619", "해변짚불곰장어", "기장군", "FD", "92/1902292_image2_1.jpg"],
   ["1277679", "부산타워", "중구", "HS", "40/3494840_image2_1.jpg"],
+  // 수영구(광안리) 추천 — district·분류 필터용
+  ["126078", "광안리해수욕장", "수영구", "NA", "45/3311245_image2_1.jpg"],
+  ["129140", "금련산", "수영구", "NA", "43/3589743_image2_1.jpg"],
+  ["130203", "수영민속예술관", "수영구", "VE", "05/3491505_image2_1.jpg"],
+  ["4068714", "포디움다이브", "수영구", "VE", "22/4068722_image2_1.jpg"],
+  ["3033472", "망미단길", "수영구", "VE", "50/3033450_image2_1.JPG"],
+  ["126799", "민락수변공원", "수영구", "VE", "66/3498366_image2_1.jpg"],
+  ["850991", "윤희횟집", "수영구", "FD", "20/1867020_image2_1.jpg"],
+  ["134989", "밀레니엄횟집", "수영구", "FD", "43/1866443_image2_1.jpg"],
+  ["3582279", "콩셉트", "수영구", "FD", "61/3582161_image2_1.jpg"],
+  ["3546069", "비쇼쿠", "수영구", "FD", "75/3546075_image2_1.jpg"],
+  ["2868961", "장덕풍천장어 광안본점", "수영구", "FD", "78/3478878_image2_1.jpg"],
+  ["2663341", "부산시민공원", "부산진구", "VE", "05/3497005_image2_1.jpg"],
+  ["3014435", "서면먹자골목", "부산진구", "VE", "12/3014312_image2_1.JPG"],
+  ["126119", "부산 어린이대공원", "부산진구", "VE", "15/3512315_image2_1.jpg"],
 ];
 
 const PLACES: MapPlace[] = PLACE_ROWS.map(([originalId, name, district, category, image], i) => ({
@@ -54,12 +69,14 @@ const PLACES: MapPlace[] = PLACE_ROWS.map(([originalId, name, district, category
 type EventRow = [contentId: string, title: string, start: string, end: string, image: string | null];
 
 const EVENT_ROWS: EventRow[] = [
+  ["2786391", "광안리 M(Marvelous) 드론 라이트쇼", "2026-01-01", "2026-12-31", "12/3518612_image3_1.jpeg"],
+  ["4099532", "2026 별바다부산 「나이트 캠크닉」", "2026-09-04", "2026-09-19", "41/4099541_image3_1.jpg"],
+  ["2558735", "부산국제공연예술제(B.P.A.F)", "2026-09-18", "2026-09-20", "65/4105565_image3_1.jpg"],
+  ["3497353", "2026 부산바다도서관", "2026-09-19", "2026-10-11", "07/4106907_image3_1.jpg"],
+  ["3006246", "2026 부산국제공연예술마켓(BPAM)", "2026-10-01", "2026-10-07", "73/4094773_image3_1.jpg"],
   ["140799", "부산국제록페스티벌", "2026-10-02", "2026-10-04", "06/4040606_image3_1.jpg"],
-  ["2991394", "2026 부산나이트워크42K with dsec", "2026-08-29", "2026-08-30", "37/4069137_image3_1.jpg"],
-  ["2644679", "2026 부산국제불교박람회", "2026-08-06", "2026-08-09", "92/4077792_image3_1.jpg"],
-  ["3498395", "2026 나이트레이스 인 부산", "2026-08-01", "2026-08-01", "41/4065341_image3_1.jpg"],
-  ["2523149", "K-핸드메이드페어 부산 2026", "2026-07-24", "2026-07-26", "66/4059066_image3_1.jpg"],
-  ["2704473", "K-일러스트레이션페어 부산 2026", "2026-07-24", "2026-07-26", null],
+  ["2855626", "허심청브로이 옥토버페스트", "2026-10-15", "2026-10-17", "35/4105335_image3_1.jpg"],
+  ["229048", "동래읍성역사축제", "2026-10-16", "2026-10-18", "43/3366443_image3_1.jpg"],
 ];
 
 const EVENTS = EVENT_ROWS.map(
@@ -95,8 +112,18 @@ export function installCourseFormFetchMock() {
 
     if (url.pathname.endsWith("/api/v1/map/places")) {
       const keyword = squash(url.searchParams.get("keyword") ?? "");
+      const district = url.searchParams.get("district");
+      const category = url.searchParams.get("category");
       const size = Number(url.searchParams.get("size") ?? 20);
-      const hits = PLACES.filter((p) => squash(p.name).includes(keyword)).slice(0, size);
+      const hits = PLACES.filter(
+        (p) =>
+          squash(p.name).includes(keyword) &&
+          (!district || p.district === district) &&
+          (!category || p.category === category),
+      )
+        // 서버의 sort=imageUrl,asc처럼 사진 있는 곳부터
+        .sort((a, b) => Number(!!b.imageUrl) - Number(!!a.imageUrl))
+        .slice(0, size);
       await new Promise((r) => setTimeout(r, 180)); // 네트워크 느낌
       const page: MapPlacePage = {
         content: hits,
