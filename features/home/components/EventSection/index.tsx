@@ -9,6 +9,7 @@ import Container from "@/components/layout/Container";
 import HoloCard, { HoloGlare } from "@/components/ui/HoloCard";
 import { eventBadgeClass } from "@/features/event/components/EventCard";
 import { useEvents } from "@/features/event/hooks/useEvents";
+import { getEventHankkutHref } from "@/features/hankkut/utils/eventHankkutLink";
 import {
   formatEventPeriod,
   getEventBadge,
@@ -86,7 +87,8 @@ export default function EventSection() {
                         transition={{ type: "spring", stiffness: 100, damping: 17, delay: i * 0.1 }}
                       >
                         <HoloCard>
-                          <Link href={`/event/${encodeURIComponent(event.contentId)}`} className="group block">
+                          {/* 포스터는 그 행사의 한끗 정보로 — 행사 자체 상세는 "행사 전체보기"에서 들어간다 */}
+                          <Link href={getEventHankkutHref(event)} className="group block">
                             <div className="relative aspect-[3/4] overflow-hidden rounded-[18px] bg-navy-800 shadow-[0_30px_60px_-24px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
                               {event.firstImage && (
                                 <>
