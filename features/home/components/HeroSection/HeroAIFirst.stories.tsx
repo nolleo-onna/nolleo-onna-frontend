@@ -37,7 +37,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Current: Story = { name: "지금 · 비교용", render: () => <HeroSection /> };
+export const Current: Story = {
+  name: "지금 홈 (A + A-2 적용)",
+  render: () => <HeroSection />,
+  loaders: [async () => installCourseFormFetchMock()],
+};
 
 // A · 대화창이 곧 히어로로 결정 — 아래 "조건 골라 내 코스 만들기" 폼만 바꿔 끼운 시안들
 export const A1Sentence: Story = { name: "A-1 · 조건 폼: 빈칸 채우기 문장", render: () => <HeroChatCenter /> };

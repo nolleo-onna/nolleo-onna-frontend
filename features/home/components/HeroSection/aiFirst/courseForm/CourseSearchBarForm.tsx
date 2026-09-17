@@ -1,14 +1,20 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Flame, Loader2, MapPin, PartyPopper, Plus, Search, Sparkles, Star, Wallet, X } from "lucide-react";
 
-import { COURSE_BUDGET_LABEL, COURSE_INCLUDE_SPOTS_MAX, COURSE_PLACE_NAME_MAX } from "@/constants/course";
+import {
+  COURSE_BUDGET_LABEL,
+  COURSE_INCLUDE_SPOTS_MAX,
+  COURSE_PLACE_NAME_MAX,
+  type CourseStartArea,
+} from "@/constants/course";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
 import { useActiveFestivalPicks, useSpotPicks } from "@/features/home/hooks/useCourseFormSuggestions";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import { readCourseSelection, saveCourseSelection } from "@/features/home/utils/searchBarSelection";
 import { AreaTilePicker, BudgetPicker } from "./Pickers";
 import { useCourseFormState, type CourseSlot } from "./useCourseFormState";
 
@@ -115,7 +121,7 @@ function ResultList({ id, query, items, isLoading, activeIndex, onHover, onPick,
 }
 
 /**
- * 조건 폼 시안 · 한 줄 검색 바
+ * 홈 히어로 2순위 · 조건 골라 내 코스 만들기 (한 줄 검색 바)
  * 지역 | 예산 | 행사 | 꼭 갈 곳을 한 줄에. 행사·꼭 갈 곳은 칸 안에서 바로 쳐서 찾는다 —
  * 스팟 장소 이름 일부("이재")만 쳐도 아래로 사진과 함께 후보("이재모피자 본점")가 뜬다.
  */
@@ -147,6 +153,23 @@ export default function CourseSearchBarForm() {
   // 필수(지역·예산)는 미리 채워 두지 않고 직접 고르게 한다. 축제를 고르면 지역은 축제 위치를 따라가 필수에서 빠진다.
   const [areaChosen, setAreaChosen] = useState(false);
   const [budgetChosen, setBudgetChosen] = useState(false);
+
+  // 전에 고른 지역·예산, 혼잡도 화면에서 "이 동네로 코스 짜기"로 넘겨준 지역을 되살린다.
+  // sessionStorage는 브라우저에만 있어 서버 렌더와 어긋나지 않게 마운트 뒤에 읽는다.
+  const { setArea, setBudget } = form;
+  useEffect(() => {
+    const saved = readCourseSelection();
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (saved.region) {
+      setArea(saved.region);
+      setAreaChosen(true);
+    }
+    if (saved.budget) {
+      setBudget(saved.budget);
+      setBudgetChosen(true);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [setArea, setBudget]);
   const [showMissing, setShowMissing] = useState(false);
   const segmentEls = useRef<Partial<Record<CourseSlot, HTMLDivElement | null>>>({});
 
@@ -302,6 +325,8 @@ export default function CourseSearchBarForm() {
     // 칸 네 개 + 버튼이 한 줄에 들어가도록 넓은 화면에선 채팅 입력창보다 넓게 편다
     <div
       ref={rootRef}
+      // CourseSection의 "코스 짜러 가기"가 이 id로 스크롤한다
+      id="search-bar"
       className="relative w-full text-left md:left-1/2 md:w-[min(calc(100vw-4rem),60rem)] md:-translate-x-1/2"
     >
       {/* ── 바 ── */}
@@ -390,6 +415,7 @@ export default function CourseSearchBarForm() {
                     onPick={(name) => {
                       form.setArea(name);
                       setAreaChosen(true);
+                      saveCourseSelection({ region: name as CourseStartArea });
                       advanceTo("budget");
                     }}
                   />
@@ -402,6 +428,7 @@ export default function CourseSearchBarForm() {
                     onPick={(tier) => {
                       form.setBudget(tier);
                       setBudgetChosen(true);
+                      saveCourseSelection({ budget: tier });
                       advanceTo("spot");
                     }}
                   />
