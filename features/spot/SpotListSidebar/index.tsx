@@ -3,7 +3,7 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { ChevronDown, Heart, MapPin, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Heart, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import { useMapPlaces } from "../hooks/useMapPlaces";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -21,15 +21,22 @@ import {
 } from "@/features/spot/utils/spotSearch";
 import type { MapPlace } from "@/types/map";
 
+/** 목록에서 고른 장소 — 지도 이동과 상세 모달에 필요한 값 */
+export interface SpotListSelection {
+  id: string;
+  title: string;
+  lat: number;
+  lng: number;
+  placeType: "SPOT" | "FOOD";
+  mapPlaceId: number;
+}
+
 interface SpotListSidebarProps {
   selectedId: string | null;
-  onSelectSpot: (
-    id: string,
-    lat: number,
-    lng: number,
-    placeType: "SPOT" | "FOOD",
-    mapPlaceId: number
-  ) => void;
+  /** 항목 클릭 — 지도를 그 위치로 옮기고 마커를 흔든다(모달은 안 띄움) */
+  onSelectSpot: (spot: SpotListSelection) => void;
+  /** "상세정보" 버튼 — 상세 모달을 띄운다 */
+  onOpenDetail: (spot: SpotListSelection) => void;
   /** 검색 결과 위치 목록 — 지도 화면 맞추기용. 검색어가 비면 호출하지 않는다 */
   onSearchResults?: (coords: { lat: number; lng: number }[]) => void;
   /** 지역구 선택 시 지도를 그 구로 이동시키는 콜백(왼쪽 필터와 동일 동작) */
@@ -62,6 +69,7 @@ function HighlightedName({ name, term, className }: { name: string; term: string
 export default function SpotListSidebar({
   selectedId,
   onSelectSpot,
+  onOpenDetail,
   onSearchResults,
   onSelectRegion,
 }: SpotListSidebarProps) {
@@ -330,6 +338,14 @@ export default function SpotListSidebar({
               const isSelected = place.originalId === selectedId;
               const category =
                 CATEGORY_META[place.category as keyof typeof CATEGORY_META] ?? FALLBACK_CATEGORY;
+              const selection: SpotListSelection = {
+                id: place.originalId,
+                title: place.name,
+                lat: place.latitude,
+                lng: place.longitude,
+                placeType: place.placeType,
+                mapPlaceId: place.id,
+              };
 
               return (
                 <motion.li
@@ -339,13 +355,7 @@ export default function SpotListSidebar({
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
-                  onClick={() => onSelectSpot(
-                    place.originalId,
-                    place.latitude,
-                    place.longitude,
-                    place.placeType,
-                    place.id
-                  )}
+                  onClick={() => onSelectSpot(selection)}
                   className={`
                     flex gap-3 cursor-pointer rounded-xl p-3 transition-all
                     ${isSelected
@@ -414,7 +424,23 @@ export default function SpotListSidebar({
                       }
                       className="h-7 w-7 rounded-full hover:bg-pink-50"
                     />
-                    {isSelected && <div className="mb-2 h-2 w-2 rounded-full bg-navy-400" />}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        // 항목 클릭(지도 이동)으로 번지지 않게
+                        e.stopPropagation();
+                        onOpenDetail(selection);
+                      }}
+                      aria-label={`${place.name} 상세정보`}
+                      className={`flex items-center gap-0.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold transition-colors ${
+                        isSelected
+                          ? "bg-navy-400 text-white hover:bg-navy-500"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                      }`}
+                    >
+                      상세정보
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
                   </div>
                 </motion.li>
               );

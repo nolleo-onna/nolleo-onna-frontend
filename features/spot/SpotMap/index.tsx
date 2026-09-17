@@ -20,11 +20,22 @@ function markerStyle(spot: MapMarker) {
   return { color: "#0d3080", emoji: "📍", label: "기타" };
 }
 
+/** 목록에서 장소를 골랐을 때 그 마커를 "딸랑" 흔들어 달라는 요청. 같은 장소를 다시 골라도 또 흔들리게 nonce를 둔다 */
+export interface MarkerRingRequest {
+  id: string;
+  title: string;
+  nonce: number;
+}
+
 interface SpotMapProps {
   selectedId: string | null;
   onSelectMarker: (id: string, placeType: "SPOT" | "FOOD") => void;
   mapInstanceRef: React.RefObject<kakao.maps.Map | null>;
+  ringRequest?: MarkerRingRequest | null;
 }
+
+/** 지도가 옮겨가는 게 끝났다는 신호(idle)가 안 오는 경우 — 이미 그 자리였을 때 — 대비 */
+const RING_FALLBACK_MS = 700;
 
 // 기본 화면은 특정 구로 확대하지 않고 부산 전체를 구 단위 원으로 보여준다
 // (DISTRICT_VIEW_MIN_LEVEL 이상이라 구 단위 뷰로 시작함). 구 하나를 고르면
@@ -65,10 +76,12 @@ function groupByDistrict(spots: MapMarker[]): Map<string, number> {
   return counts;
 }
 
-export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: SpotMapProps) {
+export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef, ringRequest }: SpotMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([]);
   const polygonsRef = useRef<kakao.maps.Polygon[]>([]);
+  // 장소 id → 지금 지도에 그려진 마커 버튼. 줌이 바뀌면 마커를 새로 그리므로 흔들 땐 항상 여기서 최신 요소를 찾는다
+  const markerElsRef = useRef(new Map<string, HTMLElement>());
   const markers = useFilteredMarkers();
   const { isLoading } = useSpotMarkers();
 
@@ -324,6 +337,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     content.innerHTML = `
       <button type="button" aria-label="${spot.title}" style="
         all: unset;
+        position: relative;
         display: block;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -331,6 +345,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     `;
 
     const el = content.firstElementChild as HTMLElement;
+    markerElsRef.current.set(spot.id, el);
     el.addEventListener("pointerenter", () => { el.style.transform = "scale(1.15)"; });
     el.addEventListener("pointerleave", () => { el.style.transform = "scale(1)"; });
     el.addEventListener("click", () => {
@@ -357,6 +372,7 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
       overlaysRef.current = [];
       polygonsRef.current.forEach((p) => p.setMap(null));
       polygonsRef.current = [];
+      markerElsRef.current.clear();
 
       if (map.getLevel() >= DISTRICT_VIEW_MIN_LEVEL) {
         const counts = groupByDistrict(markers);
@@ -389,6 +405,52 @@ export default function SpotMap({ selectedId, onSelectMarker, mapInstanceRef }: 
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers, selectedId, mapInstanceRef, districtPaths]);
+
+  // 목록에서 고른 장소: 지도 이동이 끝난 뒤 마커를 흔든다.
+  // 이동 중에 흔들면 줌 변경으로 마커가 새로 그려지면서 애니메이션이 끊기므로 idle을 기다린다.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !ringRequest) return;
+
+    let done = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const ring = () => {
+      if (done) return;
+      done = true;
+      const el = markerElsRef.current.get(ringRequest.id);
+      if (!el) return; // 필터 등으로 지도에 없는 장소 — 이동만 하고 끝
+      showStatus(ringRequest.title);
+
+      const pin = el.firstElementChild as HTMLElement | null;
+      if (pin) {
+        // 같은 장소를 연달아 골라도 처음부터 다시 흔들리게 클래스를 뗐다 붙인다
+        pin.classList.remove("spot-marker-ring");
+        void pin.offsetWidth;
+        pin.classList.add("spot-marker-ring");
+        pin.addEventListener("animationend", () => pin.classList.remove("spot-marker-ring"), { once: true });
+      }
+
+      const pulse = document.createElement("span");
+      pulse.className = "spot-marker-pulse";
+      pulse.setAttribute("aria-hidden", "true");
+      el.appendChild(pulse);
+      pulse.addEventListener("animationend", () => pulse.remove(), { once: true });
+    };
+
+    const onIdle = () => {
+      // idle 직후엔 줌 변경에 따른 마커 재렌더가 막 끝난 참이라 한 프레임 쉬고 찾는다
+      timers.push(setTimeout(ring, 60));
+    };
+    kakao.maps.event.addListener(map, "idle", onIdle);
+    timers.push(setTimeout(ring, RING_FALLBACK_MS));
+
+    return () => {
+      done = true;
+      kakao.maps.event.removeListener(map, "idle", onIdle);
+      timers.forEach(clearTimeout);
+    };
+  }, [ringRequest, mapInstanceRef, showStatus]);
 
   return (
     <section className="relative flex-1">
