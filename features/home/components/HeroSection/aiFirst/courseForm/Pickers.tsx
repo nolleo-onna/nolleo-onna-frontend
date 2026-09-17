@@ -115,7 +115,8 @@ export function AreaTilePicker({ value, onPick }: Pick<AreaPickerProps, "value" 
 }
 
 interface BudgetPickerProps {
-  value: CourseBudgetTier;
+  /** null — 아직 안 골랐다 */
+  value: CourseBudgetTier | null;
   onPick: (tier: CourseBudgetTier) => void;
 }
 

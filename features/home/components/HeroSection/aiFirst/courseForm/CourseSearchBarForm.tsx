@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Flame, Loader2, MapPin, PartyPopper, Plus, Sparkles, Star, Wallet, X } from "lucide-react";
+import { Check, Flame, Loader2, MapPin, PartyPopper, Plus, Search, Sparkles, Star, Wallet, X } from "lucide-react";
 
 import { COURSE_BUDGET_LABEL, COURSE_INCLUDE_SPOTS_MAX, COURSE_PLACE_NAME_MAX } from "@/constants/course";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
@@ -138,13 +138,34 @@ export default function CourseSearchBarForm() {
 
   const [pickCategory, setPickCategory] = useState<(typeof PICK_CATEGORIES)[number]>(undefined);
 
+  // 필수(지역·예산)는 미리 채워 두지 않고 직접 고르게 한다. 축제를 고르면 지역은 축제 위치를 따라가 필수에서 빠진다.
+  const [areaChosen, setAreaChosen] = useState(false);
+  const [budgetChosen, setBudgetChosen] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
+  const segmentEls = useRef<Partial<Record<CourseSlot, HTMLDivElement | null>>>({});
+
+  const missing: CourseSlot[] = [
+    ...(!areaChosen && !festival ? (["area"] as const) : []),
+    ...(!budgetChosen ? (["budget"] as const) : []),
+  ];
+
+  const submit = () => {
+    if (missing.length > 0) {
+      setShowMissing(true);
+      const el = segmentEls.current[missing[0]];
+      if (el) open(missing[0], el);
+      return;
+    }
+    form.submit();
+  };
+
   const isSearchSlot = openSlot === "festival" || openSlot === "spot";
   const query = openSlot === "festival" ? form.festivalQuery : form.spotQuery;
   const suggest = openSlot === "festival" ? form.festivalSuggest : form.spotSuggest;
   const isTyping = query.trim().length > 0;
 
   // 치기 전엔 추천 — 행사는 지금·곧 열리는 것, 꼭 갈 곳은 고른 동네의 장소 (축제를 골랐으면 부산 전체)
-  const areaGuide = festival ? undefined : areaGuideOf(area);
+  const areaGuide = festival || !areaChosen ? undefined : areaGuideOf(area);
   const festivalPicks = useActiveFestivalPicks();
   const spotPicks = useAreaSpotPicks(areaGuide?.district, pickCategory, openSlot === "spot");
   const picks = openSlot === "festival" ? festivalPicks : spotPicks;
@@ -183,16 +204,17 @@ export default function CourseSearchBarForm() {
   const summaryOf = (slot: CourseSlot): { text: string; empty: boolean } => {
     switch (slot) {
       case "area":
-        return { text: festival ? "축제 근처" : area, empty: false };
+        if (festival) return { text: "축제 근처", empty: false };
+        return areaChosen ? { text: area, empty: false } : { text: "지역 선택", empty: true };
       case "budget":
-        return { text: COURSE_BUDGET_LABEL[budget], empty: false };
+        return budgetChosen ? { text: COURSE_BUDGET_LABEL[budget], empty: false } : { text: "예산 선택", empty: true };
       case "festival":
-        return { text: festival ?? "행사 검색", empty: !festival };
+        return { text: festival ?? "추가하기", empty: !festival };
       case "spot":
         return {
           text:
             includeSpots.length === 0
-              ? "장소 검색"
+              ? "추가하기"
               : includeSpots.length === 1
                 ? includeSpots[0]
                 : `${includeSpots[0]} 외 ${includeSpots.length - 1}곳`,
@@ -206,11 +228,15 @@ export default function CourseSearchBarForm() {
     const isActive = openSlot === slot;
     const disabled = slot === "area" && !!festival;
     const summary = summaryOf(slot);
-    const typing = isActive && (slot === "festival" || slot === "spot");
+    const required = slot === "area" || slot === "budget";
+    const isMissing = showMissing && missing.includes(slot) && !isActive;
 
     return (
       <div
         key={slot}
+        ref={(el) => {
+          segmentEls.current[slot] = el;
+        }}
         role="button"
         tabIndex={disabled ? -1 : 0}
         aria-expanded={isActive}
@@ -225,7 +251,9 @@ export default function CourseSearchBarForm() {
         className={`group flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-[22px] px-3 py-2.5 transition-all md:rounded-full md:py-2 ${
           isActive
             ? "bg-white shadow-[0_10px_30px_-10px_rgba(5,12,26,0.35)]"
-            : openSlot
+            : isMissing
+              ? "bg-rose-50 ring-2 ring-inset ring-rose-300"
+              : openSlot
               ? "hover:bg-white/60"
               : "hover:bg-gray-100"
         } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
@@ -236,37 +264,30 @@ export default function CourseSearchBarForm() {
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1 whitespace-nowrap text-[11px] font-bold text-gray-500">
             {meta.label}
-            {slot === "festival" && <span className="font-medium text-gray-400">· 선택</span>}
-            {slot === "spot" && (
+            {required ? (
+              <span className="rounded-[5px] bg-ocean-500 px-1 py-px text-[10px] font-bold leading-tight text-white">필수</span>
+            ) : (
+              <span className="rounded-[5px] bg-gray-200 px-1 py-px text-[10px] font-semibold leading-tight text-gray-500">선택</span>
+            )}
+            {slot === "spot" && includeSpots.length > 0 && (
               <span className="font-medium text-gray-400">
-                · 선택 {includeSpots.length > 0 && `${includeSpots.length}/${COURSE_INCLUDE_SPOTS_MAX}`}
+                {includeSpots.length}/{COURSE_INCLUDE_SPOTS_MAX}
               </span>
             )}
           </span>
-          {typing ? (
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => {
-                setActiveIndex(-1);
-                if (slot === "festival") form.setFestivalQuery(e.target.value);
-                else form.setSpotQuery(e.target.value);
-              }}
-              onKeyDown={handleKeyDown}
-              maxLength={COURSE_PLACE_NAME_MAX}
-              disabled={slot === "spot" && spotsFull}
-              placeholder={slot === "festival" ? "불꽃축제, 드론쇼…" : spotsFull ? "5곳 다 담았어요" : "이재모피자…"}
-              role="combobox"
-              aria-expanded={true}
-              aria-controls={listId}
-              aria-autocomplete="list"
-              className="block w-full bg-transparent text-[15px] font-semibold text-gray-900 outline-none placeholder:font-normal placeholder:text-gray-400"
-            />
-          ) : (
-            <span className={`block truncate text-[15px] ${summary.empty ? "text-gray-400" : "font-semibold text-gray-900"}`}>
-              {summary.text}
-            </span>
-          )}
+          <span
+            className={`block truncate text-[15px] ${
+              isMissing
+                ? "font-semibold text-rose-500"
+                : summary.empty
+                  ? required
+                    ? "font-semibold text-ocean-500"
+                    : "text-gray-400"
+                  : "font-semibold text-gray-900"
+            }`}
+          >
+            {summary.text}
+          </span>
         </span>
       </div>
     );
@@ -286,12 +307,12 @@ export default function CourseSearchBarForm() {
       >
         {renderSegment("area")}
         {renderSegment("budget")}
-        {renderSegment("festival")}
         {renderSegment("spot")}
+        {renderSegment("festival")}
 
         <button
           type="button"
-          onClick={form.submit}
+          onClick={submit}
           disabled={isGenerating}
           className="mt-1 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-br from-[#34a6ff] to-[#0a84ff] px-6 text-[15px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(10,132,255,0.8)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-70 md:mt-0"
         >
@@ -325,7 +346,7 @@ export default function CourseSearchBarForm() {
                   {openSlot === "budget" && "예산은 얼마 안으로?"}
                   {openSlot === "festival" &&
                     (isTyping ? (
-                      `'${query.trim()}' 행사`
+                      `'${query.trim()}' 검색 결과`
                     ) : (
                       <>
                         <Flame className="h-4 w-4 text-pink-500" /> 지금 · 곧 열리는 행사
@@ -333,7 +354,7 @@ export default function CourseSearchBarForm() {
                     ))}
                   {openSlot === "spot" &&
                     (isTyping ? (
-                      `'${query.trim()}' 스팟 장소`
+                      `'${query.trim()}' 검색 결과`
                     ) : (
                       <>
                         <MapPin className="h-4 w-4 text-ocean-500" />
@@ -354,9 +375,10 @@ export default function CourseSearchBarForm() {
               {openSlot === "area" && (
                 <div className="px-2 pb-2">
                   <AreaTilePicker
-                    value={area}
+                    value={areaChosen ? area : ""}
                     onPick={(name) => {
                       form.setArea(name);
+                      setAreaChosen(true);
                       setCaretX(null);
                       form.setOpenSlot("budget");
                     }}
@@ -366,12 +388,63 @@ export default function CourseSearchBarForm() {
               {openSlot === "budget" && (
                 <div className="px-2 pb-2">
                   <BudgetPicker
-                    value={budget}
+                    value={budgetChosen ? budget : null}
                     onPick={(tier) => {
                       form.setBudget(tier);
+                      setBudgetChosen(true);
                       form.setOpenSlot(null);
                     }}
                   />
+                </div>
+              )}
+
+              {isSearchSlot && (
+                <div className="px-2 pb-3">
+                  <label className="flex items-center gap-2.5 rounded-2xl bg-gray-100 px-4 py-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-ocean-300">
+                    <Search className="h-[18px] w-[18px] shrink-0 text-gray-400" />
+                    <input
+                      // 칸을 바꿔 열면 새 검색창에 바로 커서가 가게
+                      key={openSlot}
+                      autoFocus
+                      value={query}
+                      onChange={(e) => {
+                        setActiveIndex(-1);
+                        if (openSlot === "festival") form.setFestivalQuery(e.target.value);
+                        else form.setSpotQuery(e.target.value);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      maxLength={COURSE_PLACE_NAME_MAX}
+                      disabled={openSlot === "spot" && spotsFull}
+                      placeholder={
+                        openSlot === "festival"
+                          ? "행사 이름으로 검색"
+                          : spotsFull
+                            ? `${COURSE_INCLUDE_SPOTS_MAX}곳까지 담았어요`
+                            : "장소 이름으로 검색"
+                      }
+                      role="combobox"
+                      aria-expanded={true}
+                      aria-controls={listId}
+                      aria-autocomplete="list"
+                      className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed"
+                    />
+                    {suggest.isLoading && isTyping && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-gray-300" />}
+                    {query && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setActiveIndex(-1);
+                          if (openSlot === "festival") form.setFestivalQuery("");
+                          else form.setSpotQuery("");
+                        }}
+                        aria-label="검색어 지우기"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-300 text-white hover:bg-gray-400"
+                      >
+                        <X className="h-3.5 w-3.5" strokeWidth={3} />
+                      </button>
+                    )}
+                  </label>
                 </div>
               )}
 
@@ -468,7 +541,17 @@ export default function CourseSearchBarForm() {
             {error}
           </span>
         ) : (
-          "지역·예산만 골라도 돼요 · 대화 없이 만들어 횟수 제한 없음"
+          <>
+            {showMissing && missing.length > 0 ? (
+              <span role="alert" className="font-semibold text-rose-100">
+                {missing.map((m) => (m === "area" ? "지역" : "예산")).join("과 ")}을 골라야 코스를 만들 수 있어요
+              </span>
+            ) : (
+              <>
+                <b className="font-semibold text-white">어디서 · 예산은 필수</b>, 꼭 갈 곳 · 행사는 비워 둬도 돼요 · 대화 없이 만들어 횟수 제한 없음
+              </>
+            )}
+          </>
         )}
       </p>
     </div>
