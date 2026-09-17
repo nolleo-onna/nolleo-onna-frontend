@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { useEvents } from "@/features/event/hooks/useEvents";
+import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
+import type { MapPlacePage } from "@/types/map";
 
 // 스팟 사이드바 검색도 같이 쓰게 되어 공용 훅으로 옮겼다
 export { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -20,12 +22,19 @@ export const courseSuggestKeys = {
 const EMPTY: Suggestion[] = [];
 
 // useQuery 밖에 둬야 참조가 고정돼 select 결과가 캐시된다
-const toSpotSuggestions = (page: { content: { originalId: string; name: string; district: string }[] }) =>
+const toSpotSuggestions = (page: MapPlacePage) =>
   page.content.map(
-    (place): Suggestion => ({ id: place.originalId, title: place.name, meta: place.district }),
+    (place): Suggestion => ({
+      id: place.originalId,
+      title: place.name,
+      // 맛집은 district가 비어 오는 경우가 많다
+      meta: place.district ?? undefined,
+      imageUrl: place.imageUrl,
+      badge: CATEGORY_META[place.category]?.label,
+    }),
   );
 
-/** 꼭 포함할 장소 후보 — 서버 keyword 부분 일치 검색 */
+/** 꼭 포함할 장소 후보 — 스팟과 같은 장소 목록을 서버 keyword 부분 일치로 찾는다 ("이재" → 이재모피자 본점) */
 export function useSpotSuggestions(keyword: string) {
   const trimmed = keyword.trim();
   const { data, isFetching } = useQuery({
@@ -34,6 +43,8 @@ export function useSpotSuggestions(keyword: string) {
     enabled: trimmed.length > 0,
     staleTime: 1000 * 60 * 5,
     select: toSpotSuggestions,
+    // 한 글자 더 칠 때마다 목록이 비었다 다시 차며 깜빡이지 않게 직전 후보를 둔다
+    placeholderData: keepPreviousData,
   });
 
   return { suggestions: data ?? EMPTY, isLoading: isFetching };
@@ -69,6 +80,8 @@ export function useFestivalSuggestions(keyword: string) {
         id: event.contentId,
         title: event.title,
         meta: formatPeriod(event.eventStartDate, event.eventEndDate),
+        imageUrl: event.firstImage2 ?? event.firstImage,
+        badge: "행사",
       }));
   }, [data, trimmed]);
 

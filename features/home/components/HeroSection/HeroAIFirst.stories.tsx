@@ -11,6 +11,7 @@ import HeroQuestionCloud from "./aiFirst/HeroQuestionCloud";
 import CourseSearchBarForm from "./aiFirst/courseForm/CourseSearchBarForm";
 import CourseStepForm from "./aiFirst/courseForm/CourseStepForm";
 import CourseTicketForm from "./aiFirst/courseForm/CourseTicketForm";
+import { installCourseFormFetchMock } from "./aiFirst/courseForm/courseFormStoryMocks";
 
 // 피드백: 히어로에서 온나 채팅이 메인인데 "온나에게 물어보기"가 검색 카드 구석의 작은 버튼이라 안 보인다.
 // 1순위 AI 채팅, 2순위 내 코스 만들기가 되도록 다시 짠 시안들. 누르면 실제 채팅 모달이 열린다.
@@ -44,6 +45,8 @@ export const A1Sentence: Story = { name: "A-1 · 조건 폼: 빈칸 채우기 �
 export const A2SearchBar: Story = {
   name: "A-2 · 조건 폼: 한 줄 검색 바",
   render: () => <HeroChatCenter courseForm={<CourseSearchBarForm />} dividerLabel="또는" />,
+  // 개발 API에 닿지 않아도 "이재"만 쳐서 후보가 뜨는지 보이게 — 실제 응답 일부를 흉내 낸다
+  loaders: [async () => installCourseFormFetchMock()],
 };
 
 export const A3Ticket: Story = {

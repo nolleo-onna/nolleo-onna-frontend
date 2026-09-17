@@ -8,6 +8,10 @@ export interface Suggestion {
   title: string;
   /** 제목 오른쪽에 흐리게 붙는 부가 정보 — 지역명, 행사 기간 등 */
   meta?: string;
+  /** 후보 썸네일 — 장소 사진, 행사 포스터 */
+  imageUrl?: string | null;
+  /** 짧은 분류 — "맛집 · 카페", "행사" 등 */
+  badge?: string;
 }
 
 interface SuggestFieldProps {
