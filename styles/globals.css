@@ -366,3 +366,46 @@
   background-repeat: no-repeat;
   animation: shimmer 1.6s ease-in-out infinite;
 }
+/* 스팟 지도 — 목록에서 장소를 고르면 지도가 그 위치로 옮겨간 뒤 마커가 "딸랑" 흔들린다.
+   마커는 카카오맵 CustomOverlay(React 밖 DOM)라 전역 클래스로 붙인다.
+   핀 꼬리 끝(아래 가운데)을 축으로 살짝 뛰어올랐다가 좌우로 잦아들며 멈춘다. */
+@keyframes spot-marker-ring {
+  0% { transform: translateY(0) rotate(0deg); }
+  14% { transform: translateY(-12px) rotate(0deg); }
+  28% { transform: translateY(0) rotate(-18deg); }
+  42% { transform: translateY(0) rotate(14deg); }
+  56% { transform: translateY(0) rotate(-10deg); }
+  70% { transform: translateY(0) rotate(6deg); }
+  84% { transform: translateY(0) rotate(-3deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.spot-marker-ring {
+  transform-origin: 50% 100%;
+  animation: spot-marker-ring 1.1s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* 핀 발밑에서 퍼지는 파동 — 흔들림만으론 지도 위에서 눈에 잘 안 띄어서 같이 준다 */
+@keyframes spot-marker-pulse {
+  from { transform: translate(-50%, 50%) scale(0.3); opacity: 0.55; }
+  to { transform: translate(-50%, 50%) scale(2.8); opacity: 0; }
+}
+
+.spot-marker-pulse {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgba(10, 132, 255, 0.45);
+  pointer-events: none;
+  animation: spot-marker-pulse 1.1s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spot-marker-ring,
+  .spot-marker-pulse {
+    animation: none;
+  }
+}

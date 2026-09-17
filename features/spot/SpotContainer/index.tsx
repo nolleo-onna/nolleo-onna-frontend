@@ -4,12 +4,17 @@ import { useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { SlidersHorizontal, List, X } from "lucide-react";
 import SpotFilterSidebar from "../SpotFilterSidebar";
-import SpotListSidebar from "../SpotListSidebar";
+import SpotListSidebar, { type SpotListSelection } from "../SpotListSidebar";
 import SpotDetailModal from "../components/SpotDetailModal";
 import SpotStatusBar from "../components/SpotStatusBar";
 import { usePlaceIdMap } from "../hooks/usePlaceIdMap";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
+
+import type { MarkerRingRequest } from "../SpotMap";
+
+/** 목록에서 고른 장소로 옮겨갈 때의 줌. 이보다 더 확대해서 보고 있었다면 그대로 둔다 */
+const SPOT_FOCUS_LEVEL = 4;
 
 const SpotMap = dynamic(() => import("../SpotMap"), {
   ssr: false,
@@ -25,6 +30,7 @@ export default function SpotContainer() {
     // 클릭 시점 값으로 고정하면 매핑 로딩이 끝나도 모달에 반영이 안 된다.
     mapPlaceId: number | null;
   } | null>(null);
+  const [ringRequest, setRingRequest] = useState<MarkerRingRequest | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
   const mapRef = useRef<kakao.maps.Map | null>(null);
@@ -35,19 +41,22 @@ export default function SpotContainer() {
       ? null
       : (modalInfo.mapPlaceId ?? placeIdMap?.get(modalInfo.id) ?? 0);
 
-  const handleSelectSpot = (
-    id: string,
-    lat: number,
-    lng: number,
-    placeType: "SPOT" | "FOOD",
-    mapPlaceId: number
-  ) => {
+  // 목록에서 장소 클릭 — 바로 모달을 띄우지 않고, 지도를 그 위치로 옮겨 가운데 두고 마커를 흔들어
+  // "여기예요"를 보여준다. 자세히 보려면 마커를 누르거나 목록의 "상세정보"를 누른다.
+  const handleSelectSpot = ({ id, title, lat, lng }: SpotListSelection) => {
+    setSelectedId(id);
+    const map = mapRef.current;
+    if (map) {
+      // 줌을 먼저 맞추고 옮겨야 끝났을 때 정확히 가운데에 온다. 구 단위 뷰에선 마커가 안 보이니 반드시 확대
+      if (map.getLevel() > SPOT_FOCUS_LEVEL) map.setLevel(SPOT_FOCUS_LEVEL);
+      map.panTo(new kakao.maps.LatLng(lat, lng));
+    }
+    setRingRequest({ id, title, nonce: Date.now() });
+  };
+
+  const handleOpenDetail = ({ id, placeType, mapPlaceId }: SpotListSelection) => {
     setSelectedId(id);
     setModalInfo({ id, placeType, mapPlaceId });
-    if (mapRef.current) {
-      mapRef.current.panTo(new kakao.maps.LatLng(lat, lng));
-      mapRef.current.setLevel(4);
-    }
   };
 
   // 오른쪽 사이드바 검색 결과 위치들로 지도 화면을 맞춘다.
@@ -123,6 +132,7 @@ export default function SpotContainer() {
             setModalInfo({ id, placeType, mapPlaceId: null });
           }}
           mapInstanceRef={mapRef}
+          ringRequest={ringRequest}
         />
 
         {/* 리스트 사이드바: lg 미만에서는 슬라이드오버로 전환 */}
@@ -141,9 +151,14 @@ export default function SpotContainer() {
           </button>
           <SpotListSidebar
             selectedId={selectedId}
-            onSelectSpot={(...args) => {
+            onSelectSpot={(spot) => {
+              // 모바일에선 목록이 지도를 덮고 있어서, 닫아야 이동·흔들림이 보인다
               setIsListOpen(false);
-              handleSelectSpot(...args);
+              handleSelectSpot(spot);
+            }}
+            onOpenDetail={(spot) => {
+              setIsListOpen(false);
+              handleOpenDetail(spot);
             }}
             onSearchResults={handleSearchResults}
             onSelectRegion={handleSelectRegion}
