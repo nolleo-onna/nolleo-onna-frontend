@@ -91,21 +91,19 @@ export function useFestivalSuggestions(keyword: string) {
 
 const PICKS_LIMIT = 6;
 
-export const courseAreaPickKeys = {
-  list: (district: string, category: string | undefined) =>
-    ["mapPlaces", "areaPicks", district, category ?? "ALL"] as const,
+export const courseSpotPickKeys = {
+  list: (category: string | undefined) => ["mapPlaces", "spotPicks", category ?? "ALL"] as const,
 };
 
 /**
- * 검색어를 치기 전에 보여줄 "이 동네 가볼 만한 곳" — 스팟 장소를 구·군(+분류)으로 부른다.
+ * 검색어를 치기 전에 보여줄 "부산 가볼 만한 곳" — 고른 지역과 상관없이 부산 전체 스팟 장소(+분류).
  * 사진 있는 곳부터 받으려고 imageUrl 오름차순으로 정렬한다 (스팟 목록과 같은 이유).
  */
-export function useAreaSpotPicks(district: string | undefined, category: string | undefined, enabled: boolean) {
+export function useSpotPicks(category: string | undefined, enabled: boolean) {
   const { data, isFetching } = useQuery({
-    queryKey: courseAreaPickKeys.list(district ?? "", category),
+    queryKey: courseSpotPickKeys.list(category),
     queryFn: () =>
       fetchMapPlaces({
-        ...(district && { district }),
         ...(category && { category }),
         sort: "imageUrl,asc",
         size: PICKS_LIMIT,

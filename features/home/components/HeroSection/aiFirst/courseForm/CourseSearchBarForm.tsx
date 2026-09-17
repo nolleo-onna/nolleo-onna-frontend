@@ -7,9 +7,8 @@ import { Check, Flame, Loader2, MapPin, PartyPopper, Plus, Search, Sparkles, Sta
 
 import { COURSE_BUDGET_LABEL, COURSE_INCLUDE_SPOTS_MAX, COURSE_PLACE_NAME_MAX } from "@/constants/course";
 import type { Suggestion } from "@/features/home/components/SearchBar/SuggestField";
-import { useActiveFestivalPicks, useAreaSpotPicks } from "@/features/home/hooks/useCourseFormSuggestions";
+import { useActiveFestivalPicks, useSpotPicks } from "@/features/home/hooks/useCourseFormSuggestions";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
-import { areaGuideOf } from "./areaGuide";
 import { AreaTilePicker, BudgetPicker } from "./Pickers";
 import { useCourseFormState, type CourseSlot } from "./useCourseFormState";
 
@@ -136,6 +135,13 @@ export default function CourseSearchBarForm() {
     form.setOpenSlot(slot);
   };
 
+  /** 하나 고르고 나서 다음 칸으로 — 칸 요소를 찾아 꼬리 위치까지 같이 옮긴다 */
+  const advanceTo = (slot: CourseSlot) => {
+    const el = segmentEls.current[slot];
+    if (el) open(slot, el);
+    else form.setOpenSlot(slot);
+  };
+
   const [pickCategory, setPickCategory] = useState<(typeof PICK_CATEGORIES)[number]>(undefined);
 
   // 필수(지역·예산)는 미리 채워 두지 않고 직접 고르게 한다. 축제를 고르면 지역은 축제 위치를 따라가 필수에서 빠진다.
@@ -164,10 +170,9 @@ export default function CourseSearchBarForm() {
   const suggest = openSlot === "festival" ? form.festivalSuggest : form.spotSuggest;
   const isTyping = query.trim().length > 0;
 
-  // 치기 전엔 추천 — 행사는 지금·곧 열리는 것, 꼭 갈 곳은 고른 동네의 장소 (축제를 골랐으면 부산 전체)
-  const areaGuide = festival || !areaChosen ? undefined : areaGuideOf(area);
+  // 치기 전엔 추천 — 행사는 지금·곧 열리는 것, 꼭 갈 곳은 지역과 상관없이 부산 전체 (다른 동네 곳도 자유롭게 넣게)
   const festivalPicks = useActiveFestivalPicks();
-  const spotPicks = useAreaSpotPicks(areaGuide?.district, pickCategory, openSlot === "spot");
+  const spotPicks = useSpotPicks(pickCategory, openSlot === "spot");
   const picks = openSlot === "festival" ? festivalPicks : spotPicks;
 
   // 화면에 보이는 목록 하나로 방향키·Enter를 맞춘다
@@ -335,11 +340,17 @@ export default function CourseSearchBarForm() {
             {caretX !== null && (
               <span
                 aria-hidden
-                className="absolute -top-1.5 hidden h-4 w-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-white md:block"
+                className="absolute -top-1.5 hidden h-4 w-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-white transition-[left] duration-300 ease-out md:block"
                 style={{ left: caretX }}
               />
             )}
             <div className="relative rounded-[28px] bg-white p-3 shadow-[0_24px_60px_-24px_rgba(5,12,26,0.7)] md:p-4">
+              <motion.div
+                key={openSlot}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+              >
               <div className="flex items-center justify-between gap-3 px-2 pb-2">
                 <p className="flex min-w-0 items-center gap-1.5 truncate text-[13px] font-bold text-gray-900">
                   {openSlot === "area" && "어디서 놀까요?"}
@@ -358,7 +369,7 @@ export default function CourseSearchBarForm() {
                     ) : (
                       <>
                         <MapPin className="h-4 w-4 text-ocean-500" />
-                        {areaGuide ? `${area} 근처 가볼 만한 곳` : "부산 가볼 만한 곳"}
+                        부산 가볼 만한 곳
                       </>
                     ))}
                 </p>
@@ -379,8 +390,7 @@ export default function CourseSearchBarForm() {
                     onPick={(name) => {
                       form.setArea(name);
                       setAreaChosen(true);
-                      setCaretX(null);
-                      form.setOpenSlot("budget");
+                      advanceTo("budget");
                     }}
                   />
                 </div>
@@ -392,7 +402,7 @@ export default function CourseSearchBarForm() {
                     onPick={(tier) => {
                       form.setBudget(tier);
                       setBudgetChosen(true);
-                      form.setOpenSlot(null);
+                      advanceTo("spot");
                     }}
                   />
                 </div>
@@ -530,6 +540,7 @@ export default function CourseSearchBarForm() {
                   }
                 />
               )}
+              </motion.div>
             </div>
           </motion.div>
         )}
