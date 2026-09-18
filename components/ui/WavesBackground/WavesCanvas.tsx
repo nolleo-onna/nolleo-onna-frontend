@@ -32,10 +32,11 @@ export default function WavesCanvas({
   const [reducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   useEffect(() => {
-    if (reducedMotion || !containerRef.current) return;
+    const container = containerRef.current;
+    if (reducedMotion || !container) return;
 
     effectRef.current = WAVES({
-      el: containerRef.current,
+      el: container,
       THREE,
       mouseControls: false,
       touchControls: false,
@@ -49,7 +50,13 @@ export default function WavesCanvas({
       zoom,
     });
 
+    // vanta는 창 크기가 바뀔 때만 캔버스를 다시 잰다. 히어로는 조건 판이 펼쳐지면
+    // 창 크기와 상관없이 세로로 늘어나서, 늘어난 아래쪽에 파도 없이 배경색만 남았다.
+    const observer = new ResizeObserver(() => effectRef.current?.resize());
+    observer.observe(container);
+
     return () => {
+      observer.disconnect();
       effectRef.current?.destroy();
       effectRef.current = null;
     };
