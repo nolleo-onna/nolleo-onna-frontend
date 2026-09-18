@@ -19,6 +19,8 @@ declare module "vanta/dist/vanta.waves.min" {
 
   interface VantaWavesEffect {
     destroy: () => void;
+    /** 담은 요소 크기에 맞춰 캔버스를 다시 잰다 — vanta는 창 크기가 바뀔 때만 스스로 부른다 */
+    resize: () => void;
   }
 
   export default function WAVES(options: VantaWavesOptions): VantaWavesEffect;
