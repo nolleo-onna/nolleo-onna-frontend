@@ -84,6 +84,32 @@ export function usePost(postId: number | null) {
   });
 }
 
+/**
+ * 핫이슈 카드에 쓸 글 사진.
+ * 목록 응답엔 사진 URL이 없고 hasImage(있다/없다)만 와서, 사진 있는 글만 상세를 불러와 첫 장을 쓴다.
+ * 상세 캐시(postKeys.detail)를 그대로 쓰므로 글을 눌러 들어가면 다시 부르지 않는다.
+ */
+export function usePostThumbnails(posts: PostSummary[]): Map<number, string> {
+  const withImage = posts.filter((post) => post.hasImage);
+
+  return useQueries({
+    queries: withImage.map((post) => ({
+      queryKey: postKeys.detail(post.id),
+      queryFn: () => fetchPost(post.id),
+      staleTime: 1000 * 60,
+      retry: false,
+    })),
+    combine: (results) => {
+      const byPostId = new Map<number, string>();
+      results.forEach((result, i) => {
+        const first = result.data?.imageUrls?.[0];
+        if (first) byPostId.set(withImage[i].id, first);
+      });
+      return byPostId;
+    },
+  });
+}
+
 export function useCreatePost() {
   const queryClient = useQueryClient();
   return useMutation({

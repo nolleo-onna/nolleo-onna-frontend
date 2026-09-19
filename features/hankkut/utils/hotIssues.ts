@@ -27,6 +27,8 @@ export interface HotIssuePost {
   key: string;
   href: string;
   title: string;
+  /** 글에 올린 첫 사진 — 목록 응답엔 없어서 따로 받아온다 (없으면 글자 카드) */
+  imageUrl: string | null;
   authorName: string;
   tagLabel: string | null;
   viewCount: number;
@@ -62,7 +64,7 @@ export function sortByPopularity<T extends Pick<PostSummary, "viewCount" | "like
  * 동네 핫이슈 카드 — 지금 갈 수 있는 이 동네 행사를 먼저 놓고 남는 자리는 인기글로 채운다.
  * 글이 하나라도 있으면 한 칸은 글 몫으로 남겨, 행사가 많은 동네에서도 커뮤니티가 묻히지 않게 한다.
  * 행사도 글도 모자란 동네(서면처럼 행사가 없는 곳)는 큐레이션 한끗을 조회수순으로 채워 줄이 비지 않게 한다.
- * 게시글 목록 응답엔 이미지 URL이 없어 글은 텍스트 카드로 그린다.
+ * 게시글 목록 응답엔 사진 URL이 없어, 사진은 postThumbnails로 따로 받아 넘긴다(없으면 글자 카드).
  */
 export function buildHotIssues(
   regionEvents: BusanEvent[],
@@ -70,6 +72,7 @@ export function buildHotIssues(
   today: string,
   curated: Hankkut[] = [],
   limit = HOT_ISSUE_LIMIT,
+  postThumbnails: Map<number, string> = new Map(),
 ): HotIssueItem[] {
   const eventSlots = recentPosts.length > 0 ? limit - 1 : limit;
 
@@ -93,6 +96,7 @@ export function buildHotIssues(
       key: `post-${post.id}`,
       href: `/hankkut/post/${post.id}`,
       title: post.title,
+      imageUrl: postThumbnails.get(post.id) ?? null,
       authorName: maskName(post.author.nickname),
       tagLabel: post.categoryTags[0] ? POST_CATEGORY_LABELS[post.categoryTags[0]] : null,
       viewCount: post.viewCount,

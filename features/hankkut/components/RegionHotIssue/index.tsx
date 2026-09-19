@@ -10,7 +10,7 @@ import { eventBadgeClass } from "@/features/event/components/EventCard";
 import { useEvents } from "@/features/event/hooks/useEvents";
 import { toDateKey } from "@/features/event/utils/eventSchedule";
 import { getPostsForGallery } from "@/features/hankkut/data/galleries";
-import { useRecentRegionPosts } from "@/features/hankkut/hooks/usePosts";
+import { useRecentRegionPosts, usePostThumbnails } from "@/features/hankkut/hooks/usePosts";
 import { HOT_ISSUE_LIMIT, buildHotIssues } from "@/features/hankkut/utils/hotIssues";
 import { filterEventsByDistrict } from "@/features/hankkut/utils/regionEvents";
 
@@ -80,6 +80,43 @@ function HotIssueCard({ item }: { item: HotIssueItem }) {
     );
   }
 
+  // 사진을 올린 글은 행사 포스터처럼 사진을 깔고 글자를 얹는다
+  if (item.imageUrl) {
+    return (
+      <Link href={item.href} className={`${CARD} bg-navy-900`}>
+        <Image
+          src={item.imageUrl}
+          alt={item.title}
+          fill
+          quality={90}
+          sizes={CARD_SIZES}
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35" />
+        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold text-navy-900">글</span>
+          {item.tagLabel && (
+            <span className="rounded-full bg-lime-300 px-2 py-0.5 text-[11px] font-bold text-navy-900">{item.tagLabel}</span>
+          )}
+        </div>
+        <div className="absolute inset-x-3 bottom-3">
+          <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white break-keep">{item.title}</p>
+          <p className="mt-1.5 flex items-center gap-2.5 text-[11px] text-white/75">
+            <span className="truncate">by {item.authorName}</span>
+            <span className="flex shrink-0 items-center gap-0.5">
+              <Eye className="h-3 w-3" />
+              {item.viewCount}
+            </span>
+            <span className="flex shrink-0 items-center gap-0.5">
+              <MessageSquare className="h-3 w-3" />
+              {item.commentCount}
+            </span>
+          </p>
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <Link href={item.href} className={`${CARD} flex flex-col justify-between bg-gradient-to-br from-navy-900 to-ocean-600 p-4`}>
       <span
@@ -122,12 +159,18 @@ export default function RegionHotIssue({ gallery }: { gallery: HankkutGallery })
   const posts = useRecentRegionPosts(gallery.districtTag);
   const today = toDateKey(new Date());
 
+  // 카드에 올릴 글 사진 — 목록 응답엔 없어서 사진 있는 글만 상세로 따로 받는다
+  const recentPosts = posts.data?.content ?? [];
+  const postThumbnails = usePostThumbnails(recentPosts);
+
   const isPending = events.isPending || posts.isPending;
   const items = buildHotIssues(
     filterEventsByDistrict(events.data ?? [], gallery.districtTag),
-    posts.data?.content ?? [],
+    recentPosts,
     today,
     getPostsForGallery(gallery.slug),
+    HOT_ISSUE_LIMIT,
+    postThumbnails,
   );
 
   if (!isPending && items.length === 0) return null;
