@@ -11,53 +11,57 @@ interface SpotFilterSidebarProps {
   onSelectRegion: (region: string | null) => void;
 }
 
+const CARD = "rounded-2xl bg-white px-4 py-4 shadow-[0_2px_10px_-4px_rgba(13,48,128,0.18)]";
+
+/**
+ * 스팟 왼쪽 필터 사이드바.
+ * 한 장의 흰 판에 구분선으로 나누던 것을, 회색 바탕 위에 흰 카드를 얹는 모양으로 바꿨다 —
+ * 지도 옆에 패널이 떠 있는 느낌이라 덜 답답하다. 고른 값은 하늘색으로 표시한다.
+ */
 export default function SpotFilterSidebar({ onSelectRegion }: SpotFilterSidebarProps) {
   return (
-    <aside className="scrollbar-hide h-full overflow-y-auto border-r border-gray-100 bg-white">
-      {/* 헤더 — 제목 아래 오늘 날씨 카드 */}
-      <div className="px-5 pb-5 pt-6">
+    <aside className="scrollbar-hide h-full overflow-y-auto border-r border-gray-100 bg-gray-50 px-3 py-4">
+      <div className="px-2 pb-3">
         <h2 className="text-xl font-bold leading-tight tracking-tight text-gray-900">
           부산 어디로<br />
-          <span className="text-navy-400">놀러갈래?</span>
+          <span className="text-ocean-500">놀러갈래?</span>
         </h2>
-        <p className="mt-1.5 text-[12px] text-gray-400">지역 · 카테고리 · 예산으로 좁혀 보세요</p>
-
-        <div className="mt-4">
-          {/* useSearchParams(지역 필터 읽기)를 쓰므로 Suspense 필요 */}
-          <Suspense fallback={<div className="animate-shimmer h-[92px] rounded-2xl" />}>
-            <TodayWeatherCard />
-          </Suspense>
-        </div>
       </div>
 
-      {/* 지금 걸린 필터 — 하나씩 뺄 수 있다 */}
+      {/* 오늘 날씨 — 지역을 고르면 그 구의 날씨로 바뀐다 */}
+      <div className="mb-3">
+        {/* useSearchParams(지역 필터 읽기)를 쓰므로 Suspense 필요 */}
+        <Suspense fallback={<div className="animate-shimmer h-[92px] rounded-2xl" />}>
+          <TodayWeatherCard />
+        </Suspense>
+      </div>
+
+      {/* 지금 걸린 필터 — 칩의 ×로 하나씩 뺀다. 고른 게 없으면 통째로 사라진다 */}
       <Suspense>
-        <ActiveFilterSummary />
+        <div className="mb-3 overflow-hidden rounded-2xl bg-white shadow-[0_2px_10px_-4px_rgba(13,48,128,0.18)] empty:hidden [&>div]:border-0 [&>div]:px-4 [&>div]:py-3.5">
+          <ActiveFilterSummary />
+        </div>
       </Suspense>
 
-      {/* 필터 목록 */}
       <Suspense>
-        <div className="border-t border-gray-100 px-5 py-5">
+        <div className={`mb-3 ${CARD}`}>
           <RegionFilter onSelectRegion={onSelectRegion} />
         </div>
-        <div className="border-t border-gray-100 px-5 py-5">
+        <div className={`mb-3 ${CARD}`}>
           <CategoryFilter />
         </div>
-        <div className="border-t border-gray-100 px-5 py-5">
+        <div className={`mb-3 ${CARD}`}>
           <BudgetFilter />
         </div>
       </Suspense>
 
-      {/* 초기화 버튼 */}
-      <div className="border-t border-gray-100 px-5 py-4">
-        <a
-          href="?"
-          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          필터 초기화
-        </a>
-      </div>
+      <a
+        href="?"
+        className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white py-3 text-sm font-semibold text-gray-500 shadow-[0_2px_10px_-4px_rgba(13,48,128,0.18)] transition-colors hover:text-ocean-600"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        필터 초기화
+      </a>
     </aside>
   );
 }

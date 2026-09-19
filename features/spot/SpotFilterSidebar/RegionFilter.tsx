@@ -62,7 +62,7 @@ export default function RegionFilter({ onSelectRegion, hideHeading = false }: Re
         <Chip
           size="sm"
           onClick={() => updateParams(null)}
-          className={`w-full justify-center ${!selected ? "border-navy-300 bg-navy-300 text-white" : ""}`}
+          className={`w-full justify-center ${!selected ? "border-ocean-500 bg-ocean-500 text-white shadow-[0_4px_12px_-6px_rgba(10,132,255,0.9)]" : "hover:border-ocean-200 hover:text-ocean-600"}`}
         >
           전체
         </Chip>
@@ -72,7 +72,9 @@ export default function RegionFilter({ onSelectRegion, hideHeading = false }: Re
             size="sm"
             onClick={() => toggle(region)}
             className={`w-full justify-center ${
-              selected === region ? "border-navy-300 bg-navy-300 text-white" : ""
+              selected === region
+                ? "border-ocean-500 bg-ocean-500 text-white shadow-[0_4px_12px_-6px_rgba(10,132,255,0.9)]"
+                : "hover:border-ocean-200 hover:text-ocean-600"
             }`}
           >
             {region}

@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import SpotFilterSidebar from "../index";
 import AccordionSidebar from "./AccordionSidebar";
-import FloatingCardSidebar from "./FloatingCardSidebar";
 import TabbedSidebar from "./TabbedSidebar";
 import type { WeatherObservation } from "@/types/weather";
 
@@ -14,7 +13,7 @@ const WEATHER: WeatherObservation[] = [
 
 const noop = () => {};
 
-// 스팟 왼쪽 필터 사이드바 시안 비교. 필터 동작(URL 쿼리)은 네 가지 모두 같고 구성만 다르다.
+// 스팟 왼쪽 필터 사이드바 시안 비교. C(떠 있는 카드)를 골라 화면에 적용했고, A·B는 비교용으로 남겨둔다.
 const meta = {
   title: "Spot/필터 사이드바 시안",
   parameters: {
@@ -54,7 +53,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Current: Story = {
-  name: "지금 · 한 판에 쭉",
+  name: "지금 · 떠 있는 카드 (적용됨)",
   render: () => <SpotFilterSidebar onSelectRegion={noop} />,
 };
 
@@ -66,9 +65,4 @@ export const Accordion: Story = {
 export const Tabbed: Story = {
   name: "B · 탭 (스크롤 없음)",
   render: () => <TabbedSidebar onSelectRegion={noop} />,
-};
-
-export const FloatingCard: Story = {
-  name: "C · 떠 있는 카드",
-  render: () => <FloatingCardSidebar onSelectRegion={noop} />,
 };
