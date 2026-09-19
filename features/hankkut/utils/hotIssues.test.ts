@@ -49,6 +49,26 @@ function post(id: number, viewCount: number, overrides: Partial<PostSummary> = {
   };
 }
 
+describe("buildHotIssues — 글 사진", () => {
+  it("사진이 있는 글은 카드에 그 사진을 쓴다", () => {
+    const thumbnails = new Map([[7, "https://storage.googleapis.com/nolleo-onna-images/posts/a.png"]]);
+    const items = buildHotIssues([], [post(7, 10, { hasImage: true })], TODAY, [], 3, thumbnails);
+    const card = items.find((item) => item.kind === "post");
+
+    expect(card).toBeDefined();
+    expect(card?.kind === "post" && card.imageUrl).toBe(
+      "https://storage.googleapis.com/nolleo-onna-images/posts/a.png",
+    );
+  });
+
+  it("사진이 없으면 null — 글자 카드로 그린다", () => {
+    const items = buildHotIssues([], [post(8, 10)], TODAY);
+    const card = items.find((item) => item.kind === "post");
+
+    expect(card?.kind === "post" && card.imageUrl).toBeNull();
+  });
+});
+
 describe("buildHotIssues", () => {
   const events = [
     event("ended", "2026-08-01", "2026-08-02"),
