@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { Reorder, useDragControls } from "motion/react";
 import {
@@ -34,6 +34,8 @@ interface Props {
   selectedPlaceId: number | null;
   /** 사용자가 설정한 예산(원). 없으면 게이지를 표시하지 않는다. */
   budget?: number;
+  /** 방금 오른쪽 패널에서 추가한 장소 — 목록에서 잠깐 강조하고 그 자리로 스크롤한다 */
+  justAddedPlaceId?: number | null;
   /** 편집 모드 여부. onStartEdit이 넘어올 때만 편집 UI를 노출한다. */
   isEditing?: boolean;
   /** 초안이 서버 구성과 달라졌는지 — 저장 버튼 활성 조건 */
@@ -91,6 +93,8 @@ interface PlaceTimelineItemProps {
   isLast: boolean;
   isSelected: boolean;
   isEditing: boolean;
+  /** 방금 추가된 장소 — 아래에서 밀려 올라오며 잠깐 강조한다 */
+  isJustAdded?: boolean;
   placesCount: number;
   nextDistance?: number;
   onSelectPlace: (place: CoursePlace) => void;
@@ -154,6 +158,7 @@ function PlaceTimelineItem({
   isLast,
   isSelected,
   isEditing,
+  isJustAdded = false,
   placesCount,
   nextDistance,
   onSelectPlace,
@@ -164,11 +169,22 @@ function PlaceTimelineItem({
   const isDraggingRef = useRef(false);
   const isDesktop = useIsDesktop();
   const cardDraggable = isEditing && isDesktop;
+  const itemRef = useRef<HTMLLIElement>(null);
+
+  // 오른쪽 패널에서 추가하면 목록 맨 아래에 붙는데, 스크롤 밖이면 추가된 걸 못 본다
+  useEffect(() => {
+    if (!isJustAdded) return;
+    itemRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [isJustAdded]);
 
   return (
     <Reorder.Item
       as="li"
+      ref={itemRef}
       value={place}
+      initial={isJustAdded ? { opacity: 0, y: 24 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
       dragListener={cardDraggable}
       dragControls={dragControls}
       onDragStart={() => {
@@ -180,7 +196,9 @@ function PlaceTimelineItem({
           isDraggingRef.current = false;
         }, 0);
       }}
-      className={`relative ${isEditing ? "select-none" : ""}`}
+      className={`relative rounded-xl transition-shadow ${isEditing ? "select-none" : ""} ${
+        isJustAdded ? "shadow-[0_0_0_2px_var(--color-lime-400)]" : ""
+      }`}
       whileDrag={{
         scale: 1.02,
         zIndex: 10,
@@ -353,6 +371,7 @@ export default function CourseSidebar({
   congestionByPlaceId,
   onRemovePlace,
   onSelectPlace,
+  justAddedPlaceId = null,
 }: Props) {
   const congested = congestionByPlaceId
     ? getCongestedPlaces(course.days[0]?.places ?? [], congestionByPlaceId)
@@ -567,6 +586,7 @@ export default function CourseSidebar({
               isLast={i === places.length - 1}
               isSelected={place.id === selectedPlaceId}
               isEditing={isEditing}
+              isJustAdded={place.id === justAddedPlaceId}
               placesCount={places.length}
               nextDistance={places[i + 1]?.distanceFromPrevM}
               onSelectPlace={onSelectPlace}
