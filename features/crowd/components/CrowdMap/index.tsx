@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCongestion } from "@/features/home/hooks/useCongestion";
 import { getDistrictSummaries } from "@/features/home/utils/congestion";
-import { CROWD_STYLE } from "@/features/crowd/utils/crowdUtils";
+import { CROWD_STYLE, CROWD_TIER_STYLE, getCrowdTiers } from "@/features/crowd/utils/crowdUtils";
 import { DISTRICT_COORDS } from "@/features/spot/constants/districtCoords";
 import MapSkeleton from "@/components/ui/Skeleton/MapSkeleton";
 import type { DistrictSpotMarker } from "@/features/crowd/hooks/useDistrictSpotMarkers";
@@ -116,11 +116,15 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, onSelectS
     polygonsRef.current.forEach((p) => p.setMap(null));
     polygonsRef.current = [];
 
-    getDistrictSummaries(congestion).forEach((summary) => {
+    const summaries = getDistrictSummaries(congestion);
+    // 지도 색만 그날 값끼리 견줘 칠한다 — 덜 붐비는 쪽이 초록, 많이 붐비는 쪽이 빨강
+    const tiers = getCrowdTiers(summaries);
+
+    summaries.forEach((summary) => {
       const coords = DISTRICT_COORDS[summary.district];
       if (!coords) return;
 
-      const style = CROWD_STYLE[summary.level];
+      const style = { bg: CROWD_TIER_STYLE[tiers[summary.district] ?? 3].color, text: "#ffffff" };
       const isSelected = summary.district === selectedDistrict;
       const rings = districtPaths?.[summary.district];
 
@@ -212,7 +216,7 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, onSelectS
     // 보이지 않게 회색 "정보 없음" 폴리곤으로 채운다. 클릭하면 패널이 열려
     // 스팟 보러가기·코스 만들기 링크는 그대로 쓸 수 있다.
     if (districtPaths) {
-      const covered = new Set(getDistrictSummaries(congestion).map((s) => s.district));
+      const covered = new Set(summaries.map((s) => s.district));
       const NO_DATA_COLOR = "#9ca3af";
 
       Object.entries(districtPaths).forEach(([district, rings]) => {
@@ -335,6 +339,20 @@ export default function CrowdMap({ selectedDistrict, onSelectDistrict, onSelectS
         </div>
       )}
       <div ref={mapRef} className="h-full w-full" />
+
+      {/* 색은 그날 부산 안에서의 상대 비교라, 무엇과 견준 색인지 밝혀둔다 */}
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-2xl bg-white/95 px-3 py-2.5 shadow-[0_4px_16px_rgba(13,48,128,0.18)] ring-1 ring-black/5">
+        <p className="mb-1.5 text-[11px] font-semibold text-gray-500">오늘 부산 안에서 비교</p>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-gray-700">덜 붐빔</span>
+          <span className="flex h-2 w-24 overflow-hidden rounded-full">
+            {([0, 1, 2, 3] as const).map((tier) => (
+              <span key={tier} className="flex-1" style={{ background: CROWD_TIER_STYLE[tier].color }} />
+            ))}
+          </span>
+          <span className="text-[11px] font-semibold text-gray-700">많이 붐빔</span>
+        </div>
+      </div>
     </section>
   );
 }
