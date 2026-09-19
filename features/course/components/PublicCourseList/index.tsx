@@ -1,31 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Loader2, Map, Sparkles } from "lucide-react";
+import { Loader2, Map, Search, Sparkles, X } from "lucide-react";
 
 import CourseCardRouteLine from "@/features/course/components/CourseCard/CourseCardRouteLine";
 import { PUBLIC_COURSES_PAGE_SIZE, usePublicCourses } from "@/features/course/hooks/usePublicCourses";
 import { ASSISTANT_NAME } from "@/constants/assistant";
-import type { PopularCourse } from "@/types/course";
+import { filterCourses, sortCourses, type CourseSortKey } from "@/features/course/utils/courseSearch";
 
-type SortKey = "popular" | "latest" | "liked";
-
-const SORTS: { key: SortKey; label: string }[] = [
+const SORTS: { key: CourseSortKey; label: string }[] = [
   { key: "popular", label: "인기순" },
   { key: "latest", label: "최신순" },
   { key: "liked", label: "좋아요순" },
 ];
-
-/** 서버가 주는 순서(조회수 → 최신)가 인기순이라, 나머지만 다시 정렬한다 */
-function sortCourses(courses: PopularCourse[], key: SortKey): PopularCourse[] {
-  if (key === "popular") return courses;
-  const sorted = [...courses];
-  if (key === "latest") sorted.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  if (key === "liked") sorted.sort((a, b) => b.likeCount - a.likeCount || b.viewCount - a.viewCount);
-  return sorted;
-}
 
 /**
  * 공유된 코스 전체보기. 홈 "지금 인기 있는 코스"가 조회수 상위 몇 개만 넘겨 보여주는 반면,
@@ -34,10 +23,19 @@ function sortCourses(courses: PopularCourse[], key: SortKey): PopularCourse[] {
 export default function PublicCourseList() {
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     usePublicCourses();
-  const [sort, setSort] = useState<SortKey>("popular");
+  const [sort, setSort] = useState<CourseSortKey>("popular");
+
+  const [keyword, setKeyword] = useState("");
+  const isSearching = keyword.trim().length > 0;
 
   const courses = useMemo(() => data?.pages.flat() ?? [], [data]);
-  const sorted = useMemo(() => sortCourses(courses, sort), [courses, sort]);
+  const matched = useMemo(() => filterCourses(courses, keyword), [courses, keyword]);
+  const sorted = useMemo(() => sortCourses(matched, sort), [matched, sort]);
+
+  // 검색은 불러온 것 안에서만 되므로, 검색 중이면 남은 쪽을 알아서 마저 불러온다
+  useEffect(() => {
+    if (isSearching && hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [isSearching, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div>
@@ -54,7 +52,33 @@ export default function PublicCourseList() {
           {ASSISTANT_NAME}로 만든 코스 중 공개한 것만 모았어요. 마음에 드는 코스를 그대로 따라가 봐도 좋아요.
         </p>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        {/* 검색 — 코스 이름 · 들르는 곳 */}
+        <label className="mt-5 flex items-center gap-2.5 rounded-2xl bg-gray-100 px-4 py-3 transition-colors focus-within:bg-white focus-within:ring-2 focus-within:ring-ocean-300 md:max-w-md">
+          <Search className="h-[18px] w-[18px] shrink-0 text-gray-400" />
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setKeyword("");
+            }}
+            placeholder="코스 이름이나 장소로 검색 (예: 해운대)"
+            maxLength={30}
+            aria-label="코스 검색"
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-gray-900 outline-none placeholder:font-normal placeholder:text-gray-400"
+          />
+          {keyword && (
+            <button
+              type="button"
+              onClick={() => setKeyword("")}
+              aria-label="검색어 지우기"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-300 text-white transition-colors hover:bg-gray-400"
+            >
+              <X className="h-3.5 w-3.5" strokeWidth={3} />
+            </button>
+          )}
+        </label>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-1.5">
             {SORTS.map(({ key, label }) => (
               <button
@@ -73,10 +97,19 @@ export default function PublicCourseList() {
             ))}
           </div>
           {courses.length > 0 && (
-            <p className="text-[13px] text-gray-400">
-              {courses.length}개
-              {/* 정렬은 지금까지 불러온 코스 안에서만 바뀐다 — 더 있으면 헷갈리지 않게 알려준다 */}
-              {hasNextPage && sort !== "popular" && " 불러옴 · 더 보기를 누르면 함께 정렬돼요"}
+            <p className="flex items-center gap-1.5 text-[13px] text-gray-400">
+              {isSearching && hasNextPage && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {isSearching ? (
+                <>
+                  <b className="font-semibold text-gray-600">&lsquo;{keyword.trim()}&rsquo;</b> {matched.length}개
+                </>
+              ) : (
+                <>
+                  {courses.length}개
+                  {/* 정렬은 지금까지 불러온 코스 안에서만 바뀐다 — 더 있으면 헷갈리지 않게 알려준다 */}
+                  {hasNextPage && sort !== "popular" && " 불러옴 · 더 보기를 누르면 함께 정렬돼요"}
+                </>
+              )}
             </p>
           )}
         </div>
@@ -88,6 +121,21 @@ export default function PublicCourseList() {
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="animate-shimmer aspect-[4/3] rounded-[22px]" />
           ))}
+        </div>
+      ) : isSearching && matched.length === 0 && !hasNextPage ? (
+        <div className="flex flex-col items-center gap-3 rounded-[20px] border border-dashed border-gray-200 bg-gray-50/60 px-6 py-20 text-center">
+          <span className="text-3xl">🔍</span>
+          <p className="text-sm font-semibold text-gray-700 break-keep">
+            &lsquo;{keyword.trim()}&rsquo;가 들어간 코스가 없어요
+          </p>
+          <p className="text-xs text-gray-400 break-keep">코스 이름과 들르는 곳 이름에서 찾아요</p>
+          <button
+            type="button"
+            onClick={() => setKeyword("")}
+            className="mt-1 rounded-full bg-navy-900 px-5 py-2.5 text-xs font-semibold text-lime-300 transition-transform hover:-translate-y-0.5"
+          >
+            전체 코스 보기
+          </button>
         </div>
       ) : isError || courses.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[20px] border border-dashed border-gray-200 bg-gray-50/60 px-6 py-20 text-center">
@@ -144,7 +192,7 @@ export default function PublicCourseList() {
             ))}
           </motion.ul>
 
-          {hasNextPage && (
+          {hasNextPage && !isSearching && (
             <div className="mt-8 flex justify-center">
               <button
                 type="button"
