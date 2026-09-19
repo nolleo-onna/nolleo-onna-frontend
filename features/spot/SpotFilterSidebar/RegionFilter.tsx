@@ -13,9 +13,11 @@ export const REGIONS = [
 
 interface RegionFilterProps {
   onSelectRegion: (region: string | null) => void;
+  /** 바깥(아코디언·탭)에서 이미 제목을 보여줄 때 — 같은 말이 두 번 나오지 않게 */
+  hideHeading?: boolean;
 }
 
-export default function RegionFilter({ onSelectRegion }: RegionFilterProps) {
+export default function RegionFilter({ onSelectRegion, hideHeading = false }: RegionFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.get("region");
@@ -43,12 +45,14 @@ export default function RegionFilter({ onSelectRegion }: RegionFilterProps) {
 
   return (
     <div>
-      <div className="mb-3.5 flex items-center justify-between">
-        <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">지역 · 구</span>
+      <div className={`flex items-center justify-between ${hideHeading ? "mb-1" : "mb-3.5"}`}>
+        {!hideHeading && (
+          <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">지역 · 구</span>
+        )}
         {selected && (
           <button
             onClick={() => updateParams(null)}
-            className="text-xs text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline"
+            className="ml-auto text-xs text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline"
           >
             초기화
           </button>
@@ -58,7 +62,7 @@ export default function RegionFilter({ onSelectRegion }: RegionFilterProps) {
         <Chip
           size="sm"
           onClick={() => updateParams(null)}
-          className={`w-full justify-center ${!selected ? "border-navy-300 bg-navy-300 text-white" : ""}`}
+          className={`w-full justify-center ${!selected ? "border-ocean-500 bg-ocean-500 text-white shadow-[0_4px_12px_-6px_rgba(10,132,255,0.9)]" : "hover:border-ocean-200 hover:text-ocean-600"}`}
         >
           전체
         </Chip>
@@ -68,7 +72,9 @@ export default function RegionFilter({ onSelectRegion }: RegionFilterProps) {
             size="sm"
             onClick={() => toggle(region)}
             className={`w-full justify-center ${
-              selected === region ? "border-navy-300 bg-navy-300 text-white" : ""
+              selected === region
+                ? "border-ocean-500 bg-ocean-500 text-white shadow-[0_4px_12px_-6px_rgba(10,132,255,0.9)]"
+                : "hover:border-ocean-200 hover:text-ocean-600"
             }`}
           >
             {region}

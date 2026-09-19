@@ -5,7 +5,12 @@ import { useCallback } from "react";
 import { Check } from "lucide-react";
 import { CATEGORIES } from "@/features/spot/constants/categoryMap";
 
-export default function CategoryFilter() {
+interface CategoryFilterProps {
+  /** 바깥에서 이미 제목을 보여줄 때 */
+  hideHeading?: boolean;
+}
+
+export default function CategoryFilter({ hideHeading = false }: CategoryFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.getAll("category");
@@ -27,27 +32,39 @@ export default function CategoryFilter() {
 
   return (
     <div>
-      <div className="mb-3.5">
-        <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">카테고리</span>
-      </div>
-      <ul className="flex flex-col gap-0.5">
-        {CATEGORIES.map(({ id, label, emoji }) => {
+      {!hideHeading && (
+        <div className="mb-3">
+          <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">카테고리</span>
+        </div>
+      )}
+      {/* 체크박스 목록이 밋밋해서, 분류 색을 쓰는 타일로 바꿨다 — 고른 것이 색으로 바로 보인다 */}
+      <ul className="grid grid-cols-2 gap-2">
+        {CATEGORIES.map(({ id, label, emoji, color }) => {
           const checked = selected.includes(id);
           return (
             <li key={id}>
               <button
                 onClick={() => toggle(id)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-1 py-2 transition-colors hover:bg-gray-50"
+                aria-pressed={checked}
+                className={`flex w-full items-center gap-1.5 rounded-xl px-2 py-2 text-left transition-all ${
+                  checked
+                    ? "text-white shadow-[0_6px_16px_-8px_rgba(5,12,26,0.6)]"
+                    : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-100 hover:bg-gray-100"
+                }`}
+                style={checked ? { backgroundColor: color } : undefined}
               >
-                <span className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border-[1.5px] transition-all ${
-                  checked ? "border-navy-400 bg-navy-400" : "border-gray-300 bg-white"
-                }`}>
-                  {checked && <Check size={10} stroke="white" strokeWidth={2.5} />}
+                <span
+                  aria-hidden
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[13px] ${
+                    checked ? "bg-white/20" : "bg-white"
+                  }`}
+                >
+                  {emoji}
                 </span>
-                <span className="text-[15px]" aria-hidden="true">{emoji}</span>
-                <span className={`text-sm font-medium tracking-tight ${checked ? "text-gray-900" : "text-gray-600"}`}>
+                <span className="min-w-0 flex-1 text-[12px] leading-tight font-semibold tracking-tight break-keep">
                   {label}
                 </span>
+                {checked && <Check size={12} strokeWidth={3} className="shrink-0" />}
               </button>
             </li>
           );

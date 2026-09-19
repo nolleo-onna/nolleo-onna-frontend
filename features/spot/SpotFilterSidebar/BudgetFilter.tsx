@@ -21,7 +21,12 @@ function formatBudget(value: number) {
   return `${value.toLocaleString()}원`;
 }
 
-export default function BudgetFilter() {
+interface BudgetFilterProps {
+  /** 바깥에서 이미 제목을 보여줄 때 */
+  hideHeading?: boolean;
+}
+
+export default function BudgetFilter({ hideHeading = false }: BudgetFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialBudget = Number(searchParams.get("budget") ?? 0);
@@ -52,13 +57,15 @@ export default function BudgetFilter() {
   };
 
   const pct = Math.round((budget / MAX) * 100);
-  const sliderBg = `linear-gradient(to right, #3d68d9 ${pct}%, #e5e7eb ${pct}%)`;
+  const sliderBg = `linear-gradient(to right, #0a84ff ${pct}%, #e5e7eb ${pct}%)`;
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">예산</span>
-      </div>
+      {!hideHeading && (
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">예산</span>
+        </div>
+      )}
 
       <div className="mb-1">
         <input
@@ -74,14 +81,14 @@ export default function BudgetFilter() {
             [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4
             [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none
             [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[2px]
-            [&::-webkit-slider-thumb]:border-navy-400 [&::-webkit-slider-thumb]:bg-white
-            [&::-webkit-slider-thumb]:shadow-[0_1px_4px_rgba(61,104,217,0.3)]
+            [&::-webkit-slider-thumb]:border-ocean-500 [&::-webkit-slider-thumb]:bg-white
+            [&::-webkit-slider-thumb]:shadow-[0_1px_4px_rgba(10,132,255,0.35)]
           "
         />
       </div>
 
       <div className="mb-3.5 text-right text-xs text-gray-500">
-        최대 <span className="font-bold text-navy-400">{formatBudget(budget)}</span>
+        최대 <span className="font-bold text-ocean-600">{formatBudget(budget)}</span>
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
@@ -92,7 +99,7 @@ export default function BudgetFilter() {
             onClick={() => handlePreset(value)}
             className={`w-full justify-center px-1 text-xs ${
               budget === value
-                ? "border-navy-200 bg-navy-50 text-navy-400"
+                ? "border-ocean-200 bg-ocean-50 text-ocean-600"
                 : ""
             }`}
           >
