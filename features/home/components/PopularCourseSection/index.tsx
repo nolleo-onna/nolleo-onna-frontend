@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import SectionHeader from "@/features/home/components/SectionHeader";
-import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
+import CourseCardRouteLine from "@/features/course/components/CourseCard/CourseCardRouteLine";
 import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
 import { ASSISTANT_NAME } from "@/constants/assistant";
@@ -20,6 +20,7 @@ const AUTO_PLAY_MS = 4000;
 const CARD_WIDTH = "w-[85%] sm:w-[calc((100%-16px)/2)] lg:w-[calc((100%-32px)/3)]";
 
 // 사람들이 만들어 공개한 코스를 조회수 순으로 보여준다. 한 줄에 3장씩, 다른 홈 카드처럼 넘긴다.
+// 전체 목록은 /course/shared(전체보기)에 같은 카드로 격자로 편다.
 export default function PopularCourseSection() {
   const { data: courses, isPending, isError } = usePopularCourses(FETCH_COUNT);
   const items = courses ?? [];
@@ -43,7 +44,7 @@ export default function PopularCourseSection() {
       <SectionHeader
         title="지금 인기 있는 코스"
         description="여행자들이 만들어 공유한 코스를 조회수 순으로 보여드려요"
-        action={{ label: "나도 만들기", href: "/course" }}
+        action={{ label: "전체보기", href: "/course/shared" }}
       >
         {canLoop && (
           <div className="hidden items-center gap-2 sm:flex">
@@ -70,7 +71,7 @@ export default function PopularCourseSection() {
       {isPending ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: VISIBLE_DESKTOP }, (_, i) => (
-            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/3] shrink-0 rounded-[20px]`} />
+            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/3] shrink-0 rounded-[22px]`} />
           ))}
         </div>
       ) : isError || items.length === 0 ? (
@@ -106,7 +107,7 @@ export default function PopularCourseSection() {
                 tabIndex={isClone ? -1 : undefined}
                 className={`${CARD_WIDTH} flex shrink-0 snap-start`}
               >
-                <RouteItineraryCard
+                <CourseCardRouteLine
                   rank={(index % items.length) + 1}
                   imageSrc={course.thumbnailImageUrl}
                   title={course.title}
