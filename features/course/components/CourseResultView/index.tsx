@@ -120,6 +120,14 @@ export default function CourseResultView() {
   const updateVisibility = useUpdateCourseVisibility(pairId);
 
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+  const [justAddedPlaceId, setJustAddedPlaceId] = useState<number | null>(null);
+
+  // 강조는 잠깐만 — 다음 추가가 오면 그 장소로 옮겨간다
+  useEffect(() => {
+    if (justAddedPlaceId === null) return;
+    const timer = setTimeout(() => setJustAddedPlaceId(null), 1600);
+    return () => clearTimeout(timer);
+  }, [justAddedPlaceId]);
   const [modalContentId, setModalContentId] = useState<string | null>(null);
   const [modalPlaceType, setModalPlaceType] = useState<"SPOT" | "FOOD" | null>(null);
   const [modalMapPlaceId, setModalMapPlaceId] = useState<number | null>(null);
@@ -317,6 +325,8 @@ export default function CourseResultView() {
       distanceFromPrevM: 0,
     };
     updateDraft([...places, added]);
+    // 왼쪽 목록에서 방금 들어온 카드를 잠깐 강조한다 (그 자리로 스크롤도 된다)
+    setJustAddedPlaceId(added.id);
   };
 
   const handleSelectPlace = (place: CoursePlace) => setSelectedPlaceId(place.id);
@@ -379,6 +389,7 @@ export default function CourseResultView() {
             onMovePlace={handleMovePlace}
             onReorderPlaces={handleReorderPlaces}
             onRemovePlace={handleRemovePlace}
+            justAddedPlaceId={justAddedPlaceId}
             onSelectDay={() => {}}
             onSelectPlace={handleSelectPlace}
           />

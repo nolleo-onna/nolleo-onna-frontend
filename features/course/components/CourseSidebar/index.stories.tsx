@@ -52,3 +52,13 @@ export const Editing: Story = {
     onRemovePlace: noop,
   },
 };
+
+// 오른쪽 패널에서 장소를 추가한 직후 — 마지막 카드가 밀려 올라오며 잠깐 강조된다
+export const JustAdded: Story = {
+  name: "편집 · 방금 추가된 장소 강조",
+  args: {
+    ...Editing.args,
+    justAddedPlaceId: MOCK_COURSE.days[0].places.at(-1)?.id ?? null,
+    selectedPlaceId: null,
+  },
+};
