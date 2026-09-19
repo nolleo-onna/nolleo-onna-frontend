@@ -22,10 +22,10 @@ const BARCODE = [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 1, 2, 3];
 /** 표 모양 로그인 — 페이지로도, 모달 속 내용으로도 쓴다. 넓은 화면에선 진짜 표처럼 가로로 눕는다 */
 function TicketCard() {
   return (
-    <div className="flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_40px_90px_-30px_rgba(5,12,26,0.95)] sm:max-w-[680px] sm:flex-row">
+    <div className="flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_40px_90px_-30px_rgba(5,12,26,0.95)] sm:max-w-[780px] sm:flex-row">
       {/* 사진 면 — 가로일 땐 왼쪽 절반 */}
-      <div className="relative h-[190px] shrink-0 sm:h-auto sm:w-[290px]">
-        <Image src={COVER.src} alt="" fill priority quality={92} sizes="(max-width: 640px) 100vw, 290px" className="object-cover" />
+      <div className="relative h-[190px] shrink-0 sm:h-auto sm:w-[340px]">
+        <Image src={COVER.src} alt="" fill priority quality={92} sizes="(max-width: 640px) 100vw, 340px" className="object-cover" />
         <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-navy-900/85 via-navy-900/25 to-navy-900/10" />
 
         <div className="absolute inset-x-5 top-4 flex items-center justify-between text-white">
@@ -63,7 +63,7 @@ function TicketCard() {
       </div>
 
       {/* 로그인 면 */}
-      <div className="flex flex-1 flex-col justify-center px-7 pb-7 pt-3 sm:py-8 sm:pl-2 sm:pr-8">
+      <div className="flex flex-1 flex-col justify-center px-7 pb-7 pt-3 sm:py-9 sm:pl-3 sm:pr-10">
         <div className="hidden items-center justify-between sm:flex">
           <span className="text-[10px] font-bold tracking-[0.14em] text-gray-400">BOARDING PASS</span>
           <span className="text-[10px] text-gray-300">NO.001</span>
