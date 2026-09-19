@@ -44,7 +44,8 @@ const meta = {
       queryClient.setQueryData(favoriteKeys.list(), FAVORITES);
       queryClient.setQueryData(favoriteStatsKey, STATS);
       try {
-        localStorage.setItem("hankkut:bookmarks", JSON.stringify([1, 10]));
+        // 4개 넘게 저장한 상태 — "더 보기"로 전부 펼쳐지는지 보려고
+        localStorage.setItem("hankkut:bookmarks", JSON.stringify([1, 2, 3, 4, 5, 6, 10]));
       } catch {
         // 스토리 환경에서 저장소를 못 쓰면 저장한 한끗은 빈 상태로 보인다
       }
