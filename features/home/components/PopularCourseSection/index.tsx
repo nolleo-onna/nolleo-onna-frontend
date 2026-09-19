@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import SectionHeader from "@/features/home/components/SectionHeader";
-import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
+import CourseCardMagazine from "@/features/course/components/CourseCard/CourseCardMagazine";
 import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
 import { ASSISTANT_NAME } from "@/constants/assistant";
@@ -20,6 +20,7 @@ const AUTO_PLAY_MS = 4000;
 const CARD_WIDTH = "w-[85%] sm:w-[calc((100%-16px)/2)] lg:w-[calc((100%-32px)/3)]";
 
 // 사람들이 만들어 공개한 코스를 조회수 순으로 보여준다. 한 줄에 3장씩, 다른 홈 카드처럼 넘긴다.
+// 전체 목록은 /course/shared(전체보기)에 같은 카드로 격자로 편다.
 export default function PopularCourseSection() {
   const { data: courses, isPending, isError } = usePopularCourses(FETCH_COUNT);
   const items = courses ?? [];
@@ -70,7 +71,7 @@ export default function PopularCourseSection() {
       {isPending ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: VISIBLE_DESKTOP }, (_, i) => (
-            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/3] shrink-0 rounded-[20px]`} />
+            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/5] shrink-0 rounded-[24px]`} />
           ))}
         </div>
       ) : isError || items.length === 0 ? (
@@ -106,7 +107,7 @@ export default function PopularCourseSection() {
                 tabIndex={isClone ? -1 : undefined}
                 className={`${CARD_WIDTH} flex shrink-0 snap-start`}
               >
-                <RouteItineraryCard
+                <CourseCardMagazine
                   rank={(index % items.length) + 1}
                   imageSrc={course.thumbnailImageUrl}
                   title={course.title}
