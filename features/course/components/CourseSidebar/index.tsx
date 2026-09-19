@@ -259,8 +259,9 @@ function PlaceTimelineItem({
               )}
             </div>
             <div className="min-w-0 flex-1">
+          {/* 상호가 길면 한 줄에서 잘려 뒤가 안 보였다 — 두 줄까지 보여준다 */}
           <p
-            className={`mb-0.5 truncate text-[14px] font-semibold ${
+            className={`mb-0.5 line-clamp-2 text-[14px] leading-snug font-semibold break-keep ${
               isSelected ? "text-navy-900" : "text-gray-800"
             }`}
           >
