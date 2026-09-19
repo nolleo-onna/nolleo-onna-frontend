@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 import type { LucideIcon } from "lucide-react";
 import DefaultAvatar from "@/components/ui/DefaultAvatar";
+import LoginTicketModal from "@/features/auth/LoginTicketModal";
 
 import type { User } from "@/types/auth";
 
@@ -190,6 +191,7 @@ export function HeaderView({ user, isLoading, isLoggingOut, onLogout }: HeaderVi
   const pathname = usePathname() ?? "/";
   const [hovered, setHovered] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
 
@@ -275,14 +277,17 @@ export function HeaderView({ user, isLoading, isLoggingOut, onLogout }: HeaderVi
               ) : user ? (
                 <UserMenu user={user} onLogout={onLogout} isLoggingOut={isLoggingOut} />
               ) : (
-                <Link
-                  href="/login"
-                  onClick={closeMenu}
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMenu();
+                    setLoginOpen(true);
+                  }}
                   className="group inline-flex items-center gap-1 rounded-full bg-navy-900 px-4 py-2 text-[13px] font-semibold text-white transition-[background-color,transform] duration-200 hover:bg-ocean-600 active:scale-95"
                 >
                   로그인
                   <ArrowRight className="hidden h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 sm:block" />
-                </Link>
+                </button>
               )}
 
               {/* 모바일 메뉴 버튼 — 두 줄이 X로 접힌다 */}
@@ -311,6 +316,9 @@ export function HeaderView({ user, isLoading, isLoggingOut, onLogout }: HeaderVi
           </div>
         </div>
       </header>
+
+      {/* 로그인 — 페이지를 옮기지 않고 보던 화면 위에 표를 띄운다 */}
+      <LoginTicketModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
 
       {/* 모바일 메뉴 — 캡슐 아래로 카드가 내려오고 링크가 차례로 떠오른다 */}
       <AnimatePresence>
