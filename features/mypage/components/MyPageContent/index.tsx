@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Bell,
   Bookmark,
+  ChevronDown,
   ChevronRight,
   FileText,
   Heart,
@@ -219,11 +220,14 @@ function SectionHead({
   icon: Icon,
   iconClass,
   title,
+  count,
   href,
 }: {
   icon: LucideIcon;
   iconClass: string;
   title: string;
+  /** 제목 옆 개수 — 몇 개 저장했는지 한눈에 */
+  count?: number;
   href: string;
 }) {
   return (
@@ -233,6 +237,9 @@ function SectionHead({
           <Icon className="h-4 w-4" />
         </span>
         {title}
+        {count !== undefined && count > 0 && (
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[12px] font-semibold text-gray-500">{count}</span>
+        )}
       </h2>
       <Link
         href={href}
@@ -402,15 +409,31 @@ function FavoritePlacesSection() {
 
 // ── 저장한 한끗 ───────────────────────────────────────────────────────────────
 function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
+  // 저장한 글이 4개를 넘으면 나머지를 아예 볼 수 없었다 — 펼쳐서 전부 볼 수 있게 한다
+  const [isExpanded, setIsExpanded] = useState(false);
+  const shown = isExpanded ? saved : saved.slice(0, SAVED_HANKKUT_LIMIT);
+  const hiddenCount = saved.length - shown.length;
+
   return (
     <motion.section {...sectionRise} className="rounded-[28px] bg-white p-6 ring-1 ring-gray-100 md:p-7">
-      <SectionHead icon={Bookmark} iconClass="bg-lime-100 text-lime-700" title="저장한 한끗" href="/hankkut" />
+      <SectionHead
+        icon={Bookmark}
+        iconClass="bg-lime-100 text-lime-700"
+        title="저장한 한끗"
+        count={saved.length}
+        href="/hankkut"
+      />
 
       {saved.length === 0 ? (
         <EmptyBlock icon={Bookmark} text="아직 저장한 한끗 정보가 없어요" href="/hankkut" cta="한끗 정보 구경하기" />
       ) : (
-        <ul className="mt-5 flex flex-col gap-2.5">
-          {saved.slice(0, SAVED_HANKKUT_LIMIT).map((item) => (
+        <ul
+          className={`mt-5 flex flex-col gap-2.5 ${
+            // 다 펼치면 옆 칸(찜한 장소)보다 한없이 길어져서, 길 때만 안쪽에서 스크롤한다
+            isExpanded && saved.length > 6 ? "max-h-[420px] overflow-y-auto pr-1" : ""
+          }`}
+        >
+          {shown.map((item) => (
             <li key={item.id}>
               <Link
                 href={`/hankkut/${item.id}`}
@@ -439,6 +462,18 @@ function SavedHankkutSection({ saved }: { saved: Hankkut[] }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {saved.length > SAVED_HANKKUT_LIMIT && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          aria-expanded={isExpanded}
+          className="mt-3 flex w-full items-center justify-center gap-1 rounded-2xl bg-gray-50 py-2.5 text-[13px] font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+        >
+          {isExpanded ? "접기" : `${hiddenCount}개 더 보기`}
+          <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+        </button>
       )}
     </motion.section>
   );

@@ -3,7 +3,7 @@
 import PhotoBackdrop from "@/components/ui/PhotoBackdrop";
 import { toBackdropPhoto } from "@/libs/tourImage";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type Variants, MotionConfig, motion } from "motion/react";
 import {
@@ -326,13 +326,21 @@ export default function MyCourseListView() {
     page * COURSE_PAGE_SIZE,
   );
 
+  const searchAreaRef = useRef<HTMLDivElement>(null);
+
   const goToPage = (next: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (next <= 1) params.delete("page");
     else params.set("page", String(next));
     const query = params.toString();
     router.replace(query ? `?${query}` : "?", { scroll: false });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // 맨 위로 올리면 상단 배너까지 되돌아가 목록이 한참 아래에 남는다 — 검색줄까지만 올린다
+    const top = searchAreaRef.current?.getBoundingClientRect().top;
+    const HEADER_H = 64; // 고정 헤더 아래에 검색줄이 걸리지 않게
+    window.scrollTo({
+      top: top === undefined ? 0 : window.scrollY + top - HEADER_H - 12,
+      behavior: "smooth",
+    });
   };
 
   const handleCardClick = (pairId: string) => {
@@ -403,8 +411,8 @@ export default function MyCourseListView() {
         <EmptyState />
       ) : (
         <>
-          {/* 검색 */}
-          <div className="relative mb-4 max-w-md">
+          {/* 검색 — 페이지를 넘기면 여기까지만 올라온다 */}
+          <div ref={searchAreaRef} className="relative mb-4 max-w-md">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"

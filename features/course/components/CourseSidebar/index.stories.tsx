@@ -52,3 +52,37 @@ export const Editing: Story = {
     onRemovePlace: noop,
   },
 };
+
+// 상호가 긴 음식점 — 한 줄에서 잘리지 않고 두 줄까지 보이는지
+export const LongPlaceNames: Story = {
+  name: "긴 상호 (두 줄까지)",
+  args: {
+    course: {
+      ...MOCK_COURSE,
+      days: [
+        {
+          ...MOCK_COURSE.days[0],
+          places: MOCK_COURSE.days[0].places.map((place, i) =>
+            i === 2
+              ? { ...place, name: "장덕풍천장어 광안리해수욕장 본점", category: "음식점", expectedCost: 32000 }
+              : i === 3
+                ? { ...place, name: "양가손만두 부전시장 본점 해운대 직영점", category: "음식점", expectedCost: 12000 }
+                : place,
+          ),
+        },
+        ...MOCK_COURSE.days.slice(1),
+      ],
+    },
+    selectedPlaceId: null,
+  },
+};
+
+// 오른쪽 패널에서 장소를 추가한 직후 — 마지막 카드가 밀려 올라오며 잠깐 강조된다
+export const JustAdded: Story = {
+  name: "편집 · 방금 추가된 장소 강조",
+  args: {
+    ...Editing.args,
+    justAddedPlaceId: MOCK_COURSE.days[0].places.at(-1)?.id ?? null,
+    selectedPlaceId: null,
+  },
+};

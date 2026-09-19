@@ -133,7 +133,8 @@ export default function CourseSpotPicker({
         </div>
 
         {/* 카테고리 칩 */}
-        <div className="scrollbar-hide -mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+        {/* 가로 스크롤이면 오른쪽 칩이 잘린 것처럼 보여서 줄바꿈으로 모두 보여준다 */}
+        <div className="-mx-1 mt-2.5 flex flex-wrap gap-1.5 px-1">
           {[{ id: "ALL", label: "전체", emoji: "✨" }, ...CATEGORIES].map(
             ({ id, label, emoji }) => {
               const active = category === id;
