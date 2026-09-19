@@ -5,7 +5,12 @@ import { useCallback } from "react";
 import { Check } from "lucide-react";
 import { CATEGORIES } from "@/features/spot/constants/categoryMap";
 
-export default function CategoryFilter() {
+interface CategoryFilterProps {
+  /** 바깥에서 이미 제목을 보여줄 때 */
+  hideHeading?: boolean;
+}
+
+export default function CategoryFilter({ hideHeading = false }: CategoryFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.getAll("category");
@@ -27,9 +32,11 @@ export default function CategoryFilter() {
 
   return (
     <div>
-      <div className="mb-3">
-        <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">카테고리</span>
-      </div>
+      {!hideHeading && (
+        <div className="mb-3">
+          <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">카테고리</span>
+        </div>
+      )}
       {/* 체크박스 목록이 밋밋해서, 분류 색을 쓰는 타일로 바꿨다 — 고른 것이 색으로 바로 보인다 */}
       <ul className="grid grid-cols-2 gap-2">
         {CATEGORIES.map(({ id, label, emoji, color }) => {

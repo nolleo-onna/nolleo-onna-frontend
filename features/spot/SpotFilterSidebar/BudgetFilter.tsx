@@ -21,7 +21,12 @@ function formatBudget(value: number) {
   return `${value.toLocaleString()}원`;
 }
 
-export default function BudgetFilter() {
+interface BudgetFilterProps {
+  /** 바깥에서 이미 제목을 보여줄 때 */
+  hideHeading?: boolean;
+}
+
+export default function BudgetFilter({ hideHeading = false }: BudgetFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialBudget = Number(searchParams.get("budget") ?? 0);
@@ -56,9 +61,11 @@ export default function BudgetFilter() {
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">예산</span>
-      </div>
+      {!hideHeading && (
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-bold tracking-widest text-gray-900 uppercase">예산</span>
+        </div>
+      )}
 
       <div className="mb-1">
         <input
