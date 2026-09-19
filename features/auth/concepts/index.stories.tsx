@@ -7,6 +7,9 @@ import MosaicLogin from "./MosaicLogin";
 import PhotoLogin from "./PhotoLogin";
 import PhotoSplitLogin from "./PhotoSplitLogin";
 import SplitLogin from "./SplitLogin";
+import TicketLogin from "./TicketLogin";
+import FloatingSpotLogin from "./FloatingSpotLogin";
+import TypeLogin from "./TypeLogin";
 
 // 로그인 화면 시안 비교. 소셜 버튼은 모두 같은 것을 쓴다.
 // 관광공사 사진은 940×627이 최대라, 화면 전체로 늘리면 흐리다 — B-1·B-2는 사진을 제 크기로 쓰는 안이다.
@@ -49,4 +52,19 @@ export const PhotoSplit: Story = {
 export const Chat: Story = {
   name: "C · 온나가 말을 거는",
   render: () => <ChatLogin />,
+};
+
+export const Ticket: Story = {
+  name: "D · 부산행 탑승권",
+  render: () => <TicketLogin />,
+};
+
+export const FloatingSpot: Story = {
+  name: "E · 떠다니는 스팟 카드",
+  render: () => <FloatingSpotLogin />,
+};
+
+export const Type: Story = {
+  name: "F · 큰 글씨 (사진 없음)",
+  render: () => <TypeLogin />,
 };
