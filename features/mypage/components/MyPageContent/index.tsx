@@ -29,6 +29,7 @@ import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
 import NotificationSettingsModal from "@/features/mypage/components/NotificationSettingsModal";
 import { MOCK_HANKKUT_LIST } from "@/features/hankkut/data/mockHankkut";
 import SkyScene from "@/features/home/components/TodayStrip/SkyScene";
+import DefaultAvatar from "@/components/ui/DefaultAvatar";
 
 import type { LucideIcon } from "lucide-react";
 import type { MyCourseSummary } from "@/types/course";
@@ -158,9 +159,8 @@ function ProfileHero({ nickname, email, profileImageUrl, isAdmin, stats }: Profi
                 className="h-[72px] w-[72px] shrink-0 rounded-full object-cover ring-4 ring-lime-300/80"
               />
             ) : (
-              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-lime-300 ring-4 ring-white/10">
-                <span className="text-2xl font-bold text-navy-900">{nickname.charAt(0)}</span>
-              </div>
+              /* 네이버·구글 로그인은 사진을 안 주는 경우가 많다 — 닉네임으로 정해지는 바다 그림 */
+              <DefaultAvatar seed={nickname} size={72} className="ring-4 ring-lime-300/80" />
             )}
             <div className="min-w-0">
               <p className="text-sm text-white/85">안녕하세요,</p>

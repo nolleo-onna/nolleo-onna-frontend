@@ -10,6 +10,8 @@ import { ArrowRight, ChevronDown, LogOut, Route, User as UserIcon } from "lucide
 import { useAuth } from "@/hooks/useAuth";
 
 import type { LucideIcon } from "lucide-react";
+import DefaultAvatar from "@/components/ui/DefaultAvatar";
+
 import type { User } from "@/types/auth";
 
 const NAV_ITEMS = [
@@ -44,15 +46,7 @@ function Avatar({ user, size }: { user: HeaderUser; size: number }) {
       />
     );
   }
-  return (
-    <span
-      aria-hidden
-      className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-navy-600 to-ocean-500 font-bold text-white ring-2 ring-white"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.4) }}
-    >
-      {user.nickname.charAt(0)}
-    </span>
-  );
+  return <DefaultAvatar seed={user.nickname} size={size} className="ring-2 ring-white" />;
 }
 
 function MenuLink({

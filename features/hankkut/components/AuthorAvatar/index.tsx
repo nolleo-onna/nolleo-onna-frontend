@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 
+import DefaultAvatar from "@/components/ui/DefaultAvatar";
+
 interface AuthorAvatarProps {
   name: string;
   /** 작성자 프로필 사진. 없거나 불러오지 못하면 첫 글자로 대신한다 */
@@ -16,8 +18,7 @@ function toHttps(url: string): string {
   return url.replace(/^http:\/\//, "https://");
 }
 
-// 마이페이지 프로필 히어로와 같은 폴백 스타일(라임 원 + 첫 글자)을 재사용해
-// 게시판·댓글에서도 톤을 맞춘다.
+// 사진이 없거나 불러오지 못하면 기본 바다 그림으로 대신한다 (마이페이지·헤더와 같은 그림).
 export default function AuthorAvatar({ name, imageUrl, size = 32 }: AuthorAvatarProps) {
   const src = imageUrl ? toHttps(imageUrl) : null;
   // 실패한 주소를 기억해 두면 다른 사진으로 바뀌었을 때 따로 초기화하지 않아도 다시 시도한다
@@ -36,17 +37,5 @@ export default function AuthorAvatar({ name, imageUrl, size = 32 }: AuthorAvatar
       />
     );
   }
-  return (
-    <div
-      className="flex shrink-0 items-center justify-center rounded-full border border-white bg-lime-300 shadow-base"
-      style={{ width: size, height: size }}
-    >
-      <span
-        className="font-bold text-navy-900"
-        style={{ fontSize: Math.max(10, Math.round(size * 0.4)) }}
-      >
-        {name.charAt(0)}
-      </span>
-    </div>
-  );
+  return <DefaultAvatar seed={name} size={size} className="border border-white shadow-base" />;
 }
