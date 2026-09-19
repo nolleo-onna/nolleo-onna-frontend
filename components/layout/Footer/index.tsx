@@ -25,7 +25,7 @@ export default function Footer() {
 
         {/* 카피라이트 */}
         <p className="mt-6 text-xs text-gray-500">
-          © 2025 놀러온나. All rights reserved.
+          © 2026 놀러온나. All rights reserved.
         </p>
       </div>
     </footer>
