@@ -10,7 +10,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useFavoriteIds, useToggleFavorite } from "../hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
 import { CATEGORY_META } from "@/features/spot/constants/categoryMap";
-import { REGIONS } from "@/features/spot/SpotFilterSidebar/RegionFilter";
+import { REGIONS, regionChipLabel } from "@/features/spot/SpotFilterSidebar/RegionFilter";
 import {
   SEARCH_SUGGESTIONS,
   filterPlaces,
@@ -265,7 +265,7 @@ export default function SpotListSidebar({
                             : "text-gray-600 hover:bg-gray-50"
                         }`}
                       >
-                        {region}
+                        {regionChipLabel(region)}
                       </button>
                     ))}
                   </div>
