@@ -16,7 +16,8 @@ const COVER = {
   label: "광안리해수욕장",
 };
 
-// 바코드 줄 굵기 — 매 렌더 무작위면 깜빡이므로 고정값. 표 아래를 가로로 채울 만큼 길게 둔다.
+// 바코드 줄 굵기 비율 — 매 렌더 무작위면 깜빡이므로 고정값.
+// px이 아니라 flex-grow 비율로 쓰므로, 막대들이 소셜 로그인 버튼과 같은 폭을 정확히 채운다.
 const BARCODE = [
   3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 1, 2, 3, 2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 3, 2,
   1, 3, 1, 2, 2, 1, 3, 1, 2, 3, 1, 1, 2, 1, 3, 2,
@@ -122,10 +123,10 @@ export default function TicketCard() {
           <SocialLoginButton provider="google" />
         </div>
 
-        {/* 표 아래를 가로로 채우는 바코드 */}
+        {/* 소셜 로그인 버튼과 같은 폭을 꽉 채우는 바코드 */}
         <div aria-hidden className="mt-6 flex h-9 w-full items-stretch gap-[3px] overflow-hidden">
-          {BARCODE.map((width, i) => (
-            <span key={i} className="shrink-0 bg-navy-900/80" style={{ width }} />
+          {BARCODE.map((weight, i) => (
+            <span key={i} className="basis-0 bg-navy-900/80" style={{ flexGrow: weight }} />
           ))}
         </div>
       </div>
