@@ -46,7 +46,7 @@ export default function CategoryFilter({ hideHeading = false }: CategoryFilterPr
               <button
                 onClick={() => toggle(id)}
                 aria-pressed={checked}
-                className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2.5 text-left transition-all ${
+                className={`flex w-full items-center gap-1.5 rounded-xl px-2 py-2 text-left transition-all ${
                   checked
                     ? "text-white shadow-[0_6px_16px_-8px_rgba(5,12,26,0.6)]"
                     : "bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-100 hover:bg-gray-100"
@@ -55,14 +55,16 @@ export default function CategoryFilter({ hideHeading = false }: CategoryFilterPr
               >
                 <span
                   aria-hidden
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[15px] ${
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[13px] ${
                     checked ? "bg-white/20" : "bg-white"
                   }`}
                 >
                   {emoji}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight">{label}</span>
-                {checked && <Check size={13} strokeWidth={3} className="shrink-0" />}
+                <span className="min-w-0 flex-1 text-[12px] leading-tight font-semibold tracking-tight break-keep">
+                  {label}
+                </span>
+                {checked && <Check size={12} strokeWidth={3} className="shrink-0" />}
               </button>
             </li>
           );

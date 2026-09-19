@@ -86,10 +86,10 @@ export default function ActiveFilterSummary() {
             type="button"
             onClick={chip.onRemove}
             aria-label={`${chip.label} 빼기`}
-            className="inline-flex max-w-full items-center gap-1 rounded-full bg-navy-50 py-1 pl-2.5 pr-1.5 text-[12px] font-semibold text-navy-600 transition-colors hover:bg-navy-100"
+            className="inline-flex max-w-full items-center gap-1 rounded-full bg-ocean-50 py-1 pl-2.5 pr-1.5 text-[12px] font-semibold text-ocean-700 transition-colors hover:bg-ocean-100"
           >
             <span className="truncate">{chip.label}</span>
-            <X className="h-3 w-3 shrink-0 text-navy-400" strokeWidth={2.5} />
+            <X className="h-3 w-3 shrink-0 text-ocean-400" strokeWidth={2.5} />
           </button>
         ))}
       </div>
