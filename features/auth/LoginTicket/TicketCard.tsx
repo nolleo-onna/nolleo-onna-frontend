@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { motion } from "motion/react";
 import { AlertCircle, Plane } from "lucide-react";
 
 import SocialLoginButton from "@/features/auth/SocialLoginButton";
@@ -17,15 +16,18 @@ const COVER = {
   label: "광안리해수욕장",
 };
 
-// 바코드 느낌의 줄 굵기 — 매 렌더 무작위면 깜빡이므로 고정값
-const BARCODE = [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 1, 2, 3];
+// 바코드 줄 굵기 비율 — 매 렌더 무작위면 깜빡이므로 고정값.
+// px이 아니라 flex-grow 비율로 쓰므로, 막대들이 소셜 로그인 버튼과 같은 폭을 정확히 채운다.
+const BARCODE = [
+  3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 1, 2, 3, 2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 3, 2,
+  1, 3, 1, 2, 2, 1, 3, 1, 2, 3, 1, 1, 2, 1, 3, 2,
+];
 
 /**
- * 로그인 — "부산행 탑승권" 한 장.
- * 넓은 화면에서는 진짜 표처럼 가로로 눕고(왼쪽 사진·오른쪽 로그인), 좁은 화면에서는 세로로 접힌다.
- * 로그인 페이지와 (나중에 붙일) 로그인 모달이 이 카드를 같이 쓴다.
+ * 로그인 표 한 장 — 페이지(/login)와 모달이 같이 쓴다.
+ * 넓은 화면에서는 진짜 탑승권처럼 가로로 눕고(왼쪽 사진·오른쪽 로그인), 좁은 화면에서는 세로로 접힌다.
  */
-export default function LoginTicket() {
+export default function TicketCard() {
   const searchParams = useSearchParams();
   const hasSessionNotice = searchParams.get("notice") === "session";
   // 이 브라우저에서 로그인에 성공한 적이 있는지 — 처음 온 사용자에게
@@ -46,12 +48,7 @@ export default function LoginTicket() {
   }, [searchParams]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, rotate: -1 }}
-      animate={{ opacity: 1, y: 0, rotate: 0 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_40px_90px_-30px_rgba(5,12,26,0.95)] sm:max-w-[780px] sm:flex-row"
-    >
+    <div className="flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_40px_90px_-30px_rgba(5,12,26,0.95)] sm:max-w-[780px] sm:flex-row">
       {/* 사진 면 — 가로일 땐 왼쪽 */}
       <div className="relative h-[190px] shrink-0 sm:h-auto sm:w-[340px]">
         <Image
@@ -83,7 +80,7 @@ export default function LoginTicket() {
         </div>
       </div>
 
-      {/* 뜯는 자리 — 세로일 땐 가로줄, 가로일 땐 세로줄. 배경이 파도라 노치는 파인 것처럼 그늘로 */}
+      {/* 뜯는 자리 — 세로일 땐 가로줄, 가로일 땐 세로줄 */}
       <div className="relative h-5 shrink-0 sm:h-auto sm:w-5">
         <span
           aria-hidden
@@ -126,12 +123,13 @@ export default function LoginTicket() {
           <SocialLoginButton provider="google" />
         </div>
 
-        <div aria-hidden className="mt-6 flex h-8 items-stretch justify-center gap-[2px] sm:justify-start">
-          {BARCODE.map((width, i) => (
-            <span key={i} className="bg-navy-900/80" style={{ width }} />
+        {/* 소셜 로그인 버튼과 같은 폭을 꽉 채우는 바코드 */}
+        <div aria-hidden className="mt-6 flex h-9 w-full items-stretch gap-[3px] overflow-hidden">
+          {BARCODE.map((weight, i) => (
+            <span key={i} className="basis-0 bg-navy-900/80" style={{ flexGrow: weight }} />
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

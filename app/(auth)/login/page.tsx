@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import WavesBackground from "@/components/ui/WavesBackground";
-import LoginTicket from "@/features/auth/LoginTicket";
+import TicketCard from "@/features/auth/LoginTicket/TicketCard";
 
 export default function LoginPage() {
   return (
@@ -12,7 +12,7 @@ export default function LoginPage() {
       <div className="relative z-10 flex w-full justify-center">
         {/* useSearchParams(returnUrl·세션 만료 안내)를 쓰므로 Suspense 필요 */}
         <Suspense fallback={null}>
-          <LoginTicket />
+          <TicketCard />
         </Suspense>
       </div>
     </main>
