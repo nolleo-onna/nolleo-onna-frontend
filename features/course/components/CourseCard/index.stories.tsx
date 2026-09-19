@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import RouteItineraryCard from "@/features/home/components/PopularCourseSection/RouteItineraryCard";
 import CourseCardMagazine from "./CourseCardMagazine";
 import CourseCardRouteLine from "./CourseCardRouteLine";
 import CourseCardTicket from "./CourseCardTicket";
@@ -56,7 +55,7 @@ function Grid({ render }: { render: (props: CourseCardProps) => React.ReactNode 
   );
 }
 
-// 공유된 코스 전체보기·홈에서 쓰는 코스 카드 시안 비교.
+// 공유된 코스 전체보기·홈에서 쓰는 코스 카드. A(매거진)를 골라 화면에 적용했고, B·C는 비교용으로 남겨둔다.
 const meta = {
   title: "Course/코스 카드 시안",
   parameters: { layout: "fullscreen" },
@@ -65,13 +64,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Current: Story = {
-  name: "지금 · 비교용",
-  render: () => <Grid render={(p) => <RouteItineraryCard {...p} />} />,
-};
-
 export const Magazine: Story = {
-  name: "A · 매거진 (사진 가득)",
+  name: "A · 매거진 (지금 쓰는 카드)",
   render: () => <Grid render={(p) => <CourseCardMagazine {...p} />} />,
 };
 
