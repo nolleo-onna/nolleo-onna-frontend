@@ -10,6 +10,7 @@ import { useMapPlaceIdByOriginal } from "@/features/spot/hooks/useMapPlaceIdByOr
 import { mapPlaceKeys } from "@/features/spot/hooks/useMapPlaces";
 import { useFavoriteStatus, useToggleFavorite } from "@/features/spot/hooks/useFavorites";
 import FavoriteButton from "@/features/spot/components/FavoriteButton";
+import ExpandableText from "@/components/ui/ExpandableText";
 import { fetchFoodDetail, fetchPlaceRating, postReview, patchReview } from "@/features/spot/apis/spot";
 type Props = {
   contentId: string | null;
@@ -332,9 +333,12 @@ export default function SpotDetailModal({
               )}
 
               {spotData.overview && (
-                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-ocean-50/60 to-ocean-100/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
+                <ExpandableText
+                  className="rounded-2xl border border-white/60 bg-gradient-to-br from-ocean-50/60 to-ocean-100/30 p-4"
+                  fadeClassName="from-ocean-50/80"
+                >
                   {stripHtml(spotData.overview)}
-                </p>
+                </ExpandableText>
               )}
 
               {mapPlaceId != null && mapPlaceId > 0 ? (
@@ -420,9 +424,12 @@ export default function SpotDetailModal({
               )}
 
               {foodData.description && (
-                <p className="rounded-2xl border border-white/60 bg-gradient-to-br from-amber-50/60 to-orange-50/30 p-4 text-sm leading-relaxed text-gray-700 line-clamp-5">
+                <ExpandableText
+                  className="rounded-2xl border border-white/60 bg-gradient-to-br from-amber-50/60 to-orange-50/30 p-4"
+                  fadeClassName="from-amber-50/80"
+                >
                   {stripHtml(foodData.description)}
-                </p>
+                </ExpandableText>
               )}
 
               {foodData.menus.length > 0 && (
