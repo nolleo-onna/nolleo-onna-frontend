@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { Plane } from "lucide-react";
 
 import SocialLoginButton from "@/features/auth/SocialLoginButton";
+import WavesBackground from "@/components/ui/WavesBackground";
 import { BUSAN_PHOTOS } from "./photos";
 
 const COVER = BUSAN_PHOTOS[0];
@@ -16,18 +17,19 @@ const BARCODE = [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 1, 2, 3];
  * 시안 D · 부산행 탑승권
  * 로그인 카드를 표 한 장으로 만든다. 위쪽은 사진과 "BUSAN" 도착지, 절취선 아래는 소셜 버튼.
  * "로그인 = 부산 가는 표를 끊는 일"로 읽히게 하는 안. 코스 결과의 티켓 카드와 결이 같다.
+ * 배경은 홈 히어로와 같은 three.js 파도 — 어두운 물 위에 흰 표가 떠 있는 모양이 된다.
  */
 export default function TicketLogin() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-ocean-50 via-white to-lime-50 px-5 py-12">
-      <span aria-hidden className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-ocean-200/50 blur-3xl" />
-      <span aria-hidden className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-lime-200/50 blur-3xl" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-navy-800 via-navy-700 to-ocean-800 px-5 py-12">
+      {/* 홈 히어로와 같은 파도 배경 */}
+      <WavesBackground />
 
       <motion.div
         initial={{ opacity: 0, y: 16, rotate: -1 }}
         animate={{ opacity: 1, y: 0, rotate: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-[0_30px_70px_-28px_rgba(5,12,26,0.6)]"
+        className="relative z-10 w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-[0_40px_90px_-30px_rgba(5,12,26,0.95)]"
       >
         {/* 표 윗면 — 사진과 도착지 */}
         <div className="relative h-[190px]">
@@ -51,10 +53,16 @@ export default function TicketLogin() {
           </div>
         </div>
 
-        {/* 뜯는 자리 */}
+        {/* 뜯는 자리 — 배경이 파도라 노치 색을 맞출 수 없어, 파인 것처럼 안쪽으로 그늘을 넣는다 */}
         <div className="relative h-5">
-          <span aria-hidden className="absolute -left-2.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-ocean-50" />
-          <span aria-hidden className="absolute -right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-lime-50" />
+          <span
+            aria-hidden
+            className="absolute -left-2.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-gray-100 shadow-[inset_-2px_0_3px_rgba(5,12,26,0.12)]"
+          />
+          <span
+            aria-hidden
+            className="absolute -right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-gray-100 shadow-[inset_2px_0_3px_rgba(5,12,26,0.12)]"
+          />
           <span aria-hidden className="absolute inset-x-6 top-1/2 border-t-2 border-dashed border-gray-200" />
         </div>
 
