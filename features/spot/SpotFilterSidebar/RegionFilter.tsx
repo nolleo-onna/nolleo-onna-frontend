@@ -4,6 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import Chip from "@/components/ui/Chip";
 
+/**
+ * 칩에 보여줄 이름. 칸이 좁아 네 글자("해운대구", "부산진구")는 "구"가 아래로 떨어져 줄이 어긋났다.
+ * 필터에 쓰는 값은 그대로 두고 표시만 줄인다 — 세 글자 이하("중구", "남구")는 떼면 뜻이 흐려져 그냥 둔다.
+ */
+export function regionChipLabel(region: string): string {
+  return region.length >= 4 ? region.replace(/[구군]$/, "") : region;
+}
+
 export const REGIONS = [
   "강서구", "금정구", "기장군", "남구",
   "동구", "동래구", "부산진구", "북구",
@@ -71,13 +79,13 @@ export default function RegionFilter({ onSelectRegion, hideHeading = false }: Re
             key={region}
             size="sm"
             onClick={() => toggle(region)}
-            className={`w-full justify-center ${
+            className={`w-full justify-center whitespace-nowrap ${
               selected === region
                 ? "border-ocean-500 bg-ocean-500 text-white shadow-[0_4px_12px_-6px_rgba(10,132,255,0.9)]"
                 : "hover:border-ocean-200 hover:text-ocean-600"
             }`}
           >
-            {region}
+            {regionChipLabel(region)}
           </Chip>
         ))}
       </div>
