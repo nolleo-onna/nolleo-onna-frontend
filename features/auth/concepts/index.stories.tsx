@@ -8,6 +8,7 @@ import PhotoLogin from "./PhotoLogin";
 import PhotoSplitLogin from "./PhotoSplitLogin";
 import SplitLogin from "./SplitLogin";
 import TicketLogin from "./TicketLogin";
+import TicketLoginModal from "./TicketLoginModal";
 import FloatingSpotLogin from "./FloatingSpotLogin";
 import TypeLogin from "./TypeLogin";
 
@@ -55,8 +56,13 @@ export const Chat: Story = {
 };
 
 export const Ticket: Story = {
-  name: "D · 부산행 탑승권",
+  name: "D · 부산행 탑승권 (파도 배경)",
   render: () => <TicketLogin />,
+};
+
+export const TicketModal: Story = {
+  name: "D-2 · 탑승권 모달 (페이지 이동 없이)",
+  render: () => <TicketLoginModal />,
 };
 
 export const FloatingSpot: Story = {
