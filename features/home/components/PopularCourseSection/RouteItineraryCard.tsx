@@ -5,8 +5,8 @@ import { maskName } from "@/features/hankkut/utils/maskName";
 import { formatCost } from "@/features/course/utils/format";
 
 interface RouteItineraryCardProps {
-  /** 조회수 순위 (1부터) */
-  rank: number;
+  /** 조회수 순위 (1부터). 인기순이 아닐 때는 빼고 그린다 */
+  rank?: number;
   imageSrc: string | null;
   title: string;
   authorNickname: string | null;
@@ -52,9 +52,11 @@ export default function RouteItineraryCard({
           <div className="h-full w-full bg-gradient-to-br from-ocean-100 via-white to-lime-100" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
-        <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-navy-900/85 px-2 text-[12px] font-bold text-lime-300 backdrop-blur-sm">
-          {rank}
-        </span>
+        {rank !== undefined && (
+          <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-navy-900/85 px-2 text-[12px] font-bold text-lime-300 backdrop-blur-sm">
+            {rank}
+          </span>
+        )}
         <p className="absolute inset-x-3 bottom-3 line-clamp-1 text-base font-bold text-white">
           {title}
         </p>

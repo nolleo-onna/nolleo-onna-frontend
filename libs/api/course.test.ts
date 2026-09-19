@@ -109,12 +109,23 @@ describe("updateCourseVisibility / fetchSharedCourse", () => {
 });
 
 describe("fetchPopularCourses", () => {
-  it("size를 붙여 조회하고 data 배열을 돌려준다", async () => {
+  it("size를 붙여 첫 페이지를 조회하고 data 배열을 돌려준다", async () => {
     const list = [{ shareToken: "t1", title: "코스", viewCount: 10 }];
     const fetchMock = mockFetch(200, { status: 200, message: "ok", data: list });
 
     await expect(fetchPopularCourses(6)).resolves.toEqual(list);
-    expect(fetchMock.mock.calls[0][0]).toBe("https://api.test.local/api/v1/courses/popular?size=6");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.test.local/api/v1/courses/popular?page=0&size=6",
+    );
+  });
+
+  it("전체보기에서 다음 쪽을 부를 수 있게 page도 붙인다", async () => {
+    const fetchMock = mockFetch(200, { status: 200, message: "ok", data: [] });
+
+    await fetchPopularCourses(12, 2);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.test.local/api/v1/courses/popular?page=2&size=12",
+    );
   });
 
   it("백엔드에 아직 API가 없어 404·401·403이면 빈 목록으로 다룬다", async () => {

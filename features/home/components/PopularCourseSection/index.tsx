@@ -43,7 +43,7 @@ export default function PopularCourseSection() {
       <SectionHeader
         title="지금 인기 있는 코스"
         description="여행자들이 만들어 공유한 코스를 조회수 순으로 보여드려요"
-        action={{ label: "나도 만들기", href: "/course" }}
+        action={{ label: "전체보기", href: "/course/shared" }}
       >
         {canLoop && (
           <div className="hidden items-center gap-2 sm:flex">
