@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Check, Plus, Search } from "lucide-react";
 
 import { buildCourseCongestion } from "@/features/course/utils/courseCongestion";
@@ -13,6 +13,7 @@ import { fetchMapPlaces } from "@/features/spot/apis/map";
 import { getDistance } from "@/features/course/data/mockCourse";
 import { formatDistance } from "@/features/course/utils/format";
 import { CATEGORIES, CATEGORY_META } from "@/features/spot/constants/categoryMap";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 import type { PlaceCongestion } from "@/features/course/utils/courseCongestion";
 import type { CrowdLevel } from "@/types/crowd";
@@ -27,6 +28,9 @@ interface CourseSpotPickerProps {
 }
 
 const FALLBACK_CATEGORY = { label: "기타", emoji: "📍", color: "#6b7280" };
+
+// 백엔드가 size를 100으로 자른다 — 더 요청해도 100개씩 온다
+const PAGE_SIZE = 100;
 
 // 여유로운 곳 우선 정렬 순서 — 혼잡도를 모르는 스팟(2)은 보통과 혼잡 사이에 둔다.
 // 혼잡한 곳 대신 여유로운 대체 장소가 목록 위쪽에 먼저 보이게 하는 게 목적.
@@ -49,12 +53,22 @@ export default function CourseSpotPicker({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("ALL");
 
-  // 전체를 한 번에 받아 칩 전환·검색을 클라이언트에서 즉시 처리한다.
-  // (스팟 페이지의 useMapPlaces와 같은 정렬/사이즈 정책)
+  // 분류·검색은 서버에서 거른다. 전에는 한 번에 다 받아(size 9999) 브라우저에서 걸렀는데,
+  // 서버가 size를 100으로 자르고 그 100개가 전부 관광(VE)이라 다른 분류 칩을 누르면 늘 0건이었다.
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const keyword = debouncedSearch.trim();
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["coursePickerPlaces"],
-    queryFn: () => fetchMapPlaces({ sort: "imageUrl,asc", size: 9999 }),
+    queryKey: ["coursePickerPlaces", category, keyword],
+    queryFn: () =>
+      fetchMapPlaces({
+        ...(category !== "ALL" && { category }),
+        ...(keyword && { keyword }),
+        sort: "imageUrl,asc",
+        size: PAGE_SIZE,
+      }),
     staleTime: 1000 * 60 * 5,
+    // 칩을 바꾸는 동안 목록이 비었다 다시 차지 않게 직전 결과를 둔다
+    placeholderData: keepPreviousData,
   });
 
   // 코스 화면과 같은 혼잡도 캐시(queryKey ["congestion"])를 공유 — 중복 요청 없음
@@ -64,13 +78,7 @@ export default function CourseSpotPicker({
   // 장소별 혼잡도를 매칭(이름 → 좌표 기반 구 폴백, 실패 시 배지 생략)해서
   // 여유로운 곳부터 정렬하고, 같은 등급 안에서는 기존처럼 이미지 있는 스팟 우선.
   const places = useMemo(() => {
-    let list = data?.content ?? [];
-    if (category !== "ALL") list = list.filter((p) => p.category === category);
-    if (search.trim()) {
-      list = list.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()),
-      );
-    }
+    const list = data?.content ?? [];
     const congestionById = buildCourseCongestion(
       list.map((p) => ({ id: p.id, name: p.name, lat: p.latitude, lng: p.longitude })),
       congestion,
@@ -96,7 +104,7 @@ export default function CourseSpotPicker({
           Number(!!b.place.imageUrl) - Number(!!a.place.imageUrl)
         );
       });
-  }, [data, category, search, congestion, courseCenter]);
+  }, [data, congestion, courseCenter]);
 
   return (
     <aside className="flex h-[45vh] w-full shrink-0 flex-col overflow-hidden border-t border-gray-100 bg-gray-50 lg:h-auto lg:w-[340px] lg:border-t-0 lg:border-l">
