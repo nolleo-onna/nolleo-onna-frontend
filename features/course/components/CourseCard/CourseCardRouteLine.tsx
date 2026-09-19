@@ -78,7 +78,8 @@ export default function CourseCardRouteLine({
                   +{remaining}
                 </span>
               </div>
-              <span className="mt-1.5 text-[11px] text-gray-400">더</span>
+              {/* 이름 줄과 높이를 맞추려고 빈 자리만 둔다 */}
+              <span aria-hidden className="mt-1.5 text-[11px] text-transparent">곳</span>
             </div>
           )}
         </div>

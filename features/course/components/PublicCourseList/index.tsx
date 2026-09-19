@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { Loader2, Map, Sparkles } from "lucide-react";
 
-import CourseCardMagazine from "@/features/course/components/CourseCard/CourseCardMagazine";
+import CourseCardRouteLine from "@/features/course/components/CourseCard/CourseCardRouteLine";
 import { PUBLIC_COURSES_PAGE_SIZE, usePublicCourses } from "@/features/course/hooks/usePublicCourses";
 import { ASSISTANT_NAME } from "@/constants/assistant";
 import type { PopularCourse } from "@/types/course";
@@ -29,7 +29,7 @@ function sortCourses(courses: PopularCourse[], key: SortKey): PopularCourse[] {
 
 /**
  * 공유된 코스 전체보기. 홈 "지금 인기 있는 코스"가 조회수 상위 몇 개만 넘겨 보여주는 반면,
- * 여기선 공개된 코스를 격자로 쭉 펼치고 정렬을 바꿔 가며 고른다. 카드는 홈과 같은 매거진 카드.
+ * 여기선 공개된 코스를 격자로 쭉 펼치고 정렬을 바꿔 가며 고른다. 카드는 홈과 같은 노선도 카드.
  */
 export default function PublicCourseList() {
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -86,7 +86,7 @@ export default function PublicCourseList() {
       {isPending ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="animate-shimmer aspect-[4/5] rounded-[24px]" />
+            <div key={i} className="animate-shimmer aspect-[4/3] rounded-[22px]" />
           ))}
         </div>
       ) : isError || courses.length === 0 ? (
@@ -126,9 +126,9 @@ export default function PublicCourseList() {
               >
                 <Link
                   href={`/course/shared/${encodeURIComponent(course.shareToken)}`}
-                  className="flex w-full rounded-[24px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ocean-500"
+                  className="flex w-full rounded-[22px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ocean-500"
                 >
-                  <CourseCardMagazine
+                  <CourseCardRouteLine
                     // 순위 배지는 조회수 순일 때만 의미가 있다
                     rank={sort === "popular" ? index + 1 : undefined}
                     imageSrc={course.thumbnailImageUrl}

@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import SectionHeader from "@/features/home/components/SectionHeader";
-import CourseCardMagazine from "@/features/course/components/CourseCard/CourseCardMagazine";
+import CourseCardRouteLine from "@/features/course/components/CourseCard/CourseCardRouteLine";
 import { useLoopingCarousel } from "@/features/home/hooks/useLoopingCarousel";
 import { usePopularCourses } from "@/features/home/hooks/usePopularCourses";
 import { ASSISTANT_NAME } from "@/constants/assistant";
@@ -71,7 +71,7 @@ export default function PopularCourseSection() {
       {isPending ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: VISIBLE_DESKTOP }, (_, i) => (
-            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/5] shrink-0 rounded-[24px]`} />
+            <div key={i} className={`${CARD_WIDTH} animate-shimmer aspect-[4/3] shrink-0 rounded-[22px]`} />
           ))}
         </div>
       ) : isError || items.length === 0 ? (
@@ -107,7 +107,7 @@ export default function PopularCourseSection() {
                 tabIndex={isClone ? -1 : undefined}
                 className={`${CARD_WIDTH} flex shrink-0 snap-start`}
               >
-                <CourseCardMagazine
+                <CourseCardRouteLine
                   rank={(index % items.length) + 1}
                   imageSrc={course.thumbnailImageUrl}
                   title={course.title}

@@ -55,7 +55,7 @@ function Grid({ render }: { render: (props: CourseCardProps) => React.ReactNode 
   );
 }
 
-// 공유된 코스 전체보기·홈에서 쓰는 코스 카드. A(매거진)를 골라 화면에 적용했고, B·C는 비교용으로 남겨둔다.
+// 공유된 코스 전체보기·홈에서 쓰는 코스 카드. C(노선도)를 골라 화면에 적용했고, A·B는 비교용으로 남겨둔다.
 const meta = {
   title: "Course/코스 카드 시안",
   parameters: { layout: "fullscreen" },
@@ -65,7 +65,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Magazine: Story = {
-  name: "A · 매거진 (지금 쓰는 카드)",
+  name: "A · 매거진 (사진 가득)",
   render: () => <Grid render={(p) => <CourseCardMagazine {...p} />} />,
 };
 
@@ -75,6 +75,6 @@ export const Ticket: Story = {
 };
 
 export const RouteLine: Story = {
-  name: "C · 노선도 (가로 동선)",
+  name: "C · 노선도 (지금 쓰는 카드)",
   render: () => <Grid render={(p) => <CourseCardRouteLine {...p} />} />,
 };
