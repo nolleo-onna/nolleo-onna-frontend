@@ -77,6 +77,34 @@ export const LongPlaceNames: Story = {
   },
 };
 
+// 음식점 카드 — 분류·가격·혼잡도 배지가 한 줄에 다 들어가는지 (좁아서 글자가 세로로 쌓이던 자리)
+export const FoodPlaceRow: Story = {
+  name: "음식점 · 가격 · 혼잡도 한 줄",
+  args: {
+    course: {
+      ...MOCK_COURSE,
+      days: [
+        {
+          ...MOCK_COURSE.days[0],
+          places: MOCK_COURSE.days[0].places.map((place, i) =>
+            i < 2
+              ? { ...place, name: i === 0 ? "광안리 대교밀면" : "수변최고돼지국밥", category: "음식점 · 카페", expectedCost: i === 0 ? 7000 : 8700 }
+              : place,
+          ),
+        },
+        ...MOCK_COURSE.days.slice(1),
+      ],
+    },
+    selectedPlaceId: null,
+    congestionByPlaceId: new Map(
+      MOCK_COURSE.days[0].places.map((place) => [
+        place.id,
+        { level: "매우혼잡" as const, rate: 91, source: "district" as const, district: "수영구" },
+      ]),
+    ),
+  },
+};
+
 // 오른쪽 패널에서 장소를 추가한 직후 — 마지막 카드가 밀려 올라오며 잠깐 강조된다
 export const JustAdded: Story = {
   name: "편집 · 방금 추가된 장소 강조",

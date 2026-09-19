@@ -267,9 +267,10 @@ function PlaceTimelineItem({
           >
             {place.name}
           </p>
-          <div className="flex items-center gap-1.5">
+          {/* 폭이 모자라면 "음식점 · 카페"가 한 글자씩 세로로 쌓이던 자리 — 한 줄로 두고 넘치면 줄인다 */}
+          <div className="flex min-w-0 items-center gap-1.5">
             <span
-              className={`text-[11px] ${
+              className={`min-w-0 truncate text-[11px] whitespace-nowrap ${
                 isSelected ? "text-ocean-600" : "text-gray-400"
               }`}
             >
@@ -277,7 +278,7 @@ function PlaceTimelineItem({
             </span>
             {place.expectedCost !== undefined && place.expectedCost > 0 && (
               <span
-                className={`text-[11px] ${
+                className={`shrink-0 text-[11px] whitespace-nowrap ${
                   isSelected ? "text-ocean-600" : "text-gray-400"
                 }`}
               >
