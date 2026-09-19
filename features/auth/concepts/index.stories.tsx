@@ -3,10 +3,13 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import LoginForm from "@/features/auth/LoginForm";
 import LoginLayout from "@/features/auth/LoginLayout";
 import ChatLogin from "./ChatLogin";
+import MosaicLogin from "./MosaicLogin";
 import PhotoLogin from "./PhotoLogin";
+import PhotoSplitLogin from "./PhotoSplitLogin";
 import SplitLogin from "./SplitLogin";
 
-// 로그인 화면 시안 비교. 소셜 버튼(카카오·네이버·구글)은 네 가지 모두 같은 것을 쓴다.
+// 로그인 화면 시안 비교. 소셜 버튼은 모두 같은 것을 쓴다.
+// 관광공사 사진은 940×627이 최대라, 화면 전체로 늘리면 흐리다 — B-1·B-2는 사진을 제 크기로 쓰는 안이다.
 const meta = {
   title: "Auth/로그인 화면 시안",
   parameters: {
@@ -29,8 +32,18 @@ export const Split: Story = {
 };
 
 export const Photo: Story = {
-  name: "B · 부산 사진 위에",
+  name: "B · 부산 사진 위에 (사진이 늘어나 흐림)",
   render: () => <PhotoLogin />,
+};
+
+export const Mosaic: Story = {
+  name: "B-1 · 사진 모자이크 (아홉 장 격자)",
+  render: () => <MosaicLogin />,
+};
+
+export const PhotoSplit: Story = {
+  name: "B-2 · 사진 반반 (한쪽만 사진)",
+  render: () => <PhotoSplitLogin />,
 };
 
 export const Chat: Story = {
